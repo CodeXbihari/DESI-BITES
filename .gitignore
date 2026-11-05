@@ -1,0 +1,23 @@
+# Node modules
+node_modules/
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# Native builds
+android/
+ios/
+
+# Logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+
+# Temp & OS files
+.DS_Store
+Thumbs.db
+*.tmp
