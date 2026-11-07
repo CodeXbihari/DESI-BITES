@@ -21,3 +21,10 @@ yarn-error.*
 .DS_Store
 Thumbs.db
 *.tmp
+
+# Local Firebase client configuration and environment overrides
+.env
+.env.*
+!.env.example
+google-services.json
+GoogleService-Info.plist

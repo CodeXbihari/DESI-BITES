@@ -11,7 +11,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -22,112 +21,70 @@ import {
   OTP_BOTTOM_IMAGE,
 } from '../data/otpData';
 
+import { useAuth } from '../context/AuthContext';
+import { authErrorMessage, OTP_LENGTH } from '../services/authValidation';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface OtpScreenProps {
   phoneNumber?: string;
-  onVerifySuccess: () => void;
   onBack: () => void;
 }
 
 export const OtpScreen: React.FC<OtpScreenProps> = ({
-  phoneNumber = '98765 43210',
-  onVerifySuccess,
+  phoneNumber,
   onBack,
 }) => {
-  const [otp, setOtp] = useState(['', '', '', '']);
+  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt } = useAuth();
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
-  const [timer, setTimer] = useState(30);
-  const [isVerifying, setIsVerifying] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [notice, setNotice] = useState('');
+  const [now, setNow] = useState(Date.now());
+  const inputRefs = useRef<Array<React.ComponentRef<typeof TextInput> | null>>([]);
+  const timer = Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const isVerifying = busy;
 
-  const inputRefs = [
-    useRef<any>(null),
-    useRef<any>(null),
-    useRef<any>(null),
-    useRef<any>(null),
-  ];
-
-  // 30-second live countdown timer
   useEffect(() => {
-    if (timer <= 0) return;
-    const interval = setInterval(() => {
-      setTimer((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [timer]);
+  }, []);
 
-  // Handle single digit input + auto-advance + paste
   const handleDigitChange = (value: string, index: number) => {
     setErrorMessage('');
+    const digits = value.replace(/\D/g, '');
+    const start = digits.length >= OTP_LENGTH ? 0 : index;
+    const next = [...otp];
+    if (!digits) next[index] = '';
+    else digits.slice(0, OTP_LENGTH - start).split('').forEach((digit, offset) => { next[start + offset] = digit; });
+    setOtp(next);
+    inputRefs.current[Math.min(start + digits.length, OTP_LENGTH - 1)]?.focus();
+  };
 
-    // Handle paste if multi-digit string is provided
-    if (value.length > 1) {
-      const cleaned = value.replace(/[^0-9]/g, '').slice(0, 4);
-      if (cleaned.length > 0) {
-        const nextOtp = [...otp];
-        for (let i = 0; i < 4; i++) {
-          nextOtp[i] = cleaned[i] || '';
-        }
-        setOtp(nextOtp);
-        const nextFocus = Math.min(cleaned.length, 3);
-        inputRefs[nextFocus].current?.focus();
-        setFocusedIndex(nextFocus);
-        return;
-      }
-    }
-
-    const digit = value.replace(/[^0-9]/g, '');
-    const nextOtp = [...otp];
-    nextOtp[index] = digit;
-    setOtp(nextOtp);
-
-    // Auto-advance to next box if digit entered
-    if (digit && index < 3) {
-      inputRefs[index + 1].current?.focus();
-      setFocusedIndex(index + 1);
+  const handleKeyPress = (event: any, index: number) => {
+    if (event.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      setOtp(previous => previous.map((digit, i) => i === index - 1 ? '' : digit));
+      inputRefs.current[index - 1]?.focus();
     }
   };
 
-  // Handle backspace navigation across boxes
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace') {
-      if (!otp[index] && index > 0) {
-        const nextOtp = [...otp];
-        nextOtp[index - 1] = '';
-        setOtp(nextOtp);
-        inputRefs[index - 1].current?.focus();
-        setFocusedIndex(index - 1);
-      }
-    }
-  };
-
-  // Resend OTP action
-  const handleResend = () => {
-    if (timer > 0) return;
-    setTimer(30);
-    setOtp(['', '', '', '']);
+  const handleResend = async () => {
+    if (timer > 0 || busy) return;
     setErrorMessage('');
-    inputRefs[0].current?.focus();
-    setFocusedIndex(0);
-    Alert.alert('OTP भेजा गया', `+91 ${phoneNumber} पर एक नया 4-अंकीय कोड भेजा गया है।`);
+    setNotice('');
+    try {
+      await sendOtp(requestedPhone ?? phoneNumber ?? '');
+      setOtp(Array(OTP_LENGTH).fill(''));
+      setNotice('A new six-digit code has been sent.');
+      inputRefs.current[0]?.focus();
+    } catch (error) { setErrorMessage(authErrorMessage(error)); }
   };
 
-  // Verify OTP action
-  const handleVerify = () => {
-    const code = otp.join('');
-    if (code.length < 4) {
-      setErrorMessage('कृपया सभी 4 अंक दर्ज करें (Please enter all 4 digits)');
-      return;
-    }
-
-    setIsVerifying(true);
+  const handleVerify = async () => {
     setErrorMessage('');
-
-    setTimeout(() => {
-      setIsVerifying(false);
-      onVerifySuccess();
-    }, 500);
+    setNotice('');
+    try { await verifyOtp(otp.join('')); }
+    catch (error) { setErrorMessage(authErrorMessage(error)); }
   };
 
   return (
@@ -154,12 +111,17 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
               resizeMode="cover"
             />
 
+            {/* The reference image contains a four-digit instruction; replace only that label. */}
+            <View pointerEvents="none" style={styles.codeInstruction}>
+              <Text style={styles.codeInstructionText}>Enter the 6-digit code sent to you</Text>
+            </View>
             {/* Transparent Touch Overlays */}
             <SafeAreaView edges={['top']} style={styles.headerSafeArea}>
               <View style={styles.topNavRow}>
                 {/* Back Arrow Touch Target */}
                 <TouchableOpacity
                   onPress={onBack}
+                  disabled={busy}
                   style={styles.backButtonTouch}
                   activeOpacity={0.6}
                   hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
@@ -181,13 +143,13 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             {errorMessage ? (
               <View style={styles.errorBanner}>
                 <Ionicons name="alert-circle" size={14} color="#790B16" />
-                <Text style={styles.errorText}>{errorMessage}</Text>
+                <Text accessibilityRole="alert" style={styles.errorText}>{errorMessage}</Text>
               </View>
             ) : null}
 
-            {/* 4 OTP Input Boxes */}
+            {/* Six-digit SMS code, including paste and autofill. */}
             <View style={styles.otpBoxesRow}>
-              {[0, 1, 2, 3].map((index) => {
+              {Array.from({ length: OTP_LENGTH }, (_, index) => {
                 const isFocused = focusedIndex === index;
                 const hasValue = !!otp[index];
                 return (
@@ -195,7 +157,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                     key={index}
                     activeOpacity={0.9}
                     onPress={() => {
-                      inputRefs[index].current?.focus();
+                      inputRefs.current[index]?.focus();
                       setFocusedIndex(index);
                     }}
                     style={[
@@ -205,10 +167,14 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                     ]}
                   >
                     <TextInput
-                      ref={inputRefs[index]}
+                      ref={(input) => { inputRefs.current[index] = input; }}
                       style={styles.otpInput}
                       keyboardType="number-pad"
-                      maxLength={1}
+                      maxLength={OTP_LENGTH}
+                      editable={!busy}
+                      textContentType="oneTimeCode"
+                      autoComplete="sms-otp"
+                      accessibilityLabel={`OTP digit ${index + 1}`}
                       value={otp[index]}
                       onChangeText={(val) => handleDigitChange(val, index)}
                       onKeyPress={(e) => handleKeyPress(e, index)}
@@ -242,7 +208,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
               {/* Resend Link Button */}
               <TouchableOpacity
                 onPress={handleResend}
-                disabled={timer > 0}
+                disabled={timer > 0 || busy}
                 activeOpacity={0.7}
               >
                 <Text
@@ -260,7 +226,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             <TouchableOpacity
               style={styles.verifyButtonWrapper}
               onPress={handleVerify}
-              disabled={isVerifying}
+              disabled={busy || otp.join('').length !== OTP_LENGTH}
               activeOpacity={0.88}
             >
               {/* Outer Golden Border */}
@@ -279,10 +245,11 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
               </View>
             </TouchableOpacity>
 
-            {/* Subtle demo helper */}
+            {notice ? <Text accessibilityRole="alert" style={styles.demoHelperText}>{notice}</Text> : null}
+            {/* Verification destination */}
             <View style={styles.demoHelperRow}>
               <Text style={styles.demoHelperText}>
-                Code sent to +91 {phoneNumber}
+                Code sent to {requestedPhone ?? phoneNumber}
               </Text>
             </View>
           </View>
@@ -330,6 +297,23 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
+  },
+  codeInstruction: {
+    position: 'absolute',
+    top: '64%',
+    left: 0,
+    width: '100%',
+    paddingHorizontal: 24,
+    minHeight: 30,
+    paddingVertical: 5,
+    backgroundColor: '#950B18',
+    borderRadius: 4,
+    justifyContent: 'center',
+  },
+  codeInstructionText: {
+    color: OTP_THEME.lightCream,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   headerSafeArea: {
     flex: 1,
@@ -385,12 +369,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    gap: 14,
+    gap: 8,
     marginBottom: 20,
   },
   otpBox: {
-    width: Math.min((SCREEN_WIDTH - 90) / 4, 68),
-    height: Math.min((SCREEN_WIDTH - 90) / 4, 68),
+    width: Math.min((SCREEN_WIDTH - 100) / 6, 52),
+    height: Math.min((SCREEN_WIDTH - 100) / 6, 52),
     borderRadius: 16,
     borderWidth: 1.5,
     borderColor: '#790B16',

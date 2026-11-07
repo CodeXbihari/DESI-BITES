@@ -1,34 +1,27 @@
 {
   "expo": {
-    "name": "Desi Mart & Food",
+    "name": "Desi Bytes",
     "slug": "desi-prototype",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FF6B00"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.desi.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FF6B00"
-      },
       "package": "com.desi.app"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
+    "web": {},
     "plugins": [
       "expo-asset",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FF6B00"
+        }
+      ]
     ]
   }
 }

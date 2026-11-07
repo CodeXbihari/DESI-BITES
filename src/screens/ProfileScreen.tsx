@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
 
@@ -13,6 +14,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onReplayOnboarding,
   onLogout,
 }) => {
+  const { user, profileError } = useAuth();
   const { addresses, favorites, orders } = useApp();
 
   return (
@@ -20,11 +22,11 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       {/* Profile Header */}
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>RS</Text>
+          <Text style={styles.avatarText}>{user?.displayName?.slice(0, 2).toUpperCase() || 'DB'}</Text>
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.userName}>Rahul Sharma</Text>
-          <Text style={styles.userPhone}>+91 98765 43210</Text>
+          <Text style={styles.userName}>{user?.displayName || 'Desi Bytes Member'}</Text>
+          <Text style={styles.userPhone}>{user?.phoneNumber}</Text>
           <View style={styles.clubBadge}>
             <Ionicons name="sparkles" size={12} color="#D97706" />
             <Text style={styles.clubText}>DESI CLUB GOLD MEMBER</Text>
@@ -33,6 +35,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {profileError ? <Text accessibilityRole="alert" style={{ color: colors.danger, padding: 16 }}>{profileError}</Text> : null}
         {/* Wallet / Desi Cash Quick Bar */}
         <View style={styles.walletBar}>
           <View style={styles.walletLeft}>

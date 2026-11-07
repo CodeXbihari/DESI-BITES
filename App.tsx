@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -14,6 +15,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
 
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { authErrorMessage } from './src/services/authValidation';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { colors } from './src/theme/colors';
 
@@ -206,15 +209,17 @@ function SplashScreen() {
 }
 
 // ── ROOT STACK NAVIGATOR ──
-function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' }) {
+function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'Onboarding' | 'Login'; onOnboardingChange: (completed: boolean) => void }) {
+  const { user, logout } = useAuth();
   return (
     <Stack.Navigator
-      initialRouteName={initialRoute}
+      initialRouteName={user ? 'Main' : initialRoute}
       screenOptions={{
         headerShown: false,
         animation: 'fade',
       }}
     >
+      <Stack.Group navigationKey={user ? `user-${user.uid}` : 'guest-onboarding'}>
       <Stack.Screen name="Onboarding">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Onboarding'>) => (
           <OnboardingScreen
@@ -224,18 +229,18 @@ function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' 
               } catch (err) {
                 console.warn('Failed to save onboarding state:', err);
               }
-              navigation.replace('Login');
+              onOnboardingChange(true);
+              navigation.replace(user ? 'Main' : 'Login');
             }}
           />
         )}
       </Stack.Screen>
 
+      </Stack.Group>
+      {!user ? <Stack.Group navigationKey="guest">
       <Stack.Screen name="Login">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Login'>) => (
           <LoginScreen
-            onLoginSuccess={() => {
-              navigation.replace('Main');
-            }}
             onNavigateToOtp={(phoneNumber) => {
               navigation.navigate('Otp', { phoneNumber });
             }}
@@ -250,9 +255,6 @@ function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' 
         {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Otp'>) => (
           <OtpScreen
             phoneNumber={route.params?.phoneNumber}
-            onVerifySuccess={() => {
-              navigation.replace('Main');
-            }}
             onBack={() => {
               navigation.goBack();
             }}
@@ -260,11 +262,12 @@ function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' 
         )}
       </Stack.Screen>
 
+      </Stack.Group> : <Stack.Group navigationKey={user.uid}>
       <Stack.Screen name="Main">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
             onLogout={() => {
-              navigation.replace('Login');
+              void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
             }}
             onReplayOnboarding={async () => {
               try {
@@ -272,6 +275,7 @@ function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' 
               } catch (err) {
                 console.warn('Failed to clear onboarding state:', err);
               }
+              onOnboardingChange(false);
               navigation.replace('Onboarding');
             }}
             onOpenSearchMenu={() => {
@@ -332,11 +336,13 @@ function RootNavigator({ initialRoute }: { initialRoute: 'Onboarding' | 'Login' 
           />
         )}
       </Stack.Screen>
+      </Stack.Group>}
     </Stack.Navigator>
   );
 }
 
-export default function App() {
+function AppContent() {
+  const { user, initializing } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
@@ -355,19 +361,23 @@ export default function App() {
     checkOnboardingStatus();
   }, []);
 
-  if (isLoading) {
+  if (isLoading || initializing) {
     return <SplashScreen />;
   }
 
   return (
     <SafeAreaProvider>
-      <AppProvider>
+      <AppProvider key={user?.uid ?? 'guest'}>
         <NavigationContainer>
-          <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} />
+          <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
         </NavigationContainer>
       </AppProvider>
     </SafeAreaProvider>
   );
+}
+
+export default function App() {
+  return <AuthProvider><AppContent /></AuthProvider>;
 }
 
 const styles = StyleSheet.create({

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -22,16 +22,17 @@ import {
   LOGIN_THEME,
 } from '../data/loginData';
 
+import { useAuth } from '../context/AuthContext';
+import { authErrorMessage } from '../services/authValidation';
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface LoginScreenProps {
-  onLoginSuccess: () => void;
   onNavigateToOtp?: (phoneNumber: string) => void;
   onBackToOnboarding?: () => void;
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = ({
-  onLoginSuccess,
   onNavigateToOtp,
   onBackToOnboarding,
 }) => {
@@ -40,36 +41,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [countryCode, setCountryCode] = useState('+91');
+  const mounted = useRef(true);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const countryCode = '+91';
+  const { sendOtp, busy, setupError, resendAt } = useAuth();
+  const [errorMessage, setErrorMessage] = useState('');
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  const remaining = Math.max(0, Math.ceil((resendAt - now) / 1000));
 
-  const handleSendOtp = () => {
-    const cleaned = phoneNumber.replace(/[^0-9]/g, '');
-    if (cleaned.length < 10) {
-      Alert.alert(
-        'अमान्य नंबर (Invalid Number)',
-        'कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें। (Please enter a valid 10-digit mobile number)'
-      );
-      return;
+  const handleSendOtp = async () => {
+    setErrorMessage('');
+    try {
+      await sendOtp(phoneNumber, isRegisterMode ? fullName.trim() : '');
+      if (mounted.current) onNavigateToOtp?.(phoneNumber);
+    } catch (error) {
+      if (mounted.current) setErrorMessage(authErrorMessage(error));
     }
-
-    if (onNavigateToOtp) {
-      onNavigateToOtp(cleaned);
-    } else {
-      onLoginSuccess();
-    }
-  };
-
-  const handleCountryCodePress = () => {
-    Alert.alert(
-      'Select Country Code',
-      'Supported countries for OTP verification:',
-      [
-        { text: '🇮🇳 India (+91)', onPress: () => setCountryCode('+91') },
-        { text: '🇬🇧 UK (+44)', onPress: () => setCountryCode('+44') },
-        { text: '🇺🇸 USA (+1)', onPress: () => setCountryCode('+1') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
   };
 
   return (
@@ -103,6 +94,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 {onBackToOnboarding ? (
                   <TouchableOpacity
                     onPress={onBackToOnboarding}
+                    disabled={busy}
                     style={styles.backButton}
                     activeOpacity={0.7}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -157,6 +149,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                     placeholderTextColor="#A48978"
                     value={fullName}
                     onChangeText={setFullName}
+                    editable={!busy}
+                    maxLength={80}
+                    autoComplete="name"
                   />
                 </View>
               </View>
@@ -169,7 +164,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 {/* Country Code Selector */}
                 <TouchableOpacity
                   style={styles.countryCodePill}
-                  onPress={handleCountryCodePress}
+                  disabled
                   activeOpacity={0.7}
                 >
                   <Text style={styles.countryCodeText}>{countryCode}</Text>
@@ -192,17 +187,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   keyboardType="phone-pad"
                   maxLength={10}
                   value={phoneNumber}
-                  onChangeText={setPhoneNumber}
+                  onChangeText={(value) => { setPhoneNumber(value.replace(/\D/g, '')); setErrorMessage(''); }}
+                  editable={!busy}
+                  autoComplete="tel-national"
+                  accessibilityLabel="Indian mobile number"
                 />
               </View>
             </View>
+
+            {(errorMessage || setupError) ? (
+              <Text accessibilityRole="alert" style={{ color: LOGIN_THEME.deepMaroon, marginBottom: 12 }}>{errorMessage || setupError}</Text>
+            ) : null}
+            <Text style={[styles.termsText, { marginBottom: 12 }]}>We will send an SMS verification code. Standard SMS rates may apply. Your number is processed by Google for verification and abuse prevention.</Text>
 
             {/* Primary Button: "Send OTP" */}
             <TouchableOpacity
               style={styles.sendOtpButton}
               onPress={handleSendOtp}
+              disabled={busy || remaining > 0}
+              accessibilityState={{ disabled: busy || remaining > 0, busy }}
               activeOpacity={0.88}
             >
+              {busy && <ActivityIndicator size="small" color="#FFFFFF" />}
               <Ionicons
                 name="send"
                 size={16}
@@ -210,7 +216,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                 style={styles.paperPlaneIcon}
               />
               <Text style={styles.sendOtpText}>
-                {isRegisterMode ? 'Create Account & Send OTP' : 'Send OTP'}
+                {busy ? 'Sending OTP…' : remaining > 0 ? `Try again in ${remaining}s` : isRegisterMode ? 'Create Account & Send OTP' : 'Send OTP'}
               </Text>
             </TouchableOpacity>
 
