@@ -1,11 +1,19 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useApp } from '../context/AppContext';
+import { homeTheme as theme } from '../theme/homeTheme';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  variant?: 'default' | 'home';
+  onOpenProfile?: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfile }) => {
   const { selectedAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+
+  if (variant === 'home') return <HomeHeader onOpenProfile={onOpenProfile} />;
 
   return (
     <View style={styles.container}>
@@ -166,5 +174,121 @@ const styles = StyleSheet.create({
     color: colors.text,
     paddingVertical: 0,
   },
+});
+
+function HomeHeader({ onOpenProfile }: Pick<HeaderProps, 'onOpenProfile'>) {
+  const { selectedAddress, addresses, setSelectedAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+  const [showAddresses, setShowAddresses] = useState(false);
+
+  return (
+    <>
+      <View style={homeStyles.header}>
+        <Image
+          source={require('../../assets/images/login_footer_landscape.jpg')}
+          style={homeStyles.texture}
+          resizeMode="cover"
+          accessible={false}
+        />
+        <View style={homeStyles.topRow}>
+          <TouchableOpacity
+            style={homeStyles.location}
+            onPress={() => setShowAddresses(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Delivery address: ${selectedAddress.tag}, ${selectedAddress.area}. Change address`}
+          >
+            <Text style={homeStyles.delivering}>DELIVERING TO</Text>
+            <View style={homeStyles.addressRow}>
+              <Ionicons name="home-outline" size={18} color={theme.primary} />
+              <Text style={homeStyles.addressTitle} numberOfLines={1}>{selectedAddress.tag}</Text>
+              <Ionicons name="chevron-down" size={14} color={theme.primary} />
+            </View>
+            <Text style={homeStyles.addressDetail} numberOfLines={1}>{selectedAddress.addressLine}, {selectedAddress.area}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={homeStyles.cart}
+            onPress={() => setIsCartOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Open grocery cart, ${cartCount} items`}
+          >
+            <Ionicons name="bag-outline" size={19} color={theme.primary} />
+            {cartCount > 0 && <Text style={homeStyles.cartBadge}>{cartCount}</Text>}
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={homeStyles.profile}
+            onPress={onOpenProfile}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+          >
+            <Ionicons name="person-outline" size={18} color={theme.card} />
+          </TouchableOpacity>
+        </View>
+        <View style={homeStyles.search}>
+          <Ionicons name="search" size={20} color={theme.primary} />
+          <TextInput
+            style={homeStyles.input}
+            placeholder="Search for food, chai, groceries…"
+            placeholderTextColor={theme.muted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            returnKeyType="search"
+            accessibilityLabel="Search food and daily essentials"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10}>
+              <Ionicons name="close-circle" size={18} color={theme.muted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+      <Modal visible={showAddresses} transparent animationType="fade" onRequestClose={() => setShowAddresses(false)}>
+        <View style={homeStyles.backdrop}>
+          <View style={homeStyles.addressSheet}>
+            <View style={homeStyles.topRow}>
+              <Text style={homeStyles.sheetTitle}>Delivering to</Text>
+              <TouchableOpacity onPress={() => setShowAddresses(false)} accessibilityRole="button" accessibilityLabel="Close address selection" hitSlop={10}>
+                <Ionicons name="close" size={22} color={theme.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              {addresses.map(address => (
+                <TouchableOpacity
+                  key={address.id}
+                  style={[homeStyles.addressOption, address.id === selectedAddress.id && homeStyles.addressSelected]}
+                  onPress={() => { setSelectedAddress(address); setShowAddresses(false); }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: address.id === selectedAddress.id }}
+                >
+                  <Text style={homeStyles.optionTitle}>{address.tag} · {address.area}</Text>
+                  <Text style={homeStyles.addressDetail}>{address.addressLine}, {address.city}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+}
+
+const homeStyles = StyleSheet.create({
+  header: { backgroundColor: theme.header, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.border, overflow: 'hidden' },
+  texture: { ...StyleSheet.absoluteFill, width: '100%', height: '100%', opacity: 0.09 },
+  topRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  location: { flex: 1, minWidth: 0 },
+  delivering: { fontSize: 9, letterSpacing: 1.2, color: theme.muted, fontWeight: '700', marginBottom: 5 },
+  addressRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  addressTitle: { flexShrink: 1, color: theme.text, fontSize: 18, fontWeight: '800' },
+  addressDetail: { fontSize: 10, lineHeight: 16, color: theme.muted, marginTop: 4 },
+  cart: { width: 36, height: 36, borderWidth: 1, borderColor: theme.gold, borderRadius: 18, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center' },
+  cartBadge: { position: 'absolute', top: -5, right: -4, minWidth: 16, borderRadius: 8, textAlign: 'center', paddingHorizontal: 3, backgroundColor: theme.primary, color: theme.card, fontSize: 9, fontWeight: '800' },
+  profile: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: theme.gold, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderWidth: 1, borderColor: '#C49B77', borderRadius: 12, backgroundColor: theme.card },
+  input: { flex: 1, minWidth: 0, fontSize: 13, paddingVertical: 12, color: theme.text },
+  backdrop: { flex: 1, backgroundColor: 'rgba(44,24,18,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
+  addressSheet: { width: '100%', maxWidth: 420, maxHeight: '80%', borderRadius: 18, padding: 20, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.gold },
+  sheetTitle: { flex: 1, fontFamily: theme.headingFont, fontSize: 23, fontWeight: '700', color: theme.text },
+  addressOption: { borderWidth: 1, borderColor: theme.border, borderRadius: 12, backgroundColor: theme.card, padding: 12, marginBottom: 10 },
+  addressSelected: { borderColor: theme.primary },
+  optionTitle: { fontWeight: '700', color: theme.text, fontSize: 14 },
 });
 

@@ -19,6 +19,8 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { authErrorMessage } from './src/services/authValidation';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { colors } from './src/theme/colors';
+import { homeTheme } from './src/theme/homeTheme';
+import type { SearchMenuItem } from './src/data/searchMenuData';
 
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ExploreScreen } from './src/screens/ExploreScreen';
@@ -44,7 +46,7 @@ export type RootStackParamList = {
   Login: undefined;
   Otp: { phoneNumber?: string };
   Main: undefined;
-  SearchMenu: undefined;
+  SearchMenu: { category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
   Payment: { amount?: number } | undefined;
   OrderTracking: { orderId?: string; totalAmount?: number } | undefined;
@@ -57,20 +59,37 @@ type Tab = 'home' | 'explore' | 'orders' | 'profile';
 interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
-  onOpenSearchMenu?: () => void;
+  onOpenSearchMenu?: (category?: SearchMenuItem['category']) => void;
 }
 
 function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProps) {
   const [currentTab, setCurrentTab] = useState<Tab>('home');
-  const { orders } = useApp();
+  const [cartBottomSpace, setCartBottomSpace] = useState(0);
+  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height);
+  const { orders, cartCount } = useApp();
+  const isHome = currentTab === 'home';
+  const activeTabColor = isHome ? homeTheme.primary : colors.primary;
+  const inactiveTabColor = isHome ? homeTheme.muted : colors.textMuted;
+
+  // The tab bar already sits outside the screen container. Reserve only the
+  // part of the cart's measured height and bottom offset that covers Home.
+  const homeBottomInset = cartCount > 0
+    ? Math.max(0, cartBottomSpace - tabBarHeight)
+    : 0;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, isHome && styles.homeContainer]} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
 
       {/* Screen Container */}
       <View style={styles.screenContainer}>
-        {currentTab === 'home' && <HomeScreen />}
+        {currentTab === 'home' && (
+          <HomeScreen
+            bottomContentInset={homeBottomInset}
+            onOpenMenu={category => onOpenSearchMenu ? onOpenSearchMenu(category) : setCurrentTab('explore')}
+            onOpenProfile={() => setCurrentTab('profile')}
+          />
+        )}
         {currentTab === 'explore' && <ExploreScreen />}
         {currentTab === 'orders' && <OrdersScreen />}
         {currentTab === 'profile' && (
@@ -82,7 +101,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       </View>
 
       {/* Floating Cart bar (shows when cart has items) */}
-      <CartFloatingBar />
+      <CartFloatingBar onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : 'default'} />
 
       {/* Slide-up Modals */}
       <CartModal />
@@ -90,7 +109,10 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       <OrderTrackingModal />
 
       {/* Bottom Tab Bar */}
-      <View style={styles.tabBar}>
+      <View
+        style={[styles.tabBar, isHome && styles.homeTabBar]}
+        onLayout={({ nativeEvent: { layout } }) => setTabBarHeight(layout.height)}
+      >
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => setCurrentTab('home')}
@@ -99,12 +121,14 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Ionicons
             name={currentTab === 'home' ? 'home' : 'home-outline'}
             size={22}
-            color={currentTab === 'home' ? colors.primary : colors.textMuted}
+            color={currentTab === 'home' ? activeTabColor : inactiveTabColor}
           />
           <Text
             style={[
               styles.tabLabel,
+              isHome && styles.homeTabLabel,
               currentTab === 'home' && styles.tabLabelActive,
+              currentTab === 'home' && styles.homeTabLabelActive,
             ]}
           >
             Home
@@ -125,11 +149,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Ionicons
             name={currentTab === 'explore' ? 'restaurant' : 'restaurant-outline'}
             size={22}
-            color={currentTab === 'explore' ? colors.primary : colors.textMuted}
+            color={currentTab === 'explore' ? activeTabColor : inactiveTabColor}
           />
           <Text
             style={[
               styles.tabLabel,
+              isHome && styles.homeTabLabel,
               currentTab === 'explore' && styles.tabLabelActive,
             ]}
           >
@@ -146,7 +171,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
             <Ionicons
               name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'}
               size={22}
-              color={currentTab === 'orders' ? colors.primary : colors.textMuted}
+              color={currentTab === 'orders' ? activeTabColor : inactiveTabColor}
             />
             {orders.length > 0 && (
               <View style={styles.ordersBadge}>
@@ -157,6 +182,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Text
             style={[
               styles.tabLabel,
+              isHome && styles.homeTabLabel,
               currentTab === 'orders' && styles.tabLabelActive,
             ]}
           >
@@ -172,11 +198,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Ionicons
             name={currentTab === 'profile' ? 'person' : 'person-outline'}
             size={22}
-            color={currentTab === 'profile' ? colors.primary : colors.textMuted}
+            color={currentTab === 'profile' ? activeTabColor : inactiveTabColor}
           />
           <Text
             style={[
               styles.tabLabel,
+              isHome && styles.homeTabLabel,
               currentTab === 'profile' && styles.tabLabelActive,
             ]}
           >
@@ -278,16 +305,17 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
               onOnboardingChange(false);
               navigation.replace('Onboarding');
             }}
-            onOpenSearchMenu={() => {
-              navigation.navigate('SearchMenu');
+            onOpenSearchMenu={(category = 'All') => {
+              navigation.navigate('SearchMenu', { category });
             }}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="SearchMenu">
-        {({ navigation }: NativeStackScreenProps<RootStackParamList, 'SearchMenu'>) => (
+        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchMenu'>) => (
           <SearchMenuScreen
+            initialCategory={route.params?.category}
             onBack={() => {
               navigation.goBack();
             }}
@@ -387,6 +415,20 @@ const styles = StyleSheet.create({
   },
   screenContainer: {
     flex: 1,
+  },
+  homeContainer: {
+    backgroundColor: homeTheme.background,
+  },
+  homeTabBar: {
+    backgroundColor: homeTheme.card,
+    borderTopColor: homeTheme.border,
+    shadowColor: homeTheme.text,
+  },
+  homeTabLabel: {
+    color: homeTheme.muted,
+  },
+  homeTabLabelActive: {
+    color: homeTheme.primary,
   },
   tabBar: {
     flexDirection: 'row',

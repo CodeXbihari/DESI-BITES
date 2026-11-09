@@ -1,14 +1,18 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { BANNERS } from '../data/mockData';
 import { useApp } from '../context/AppContext';
+import { homeTheme as theme } from '../theme/homeTheme';
+import { SEARCH_MENU_ITEMS } from '../data/searchMenuData';
 
-const { width } = Dimensions.get('window');
-const BANNER_WIDTH = width - 48;
+interface BannerSliderProps { variant?: 'default' | 'home' }
 
-export const BannerSlider: React.FC = () => {
+export const BannerSlider: React.FC<BannerSliderProps> = ({ variant = 'default' }) => {
   const { applyCoupon, setIsCartOpen } = useApp();
+  const [containerWidth, setContainerWidth] = useState(Dimensions.get('window').width);
+  const isHome = variant === 'home';
+  const bannerWidth = isHome ? Math.max(220, Math.min(320, containerWidth - 64)) : containerWidth - 48;
 
   const handleBannerPress = (code: string) => {
     applyCoupon(code);
@@ -16,37 +20,40 @@ export const BannerSlider: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} onLayout={({ nativeEvent: { layout } }) => setContainerWidth(layout.width)}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         decelerationRate="fast"
-        snapToInterval={BANNER_WIDTH + 12}
+        snapToInterval={bannerWidth + 12}
         snapToAlignment="start"
       >
-        {BANNERS.map((banner) => (
+        {BANNERS.map((banner, index) => (
           <TouchableOpacity
             key={banner.id}
             activeOpacity={0.9}
-            style={[styles.card, { backgroundColor: banner.bgGradient[0] }]}
+            style={[styles.card, { width: bannerWidth, backgroundColor: banner.bgGradient[0] }, isHome && homeStyles.card, isHome && index === 1 && homeStyles.oliveCard]}
             onPress={() => handleBannerPress(banner.code)}
+            accessibilityRole="button"
+            accessibilityLabel={`${banner.discount}. Apply ${banner.code} and open grocery cart`}
           >
+            {isHome && <Image source={{ uri: SEARCH_MENU_ITEMS[index === 0 ? 12 : index === 1 ? 0 : 7].image }} style={homeStyles.image} />}
             <View style={styles.content}>
               <View style={styles.badge}>
                 <Ionicons name="pricetag" size={12} color="#FFFFFF" />
-                <Text style={styles.badgeText}>{banner.discount}</Text>
+                <Text style={[styles.badgeText, isHome && homeStyles.badgeText]}>{banner.discount}</Text>
               </View>
-              <Text style={styles.title}>{banner.title}</Text>
-              <Text style={styles.subtitle}>{banner.subtitle}</Text>
+              <Text style={[styles.title, isHome && homeStyles.title]}>{banner.title}</Text>
+              <Text style={[styles.subtitle, isHome && homeStyles.subtitle]}>{banner.subtitle}</Text>
               <View style={styles.codeRow}>
                 <Text style={styles.codeLabel}>Use code:</Text>
-                <View style={styles.codeBadge}>
-                  <Text style={styles.codeText}>{banner.code}</Text>
+                <View style={[styles.codeBadge, isHome && homeStyles.codeBadge]}>
+                  <Text style={[styles.codeText, isHome && homeStyles.codeText]}>{banner.code}</Text>
                 </View>
               </View>
             </View>
-            <View style={styles.decorIconContainer}>
+            <View style={[styles.decorIconContainer, isHome && homeStyles.hideIcon]}>
               <Ionicons name={banner.icon as any} size={64} color="rgba(255,255,255,0.22)" />
             </View>
           </TouchableOpacity>
@@ -65,7 +72,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    width: BANNER_WIDTH,
     borderRadius: 16,
     padding: 16,
     position: 'relative',
@@ -135,5 +141,17 @@ const styles = StyleSheet.create({
     right: 8,
     bottom: -6,
   },
+});
+
+const homeStyles = StyleSheet.create({
+  card: { backgroundColor: theme.primary, borderWidth: 1, borderColor: theme.gold, padding: 17, minHeight: 150, shadowColor: theme.text, shadowOpacity: 0.1, elevation: 2 },
+  oliveCard: { backgroundColor: theme.olive },
+  image: { position: 'absolute', right: -20, bottom: -23, width: 120, height: 120, borderRadius: 60, opacity: 0.8, borderWidth: 3, borderColor: theme.gold },
+  badgeText: { color: theme.card, fontSize: 9, letterSpacing: 1 },
+  title: { fontFamily: theme.headingFont, color: theme.card, fontSize: 23, lineHeight: 27, maxWidth: '80%', marginVertical: 5 },
+  subtitle: { color: theme.background, fontSize: 11, lineHeight: 16, maxWidth: '75%', marginBottom: 12 },
+  codeBadge: { backgroundColor: 'transparent', borderWidth: 1, borderStyle: 'dashed', borderColor: theme.gold, paddingVertical: 4 },
+  codeText: { color: theme.card, fontSize: 10 },
+  hideIcon: { display: 'none' },
 });
 

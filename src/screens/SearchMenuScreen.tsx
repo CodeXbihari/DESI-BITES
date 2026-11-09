@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,23 +25,29 @@ import {
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-type MenuCategory = 'All' | 'Nashta' | 'Thali' | 'Mithai' | 'Chai';
+type MenuCategory = SearchMenuItem['category'];
 
 const CATEGORY_PILLS: MenuCategory[] = ['All', 'Nashta', 'Thali', 'Mithai', 'Chai'];
 
 interface SearchMenuScreenProps {
   onBack?: () => void;
   onViewCart?: () => void;
+  initialCategory?: MenuCategory;
 }
 
 export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
   onBack,
   onViewCart,
+  initialCategory = 'All',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeCategory, setActiveCategory] = useState<MenuCategory>('All');
+  const [activeCategory, setActiveCategory] = useState<MenuCategory>(initialCategory);
   const [cart, setCart] = useState<Record<string, number>>({});
   const searchInputRef = useRef<any>(null);
+
+  useEffect(() => {
+    setActiveCategory(initialCategory);
+  }, [initialCategory]);
 
   // Filter items by search + category
   const filteredItems = useMemo(() => {

@@ -1,90 +1,109 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Header } from '../components/Header';
 import { BannerSlider } from '../components/BannerSlider';
 import { CategoryPills } from '../components/CategoryPills';
 import { ProductCard } from '../components/ProductCard';
+import { HomeServiceCards } from '../components/HomeServiceCards';
+import { HomeFoodCategories } from '../components/HomeFoodCategories';
+import { HomeFoodDiscovery } from '../components/HomeFoodDiscovery';
 import { useApp } from '../context/AppContext';
-import { colors } from '../theme/colors';
+import { homeTheme as theme } from '../theme/homeTheme';
+import type { SearchMenuItem } from '../data/searchMenuData';
+import type { Product } from '../types';
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  bottomContentInset?: number;
+  onOpenMenu: (category: SearchMenuItem['category']) => void;
+  onOpenProfile: () => void;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({
+  bottomContentInset = 0,
+  onOpenMenu,
+  onOpenProfile,
+}) => {
   const { products, activeCategory, searchQuery } = useApp();
+  const listRef = useRef<FlatList<Product>>(null);
+  const [essentialsOffset, setEssentialsOffset] = useState(0);
+  const query = searchQuery.trim().toLowerCase();
 
   const filteredProducts = products.filter(product => {
-    const matchesCategory =
-      activeCategory === 'all' || product.category === activeCategory;
-    const matchesSearch =
-      searchQuery.trim() === '' ||
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (product.hindiName && product.hindiName.includes(searchQuery));
+    const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
+    const matchesSearch = !query || product.name.toLowerCase().includes(query)
+      || product.hindiName?.includes(query);
     return matchesCategory && matchesSearch;
   });
 
+  const openEssentials = () => {
+    listRef.current?.scrollToOffset({ offset: essentialsOffset, animated: true });
+  };
+
   return (
     <View style={styles.container}>
-      <Header />
+      <Header variant="home" onOpenProfile={onOpenProfile} />
       <FlatList
+        ref={listRef}
+        testID="home-product-list"
+        style={styles.list}
         data={filteredProducts}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomContentInset }]}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
-          <>
-            {searchQuery === '' && (
+          <View>
+            {!query && (
               <>
-                <BannerSlider />
-                {/* 12-Min Promise Ribbon */}
-                <View style={styles.promiseBanner}>
-                  <View style={styles.promiseItem}>
-                    <Ionicons name="flash" size={16} color={colors.primary} />
-                    <Text style={styles.promiseText}>12-15 Mins</Text>
-                  </View>
-                  <View style={styles.promiseDivider} />
-                  <View style={styles.promiseItem}>
-                    <Ionicons name="shield-checkmark" size={16} color={colors.secondary} />
-                    <Text style={styles.promiseText}>100% Shudh</Text>
-                  </View>
-                  <View style={styles.promiseDivider} />
-                  <View style={styles.promiseItem}>
-                    <Ionicons name="pricetags" size={16} color={colors.accent} />
-                    <Text style={styles.promiseText}>Best Price</Text>
-                  </View>
+                <Text style={styles.welcome}>What sounds <Text style={styles.welcomeAccent}>good today?</Text></Text>
+                <HomeServiceCards onOpenFood={() => onOpenMenu('All')} onOpenEssentials={openEssentials} />
+                <BannerSlider variant="home" />
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>What's on your mind?</Text>
+                  <TouchableOpacity onPress={() => onOpenMenu('All')} accessibilityRole="button" accessibilityLabel="Browse all food categories">
+                    <Text style={styles.sectionLink}>See all →</Text>
+                  </TouchableOpacity>
+                </View>
+                <HomeFoodCategories onOpenMenu={onOpenMenu} />
+                <View style={styles.divider} accessible={false}>
+                  <View style={styles.dividerLine} />
+                  <Ionicons name="leaf-outline" size={15} color={theme.gold} />
+                  <View style={styles.dividerLine} />
                 </View>
               </>
             )}
-
-            <CategoryPills />
-
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                {searchQuery
-                  ? `Results for "${searchQuery}"`
-                  : activeCategory === 'all'
-                  ? 'Desi Favorites & Essentials'
-                  : 'Items in category'}
-              </Text>
-              <Text style={styles.itemsCount}>
-                {filteredProducts.length} items
-              </Text>
+            <HomeFoodDiscovery searchQuery={searchQuery} onOpenMenu={onOpenMenu} />
+            <View onLayout={({ nativeEvent: { layout } }) => setEssentialsOffset(layout.y)}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{query ? 'Matching essentials' : 'Your daily essentials'}</Text>
+                <Text style={styles.itemsCount}>{filteredProducts.length} items</Text>
+              </View>
+              <CategoryPills variant="home" />
             </View>
-          </>
+          </View>
         }
         renderItem={({ item }) => (
           <View style={styles.cardWrapper}>
-            <ProductCard product={item} />
+            <ProductCard product={item} variant="home" />
           </View>
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color={colors.textLight} />
-            <Text style={styles.emptyText}>No items found</Text>
-            <Text style={styles.emptySubText}>
-              Try searching for something else like "atta", "paneer", or "ghee"
-            </Text>
+            <Ionicons name="search-outline" size={38} color={theme.muted} />
+            <Text style={styles.emptyText}>No matching essentials</Text>
+            <Text style={styles.emptySubText}>Try another search or choose a different grocery category.</Text>
           </View>
+        }
+        ListFooterComponent={
+          <Image
+            source={require('../../assets/images/login_footer_landscape.jpg')}
+            style={styles.footer}
+            resizeMode="cover"
+            accessible={false}
+          />
         }
       />
     </View>
@@ -92,80 +111,21 @@ export const HomeScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  listContent: {
-    paddingBottom: 110,
-  },
-  promiseBanner: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: colors.card,
-    marginHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    marginBottom: 8,
-  },
-  promiseItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  promiseText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  promiseDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: colors.border,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 10,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: colors.text,
-  },
-  itemsCount: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-  columnWrapper: {
-    paddingHorizontal: 16,
-    justifyContent: 'space-between',
-  },
-  cardWrapper: {
-    width: '48.5%',
-  },
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 12,
-  },
-  emptySubText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 4,
-  },
+  container: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center', backgroundColor: theme.background },
+  list: { flex: 1 },
+  listContent: { flexGrow: 1 },
+  welcome: { fontFamily: theme.headingFont, fontSize: 24, lineHeight: 31, fontWeight: '700', color: theme.text, marginHorizontal: 16, marginTop: 20, marginBottom: 14 },
+  welcomeAccent: { color: theme.primary },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 22, marginBottom: 14 },
+  sectionTitle: { flexShrink: 1, fontFamily: theme.headingFont, fontSize: 20, fontWeight: '700', color: theme.text },
+  sectionLink: { color: theme.primary, fontSize: 11, fontWeight: '700' },
+  itemsCount: { fontSize: 11, color: theme.muted },
+  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 24, marginBottom: 22 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: theme.border },
+  columnWrapper: { paddingHorizontal: 16, justifyContent: 'space-between' },
+  cardWrapper: { width: '48.5%', paddingTop: 8 },
+  emptyContainer: { alignItems: 'center', padding: 28 },
+  emptyText: { fontFamily: theme.headingFont, fontSize: 17, color: theme.text, fontWeight: '700', marginTop: 12 },
+  emptySubText: { color: theme.muted, fontSize: 12, textAlign: 'center', lineHeight: 18, marginTop: 6 },
+  footer: { width: '100%', height: 96 },
 });
-

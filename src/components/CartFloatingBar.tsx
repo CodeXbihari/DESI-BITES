@@ -3,30 +3,44 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
+import { homeTheme as theme } from '../theme/homeTheme';
 
-export const CartFloatingBar: React.FC = () => {
+interface CartFloatingBarProps {
+  onBottomSpaceChange?: (height: number) => void;
+  variant?: 'default' | 'home';
+}
+
+export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceChange, variant = 'default' }) => {
   const { cartCount, finalTotal, setIsCartOpen } = useApp();
+  const isHome = variant === 'home';
 
   if (cartCount === 0) return null;
 
   return (
-    <View style={styles.outerContainer}>
+    <View
+      style={styles.outerContainer}
+      onLayout={({ nativeEvent: { layout } }) => {
+        onBottomSpaceChange?.(layout.height + styles.outerContainer.bottom);
+      }}
+    >
       <TouchableOpacity
-        style={styles.container}
+        style={[styles.container, isHome && homeStyles.container]}
         activeOpacity={0.9}
         onPress={() => setIsCartOpen(true)}
+        accessibilityRole="button"
+        accessibilityLabel={`View grocery cart, ${cartCount} items, ₹${finalTotal}`}
       >
         <View style={styles.leftInfo}>
-          <View style={styles.countBadge}>
+          <View style={[styles.countBadge, isHome && homeStyles.countBadge]}>
             <Text style={styles.countText}>{cartCount}</Text>
           </View>
           <View>
             <Text style={styles.totalText}>₹{finalTotal}</Text>
-            <Text style={styles.extraText}>Plus taxes & delivery</Text>
+            <Text style={[styles.extraText, isHome && homeStyles.extraText]}>Plus taxes & delivery</Text>
           </View>
         </View>
 
-        <View style={styles.rightAction}>
+        <View style={[styles.rightAction, isHome && homeStyles.rightAction]}>
           <Text style={styles.viewCartText}>View Cart</Text>
           <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
         </View>
@@ -97,5 +111,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+});
+
+const homeStyles = StyleSheet.create({
+  container: { backgroundColor: theme.primary, borderWidth: 1, borderColor: theme.gold, shadowColor: theme.text, flexWrap: 'wrap', gap: 8 },
+  countBadge: { backgroundColor: theme.primaryDark },
+  extraText: { color: theme.background },
+  rightAction: { backgroundColor: theme.primaryDark, paddingHorizontal: 10 },
 });
 
