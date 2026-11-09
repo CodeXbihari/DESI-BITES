@@ -22,7 +22,7 @@ export const CartFloatingBar: React.FC = () => {
           </View>
           <View>
             <Text style={styles.totalText}>₹{finalTotal}</Text>
-            <Text style={styles.extraText}>Plus taxes & delivery</Text>
+            <Text style={styles.extraText}>Estimate · no payment collected</Text>
           </View>
         </View>
 

@@ -16,7 +16,7 @@ import { colors } from '../theme/colors';
 
 const { height } = Dimensions.get('window');
 
-export const CartModal: React.FC = () => {
+export const CartModal: React.FC<{ onCheckout: () => void }> = ({ onCheckout }) => {
   const {
     cart,
     isCartOpen,
@@ -29,8 +29,8 @@ export const CartModal: React.FC = () => {
     applyCoupon,
     removeCoupon,
     finalTotal,
-    setIsCheckoutOpen,
-    selectedAddress,
+    fulfillment,
+    deliveryAddressDraft,
   } = useApp();
 
   const [inputCoupon, setInputCoupon] = useState('');
@@ -48,7 +48,7 @@ export const CartModal: React.FC = () => {
 
   const handleProceedToCheckout = () => {
     setIsCartOpen(false);
-    setIsCheckoutOpen(true);
+    onCheckout();
   };
 
   return (
@@ -65,7 +65,7 @@ export const CartModal: React.FC = () => {
             <View>
               <Text style={styles.headerTitle}>My Desi Cart</Text>
               <Text style={styles.headerSubtitle}>
-                Delivering to {selectedAddress.tag} ({selectedAddress.area})
+                {fulfillment === 'pickup' ? 'Pickup' : deliveryAddressDraft.trim() ? 'Delivery address entered' : 'Enter delivery address at checkout'}
               </Text>
             </View>
             <TouchableOpacity
@@ -100,7 +100,7 @@ export const CartModal: React.FC = () => {
                 <View style={styles.freeDeliveryBanner}>
                   <Ionicons name="bicycle" size={18} color={colors.secondary} />
                   <Text style={styles.freeDeliveryText}>
-                    {cartSubtotal >= 499 || appliedCoupon === 'DESIEXPRESS'
+                    {fulfillment === 'pickup' ? 'Pickup — no delivery fee' : cartSubtotal >= 499 || appliedCoupon === 'DESIEXPRESS'
                       ? '🎉 Yay! Free delivery applied to your order'
                       : `Add ₹${499 - cartSubtotal} more for FREE delivery`}
                   </Text>
@@ -122,7 +122,7 @@ export const CartModal: React.FC = () => {
                           {item.product.weight}
                         </Text>
                         <Text style={styles.itemPrice}>
-                          ₹{item.product.price * item.quantity}
+                          ₹{((Math.round(item.product.price * 100) * item.quantity) / 100).toFixed(2)}
                         </Text>
                       </View>
 
@@ -226,12 +226,9 @@ export const CartModal: React.FC = () => {
                       {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
                     </Text>
                   </View>
-                  <View style={styles.billRow}>
-                    <Text style={styles.billLabel}>Handling & Packaging</Text>
-                    <Text style={styles.billValue}>FREE</Text>
-                  </View>
+
                   <View style={[styles.billRow, styles.totalRow]}>
-                    <Text style={styles.grandTotalLabel}>To Pay</Text>
+                    <Text style={styles.grandTotalLabel}>Estimate</Text>
                     <Text style={styles.grandTotalValue}>₹{finalTotal}</Text>
                   </View>
                 </View>
@@ -240,7 +237,7 @@ export const CartModal: React.FC = () => {
               {/* Bottom Checkout CTA */}
               <View style={styles.footer}>
                 <View>
-                  <Text style={styles.footerLabel}>Total Amount</Text>
+                  <Text style={styles.footerLabel}>Estimated total</Text>
                   <Text style={styles.footerTotal}>₹{finalTotal}</Text>
                 </View>
                 <TouchableOpacity
@@ -248,7 +245,7 @@ export const CartModal: React.FC = () => {
                   activeOpacity={0.8}
                   onPress={handleProceedToCheckout}
                 >
-                  <Text style={styles.checkoutBtnText}>Select Address & Pay</Text>
+                  <Text style={styles.checkoutBtnText}>Review Checkout</Text>
                   <Ionicons name="chevron-forward" size={18} color="#FFFFFF" />
                 </TouchableOpacity>
               </View>

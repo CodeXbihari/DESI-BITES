@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { Product, CartItem, Order, CategoryType, DeliveryAddress } from '../types';
+import { Product, CartProduct, CartItem, Order, CategoryType, DeliveryAddress, FulfillmentType } from '../types';
+import { addCartItem, setCartQuantity, calculateCartEstimate, normalizeCoupon } from '../services/cart';
 import { PRODUCTS, INITIAL_ADDRESSES } from '../data/mockData';
 
 interface AppContextType {
@@ -11,7 +12,7 @@ interface AppContextType {
   
   // Cart
   cart: CartItem[];
-  addToCart: (product: Product) => void;
+  addToCart: (product: CartProduct) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -27,6 +28,11 @@ interface AppContextType {
   // Favorites
   favorites: string[];
   toggleFavorite: (productId: string) => void;
+
+  fulfillment: FulfillmentType;
+  setFulfillment: (value: FulfillmentType) => void;
+  deliveryAddressDraft: string;
+  setDeliveryAddressDraft: (value: string) => void;
 
   // Delivery & Address
   addresses: DeliveryAddress[];
@@ -55,6 +61,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [fulfillment, setFulfillment] = useState<FulfillmentType>('delivery');
+  const [deliveryAddressDraft, setDeliveryAddressDraft] = useState('');
   const [favorites, setFavorites] = useState<string[]>([]);
   const [addresses] = useState<DeliveryAddress[]>(INITIAL_ADDRESSES);
   const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress>(INITIAL_ADDRESSES[0]);
@@ -67,36 +75,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
 
-  // Cart operations
-  const addToCart = (product: Product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.product.id === product.id);
-      if (existing) {
-        return prev.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-      return [...prev, { product, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (productId: string) => {
-    setCart(prev => prev.filter(item => item.product.id !== productId));
-  };
-
-  const updateQuantity = (productId: string, quantity: number) => {
-    if (quantity <= 0) {
-      removeFromCart(productId);
-      return;
-    }
-    setCart(prev =>
-      prev.map(item =>
-        item.product.id === productId ? { ...item, quantity } : item
-      )
-    );
-  };
+  // All menu and checkout controls update this same state.
+  const addToCart = (product: CartProduct) => setCart(prev => addCartItem(prev, product));
+  const removeFromCart = (productId: string) => setCart(prev => setCartQuantity(prev, productId, 0));
+  const updateQuantity = (productId: string, quantity: number) => setCart(prev => setCartQuantity(prev, productId, quantity));
 
   const clearCart = () => {
     setCart([]);
@@ -111,49 +93,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  // Calculations
-  const cartCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cart]);
-
-  const cartSubtotal = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  }, [cart]);
-
-  const deliveryFee = useMemo(() => {
-    if (cartSubtotal === 0) return 0;
-    if (appliedCoupon === 'DESIEXPRESS' || cartSubtotal >= 499) return 0;
-    return 35;
-  }, [cartSubtotal, appliedCoupon]);
-
-  const appliedDiscount = useMemo(() => {
-    if (!appliedCoupon) return 0;
-    if (appliedCoupon === 'FESTIVE40') {
-      return Math.round(cartSubtotal * 0.4);
-    }
-    if (appliedCoupon === 'SPICE20') {
-      return Math.round(cartSubtotal * 0.2);
-    }
-    return 0;
-  }, [cartSubtotal, appliedCoupon]);
+  const estimate = useMemo(() => calculateCartEstimate(cart, appliedCoupon, fulfillment), [cart, appliedCoupon, fulfillment]);
+  // Rupee values retained at the presentation boundary for existing components.
+  const cartCount = estimate.count;
+  const cartSubtotal = estimate.subtotalPaise / 100;
+  const deliveryFee = estimate.deliveryFeePaise / 100;
+  const appliedDiscount = estimate.discountPaise / 100;
+  const finalTotal = estimate.totalPaise / 100;
 
   const applyCoupon = (code: string): boolean => {
-    const upper = code.trim().toUpperCase();
-    if (upper === 'FESTIVE40' || upper === 'DESIEXPRESS' || upper === 'SPICE20') {
-      setAppliedCoupon(upper);
-      return true;
-    }
-    return false;
+    const coupon = normalizeCoupon(code);
+    if (!coupon) return false;
+    setAppliedCoupon(coupon);
+    return true;
   };
-
-  const removeCoupon = () => {
-    setAppliedCoupon(null);
-  };
-
-  const finalTotal = useMemo(() => {
-    const total = cartSubtotal - appliedDiscount + deliveryFee;
-    return Math.max(0, total);
-  }, [cartSubtotal, appliedDiscount, deliveryFee]);
+  const removeCoupon = () => setAppliedCoupon(null);
 
   const placeOrder = (paymentMethod: string): Order => {
     const newOrder: Order = {
@@ -197,6 +151,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         applyCoupon,
         removeCoupon,
         finalTotal,
+        fulfillment,
+        setFulfillment,
+        deliveryAddressDraft,
+        setDeliveryAddressDraft,
         favorites,
         toggleFavorite,
         addresses,

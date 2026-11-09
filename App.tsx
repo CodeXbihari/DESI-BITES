@@ -29,13 +29,9 @@ import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 import { SearchMenuScreen } from './src/screens/SearchMenuScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
-import { PaymentScreen } from './src/screens/PaymentScreen';
-import { OrderTrackingScreen } from './src/screens/OrderTrackingScreen';
 
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
-import { CheckoutModal } from './src/components/CheckoutModal';
-import { OrderTrackingModal } from './src/components/OrderTrackingModal';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -46,8 +42,6 @@ export type RootStackParamList = {
   Main: undefined;
   SearchMenu: undefined;
   Checkout: undefined;
-  Payment: { amount?: number } | undefined;
-  OrderTracking: { orderId?: string; totalAmount?: number } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,9 +52,10 @@ interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
   onOpenSearchMenu?: () => void;
+  onCheckout: () => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onCheckout }: MainAppProps) {
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const { orders } = useApp();
 
@@ -85,9 +80,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       <CartFloatingBar />
 
       {/* Slide-up Modals */}
-      <CartModal />
-      <CheckoutModal />
-      <OrderTrackingModal />
+      <CartModal onCheckout={onCheckout} />
 
       {/* Bottom Tab Bar */}
       <View style={styles.tabBar}>
@@ -266,6 +259,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
       <Stack.Screen name="Main">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
+            onCheckout={() => navigation.navigate('Checkout')}
             onLogout={() => {
               void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
             }}
@@ -304,38 +298,10 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
             onBack={() => {
               navigation.goBack();
             }}
-            onPaymentSuccess={() => {
-              navigation.navigate('Payment', { amount: 502 });
-            }}
           />
         )}
       </Stack.Screen>
 
-      <Stack.Screen name="Payment">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Payment'>) => (
-          <PaymentScreen
-            amount={route.params?.amount ?? 502}
-            onBack={() => {
-              navigation.goBack();
-            }}
-            onPaymentSuccess={() => {
-              navigation.navigate('OrderTracking', { orderId: '#DB-84920', totalAmount: route.params?.amount ?? 502 });
-            }}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="OrderTracking">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'OrderTracking'>) => (
-          <OrderTrackingScreen
-            orderId={route.params?.orderId ?? '#DB-84920'}
-            totalAmount={route.params?.totalAmount ?? 502}
-            onBackToHome={() => {
-              navigation.replace('Main');
-            }}
-          />
-        )}
-      </Stack.Screen>
       </Stack.Group>}
     </Stack.Navigator>
   );
