@@ -4,13 +4,22 @@ import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
 
-export const CartFloatingBar: React.FC = () => {
+interface CartFloatingBarProps {
+  onBottomSpaceChange?: (height: number) => void;
+}
+
+export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceChange }) => {
   const { cartCount, finalTotal, setIsCartOpen } = useApp();
 
   if (cartCount === 0) return null;
 
   return (
-    <View style={styles.outerContainer}>
+    <View
+      style={styles.outerContainer}
+      onLayout={({ nativeEvent: { layout } }) => {
+        onBottomSpaceChange?.(layout.height + styles.outerContainer.bottom);
+      }}
+    >
       <TouchableOpacity
         style={styles.container}
         activeOpacity={0.9}

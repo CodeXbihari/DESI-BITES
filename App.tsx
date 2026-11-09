@@ -62,7 +62,15 @@ interface MainAppProps {
 
 function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProps) {
   const [currentTab, setCurrentTab] = useState<Tab>('home');
-  const { orders } = useApp();
+  const [cartBottomSpace, setCartBottomSpace] = useState(0);
+  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height);
+  const { orders, cartCount } = useApp();
+
+  // The tab bar already sits outside the screen container. Reserve only the
+  // part of the cart's measured height and bottom offset that covers Home.
+  const homeBottomInset = cartCount > 0
+    ? Math.max(0, cartBottomSpace - tabBarHeight)
+    : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
@@ -70,7 +78,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
 
       {/* Screen Container */}
       <View style={styles.screenContainer}>
-        {currentTab === 'home' && <HomeScreen />}
+        {currentTab === 'home' && <HomeScreen bottomContentInset={homeBottomInset} />}
         {currentTab === 'explore' && <ExploreScreen />}
         {currentTab === 'orders' && <OrdersScreen />}
         {currentTab === 'profile' && (
@@ -82,7 +90,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       </View>
 
       {/* Floating Cart bar (shows when cart has items) */}
-      <CartFloatingBar />
+      <CartFloatingBar onBottomSpaceChange={setCartBottomSpace} />
 
       {/* Slide-up Modals */}
       <CartModal />
@@ -90,7 +98,10 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       <OrderTrackingModal />
 
       {/* Bottom Tab Bar */}
-      <View style={styles.tabBar}>
+      <View
+        style={styles.tabBar}
+        onLayout={({ nativeEvent: { layout } }) => setTabBarHeight(layout.height)}
+      >
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() => setCurrentTab('home')}

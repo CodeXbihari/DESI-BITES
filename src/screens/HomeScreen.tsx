@@ -8,7 +8,11 @@ import { ProductCard } from '../components/ProductCard';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
 
-export const HomeScreen: React.FC = () => {
+interface HomeScreenProps {
+  bottomContentInset?: number;
+}
+
+export const HomeScreen: React.FC<HomeScreenProps> = ({ bottomContentInset = 0 }) => {
   const { products, activeCategory, searchQuery } = useApp();
 
   const filteredProducts = products.filter(product => {
@@ -25,11 +29,12 @@ export const HomeScreen: React.FC = () => {
     <View style={styles.container}>
       <Header />
       <FlatList
+        style={styles.list}
         data={filteredProducts}
         keyExtractor={(item) => item.id}
         numColumns={2}
         columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: bottomContentInset }]}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <>
@@ -96,8 +101,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+  list: {
+    flex: 1,
+  },
   listContent: {
-    paddingBottom: 110,
+    flexGrow: 1,
   },
   promiseBanner: {
     flexDirection: 'row',
