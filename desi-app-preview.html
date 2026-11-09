@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>DESI BITES - Pixel-Accurate Login & Flow Preview</title>
-  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <title>DESI BITES - Live App Preview</title>
+  <script defer src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Mukta:wght@500;600;700;800&family=Yatra+One&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600;1,700&family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@600;700&display=swap" rel="stylesheet">
   <style>
@@ -1889,9 +1889,31 @@
     .tracking-home-btn:active { transform: translateY(2px); }
 
 
+
+    [hidden] { display: none !important; }
+    body { margin: 0; background: #2C1812; color: #FFF0D7; min-height: 100dvh; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .live-preview { box-sizing: border-box; width: min(100%, 420px); height: calc(100dvh - 24px); min-height: 440px; display: flex; flex-direction: column; gap: 10px; font-family: sans-serif; }
+    .live-preview-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: #FFF0D7; font-size: 13px; }
+    .live-preview-toolbar a, .live-preview-toolbar button, .live-preview-return { padding: 8px 10px; border: 1px solid #D6A45B; border-radius: 8px; background: #861C24; color: #FFF0D7; font: 600 12px sans-serif; text-decoration: none; cursor: pointer; }
+    .live-preview-note { margin: 0; color: #D4B8A5; font-size: 11px; line-height: 1.5; }
+    .live-preview-frame { flex: 1; width: 100%; min-height: 0; border: 1px solid #D6A45B; border-radius: 18px; background: #FFF0D7; }
+    .live-preview-return { margin-bottom: 16px; }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-3 select-none">
+
+  <main id="live-preview" class="live-preview">
+    <div class="live-preview-toolbar">
+      <strong>DESI BITES · Live app</strong>
+      <a id="live-app-link" href="http://localhost:8081" target="_blank" rel="noopener noreferrer">Open app &#8599;</a>
+      <button type="button" onclick="setPreviewMode('design')">Design mockup</button>
+    </div>
+    <p class="live-preview-note">Uses the same Expo app as your mobile preview. Keep Expo running on port 8081.</p>
+    <iframe id="live-app-frame" class="live-preview-frame" title="Latest DESI BITES app"></iframe>
+  </main>
+  <section id="design-preview" hidden>
+    <button type="button" class="live-preview-return" onclick="setPreviewMode('live')">Back to live app</button>
+
 
   <!-- Top Controller Bar with Screen Navigation -->
   <div class="max-w-[420px] w-full mb-3 flex items-center justify-between text-xs text-slate-400">
@@ -3301,7 +3323,20 @@ Email: help@desiexpress.in')">
 
   </div>
 
+  </section>
   <script>
+    function setPreviewMode(mode) {
+      document.getElementById('live-preview').hidden = mode !== 'live';
+      document.getElementById('design-preview').hidden = mode !== 'design';
+    }
+    const liveAppUrl = new URL('http://localhost:8081');
+    if (location.hostname) {
+      liveAppUrl.hostname = location.hostname;
+      liveAppUrl.protocol = location.protocol;
+    }
+    document.getElementById('live-app-link').href = liveAppUrl.href;
+    document.getElementById('live-app-frame').src = liveAppUrl.href;
+
     function showScreen(screen) {
       const screens = {
         onboarding: document.getElementById('screen-onboarding'),

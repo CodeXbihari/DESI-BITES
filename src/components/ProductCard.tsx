@@ -4,13 +4,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Product } from '../types';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
+import { homeTheme as theme } from '../theme/homeTheme';
 
 interface ProductCardProps {
   product: Product;
+  variant?: 'default' | 'home';
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' }) => {
   const { cart, addToCart, updateQuantity, favorites, toggleFavorite } = useApp();
+  const isHome = variant === 'home';
 
   const cartItem = cart.find(item => item.product.id === product.id);
   const quantity = cartItem?.quantity || 0;
@@ -21,9 +24,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   );
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isHome && homeStyles.card]}>
       {/* Image Container with Badges */}
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, isHome && homeStyles.imageContainer]}>
         <Image
           source={{ uri: product.image }}
           style={styles.image}
@@ -32,21 +35,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
         {/* Favorite Icon */}
         <TouchableOpacity
-          style={styles.favoriteBtn}
+          style={[styles.favoriteBtn, isHome && homeStyles.favoriteBtn]}
           onPress={() => toggleFavorite(product.id)}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel={`Favorite ${product.name}`}
+          accessibilityState={{ selected: isFav }}
         >
           <Ionicons
             name={isFav ? 'heart' : 'heart-outline'}
             size={18}
-            color={isFav ? colors.danger : colors.textMuted}
+            color={isHome ? theme.primary : isFav ? colors.danger : colors.textMuted}
           />
         </TouchableOpacity>
 
         {/* Bestseller / Discount Tags */}
         <View style={styles.topBadges}>
           {product.isBestseller && (
-            <View style={styles.bestsellerBadge}>
+            <View style={[styles.bestsellerBadge, isHome && homeStyles.bestsellerBadge]}>
               <Text style={styles.bestsellerText}>BESTSELLER</Text>
             </View>
           )}
@@ -60,7 +66,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Delivery Time Badge */}
         <View style={styles.timeBadge}>
           <Ionicons name="time" size={11} color={colors.text} />
-          <Text style={styles.timeText}>{product.deliveryMinutes} mins</Text>
+          <Text style={[styles.timeText, isHome && homeStyles.muted]}>{product.deliveryMinutes} mins</Text>
         </View>
       </View>
 
@@ -71,15 +77,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <View style={styles.vegIndicator}>
             <View style={styles.vegDot} />
           </View>
-          <Text style={styles.weightText}>{product.weight}</Text>
+          <Text style={[styles.weightText, isHome && homeStyles.muted]}>{product.weight}</Text>
         </View>
 
         {/* Title & Hindi Subtitle */}
-        <Text style={styles.title} numberOfLines={2}>
+        <Text style={[styles.title, isHome && homeStyles.title]} numberOfLines={2}>
           {product.name}
         </Text>
         {product.hindiName && (
-          <Text style={styles.hindiSubtitle} numberOfLines={1}>
+          <Text style={[styles.hindiSubtitle, isHome && homeStyles.muted]} numberOfLines={1}>
             {product.hindiName}
           </Text>
         )}
@@ -90,32 +96,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <Ionicons name="star" size={11} color="#FFFFFF" />
             <Text style={styles.ratingText}>{product.rating.toFixed(1)}</Text>
           </View>
-          <Text style={styles.ratingCount}>({product.ratingCount})</Text>
+          <Text style={[styles.ratingCount, isHome && homeStyles.muted]}>({product.ratingCount})</Text>
         </View>
 
         {/* Price & Add Action */}
-        <View style={styles.bottomRow}>
-          <View style={styles.priceContainer}>
-            <Text style={styles.price}>₹{product.price}</Text>
+        <View style={[styles.bottomRow, isHome && homeStyles.bottomRow]}>
+          <View style={[styles.priceContainer, isHome && homeStyles.priceContainer]}>
+            <Text style={[styles.price, isHome && homeStyles.price]}>₹{product.price}</Text>
             {product.originalPrice > product.price && (
-              <Text style={styles.originalPrice}>₹{product.originalPrice}</Text>
+              <Text style={[styles.originalPrice, isHome && homeStyles.muted]}>₹{product.originalPrice}</Text>
             )}
           </View>
 
           {quantity === 0 ? (
             <TouchableOpacity
-              style={styles.addButton}
+              style={[styles.addButton, isHome && homeStyles.addButton]}
               onPress={() => addToCart(product)}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={`Add ${product.name} to grocery cart`}
             >
-              <Text style={styles.addButtonText}>ADD</Text>
-              <Ionicons name="add" size={14} color={colors.primary} />
+              <Text style={[styles.addButtonText, isHome && homeStyles.addButtonText]}>ADD</Text>
+              <Ionicons name="add" size={14} color={isHome ? theme.card : colors.primary} />
             </TouchableOpacity>
           ) : (
-            <View style={styles.stepperContainer}>
+            <View style={[styles.stepperContainer, isHome && homeStyles.stepperContainer]}>
               <TouchableOpacity
                 style={styles.stepperBtn}
                 onPress={() => updateQuantity(product.id, quantity - 1)}
+                accessibilityRole="button"
+                accessibilityLabel={`Remove one ${product.name}`}
               >
                 <Ionicons name="remove" size={14} color="#FFFFFF" />
               </TouchableOpacity>
@@ -123,6 +133,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               <TouchableOpacity
                 style={styles.stepperBtn}
                 onPress={() => updateQuantity(product.id, quantity + 1)}
+                accessibilityRole="button"
+                accessibilityLabel={`Add one ${product.name}`}
               >
                 <Ionicons name="add" size={14} color="#FFFFFF" />
               </TouchableOpacity>
@@ -342,5 +354,20 @@ const styles = StyleSheet.create({
     minWidth: 16,
     textAlign: 'center',
   },
+});
+
+const homeStyles = StyleSheet.create({
+  card: { backgroundColor: theme.card, borderColor: theme.border, shadowColor: theme.text, borderRadius: 13 },
+  imageContainer: { height: 112, backgroundColor: theme.header },
+  favoriteBtn: { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, width: 28, height: 28, borderRadius: 14 },
+  bestsellerBadge: { backgroundColor: theme.primary },
+  title: { fontFamily: theme.headingFont, color: theme.text, fontSize: 13, lineHeight: 18, minHeight: 36 },
+  muted: { color: theme.muted },
+  price: { fontFamily: theme.headingFont, color: theme.text },
+  priceContainer: { flexWrap: 'wrap', flexShrink: 1 },
+  bottomRow: { flexWrap: 'wrap', rowGap: 8, columnGap: 4 },
+  addButton: { backgroundColor: theme.primary, borderColor: theme.primary, paddingHorizontal: 9, minHeight: 30 },
+  addButtonText: { color: theme.card, fontSize: 11 },
+  stepperContainer: { backgroundColor: theme.primary },
 });
 

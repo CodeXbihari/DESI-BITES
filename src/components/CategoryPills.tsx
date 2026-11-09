@@ -4,9 +4,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { CATEGORIES } from '../data/mockData';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
+import { homeTheme as theme } from '../theme/homeTheme';
 
-export const CategoryPills: React.FC = () => {
+interface CategoryPillsProps { variant?: 'default' | 'home' }
+
+export const CategoryPills: React.FC<CategoryPillsProps> = ({ variant = 'default' }) => {
   const { activeCategory, setActiveCategory } = useApp();
+  const isHome = variant === 'home';
 
   return (
     <View style={styles.container}>
@@ -24,17 +28,20 @@ export const CategoryPills: React.FC = () => {
               onPress={() => setActiveCategory(cat.id)}
               style={[
                 styles.pill,
+                isHome && homeStyles.pill,
                 isActive && styles.pillActive,
+                isHome && isActive && homeStyles.pillActive,
               ]}
             >
               <Ionicons
                 name={cat.icon as any}
                 size={16}
-                color={isActive ? '#FFFFFF' : colors.textMuted}
+                color={isActive ? (isHome ? theme.card : '#FFFFFF') : (isHome ? theme.muted : colors.textMuted)}
               />
               <Text
                 style={[
                   styles.pillText,
+                  isHome && homeStyles.pillText,
                   isActive && styles.pillTextActive,
                 ]}
               >
@@ -80,5 +87,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+});
+
+const homeStyles = StyleSheet.create({
+  pill: { backgroundColor: theme.card, borderColor: theme.border, paddingHorizontal: 12 },
+  pillActive: { backgroundColor: theme.primary, borderColor: theme.primary },
+  pillText: { color: theme.text, fontSize: 11 },
 });
 
