@@ -4,8 +4,11 @@ const menuQtys = {};
 const MENU_DISHES = {};
 let menuCatalog = [];
 let homeSections = { popular: [], recommended: [] };
-let activeMenuCat = 'All';
 let searchBackScreen = 'home';
+let searchCollection = null;
+let searchCategory = null;
+const previewOrders = [];
+let trackingQtys = null;
 async function loadPreviewData(path) {
   const response = await fetch(path);
   if (!response.ok) throw new Error('Menu could not be loaded. Please refresh.');
@@ -43,9 +46,6 @@ function renderRestaurantViews() {
     const item = menuCatalog.find(item => item.category === category);
     return item ? `<button onclick="openRestaurantMenu('${category}')"><img src="${item.image}" alt=""><span>${category}</span></button>` : '';
   }).join('');
-  const categories = ['All', ...new Set(menuCatalog.map(item => item.category))];
-  document.getElementById('dbp-menu-pills').innerHTML = categories.map(category => `<button class="${category === activeMenuCat ? 'selected' : ''}" onclick="openRestaurantMenu('${category}')">${category}</button>`).join('');
-  document.getElementById('dbp-menu-grid').innerHTML = menuCatalog.filter(item => activeMenuCat === 'All' || item.category === activeMenuCat).map(menuCard).join('');
   rowOffsets.forEach(([id, offset]) => { document.getElementById(id).scrollLeft = offset; });
   filterMenuItems();
   updateSearchCartBar();
@@ -53,21 +53,41 @@ function renderRestaurantViews() {
 function filterMenuItems() {
   const value = document.getElementById('dbp-search-input').value;
   const query = value.trim().toLowerCase();
-  const results = query ? menuCatalog.filter(item => item.name.toLowerCase().includes(query)) : [];
+  const results = query ? menuCatalog.filter(item => item.name.toLowerCase().includes(query)) : searchCategory ? menuCatalog.filter(item => item.category === searchCategory) : searchCollection ? homeSections[searchCollection].map(id => menuCatalog.find(item => item.id === id)).filter(Boolean) : [];
   const heading = document.getElementById('dbp-search-heading');
   heading.replaceChildren();
   if (query) { heading.append('Showing results for “'); const strong = document.createElement('strong'); strong.textContent = value.trim(); heading.append(strong, '”'); }
-  else heading.textContent = 'Search the Desi Bites menu';
+  else heading.textContent = searchCategory ? `Showing results for “${searchCategory}”` : searchCollection === 'popular' ? 'Popular Items' : searchCollection === 'recommended' ? 'Recommended for You' : 'Search the Desi Bites menu';
   document.getElementById('dbp-search-grid').innerHTML = results.map(menuCard).join('');
   document.getElementById('dbp-clear').hidden = !query;
   const empty = document.getElementById('dbp-search-empty');
   empty.hidden = results.length > 0;
   empty.textContent = query ? 'No matching dishes. Try another food name or clear your search.' : 'Type a food name to search across our full menu.';
 }
-function clearFoodSearch() { document.getElementById('dbp-search-input').value = ''; filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
-function openFoodSearch(query = '', from = 'home') { searchBackScreen = from; document.getElementById('dbp-search-input').value = query; showScreen('search'); filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
-function openRestaurantMenu(category = 'All') { activeMenuCat = category; showScreen('menu'); renderRestaurantViews(); }
+function clearFoodSearch() { searchCollection = null; searchCategory = null; document.getElementById('dbp-search-input').value = ''; filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
+function openFoodSearch(query = '', from = 'home', collection = null, category = null) { searchBackScreen = from; searchCollection = collection; searchCategory = category; document.getElementById('dbp-search-input').value = query; showScreen('search'); filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
+function openRestaurantMenu(category = 'All') { openFoodSearch('', 'home', null, category === 'All' ? null : category); }
 function openMenuWithCat(category) { openRestaurantMenu(category); }
+function renderOrderTabs() {
+  const content = previewOrders.length ? previewOrders.map(order => `<article class="dbp-order-card"><strong>${order.id}</strong><small>Ordered on ${order.date}</small>${Object.entries(order.items).map(([id, quantity]) => `<div>${quantity}× ${MENU_DISHES[id]?.name || 'Dish'}</div>`).join('')}<button onclick="reorderPreview('${order.id}')">Add to cart</button></article>`).join('') : '<p class="dbp-empty">No past orders yet. Placed orders will appear here.</p>';
+  document.getElementById('dbp-orders-list').innerHTML = previewOrders.length ? previewOrders.map(order => `<article class="dbp-order-card"><strong>${order.id}</strong><small>Ordered on ${order.date}</small>${Object.entries(order.items).map(([id, quantity]) => `<div>${quantity}× ${MENU_DISHES[id]?.name || 'Dish'}</div>`).join('')}<span>₹${order.total}</span></article>`).join('') : content;
+  document.getElementById('dbp-reorder-list').innerHTML = content;
+}
+function reorderPreview(orderId) {
+  const order = previewOrders.find(entry => entry.id === orderId);
+  if (!order) return;
+  const unavailable = [];
+  let added = 0;
+  Object.entries(order.items).forEach(([id, quantity]) => {
+    if (!MENU_DISHES[id]?.available) { unavailable.push(MENU_DISHES[id]?.name || id); return; }
+    menuQtys[id] = (menuQtys[id] || 0) + quantity;
+    added += quantity;
+  });
+  const notice = document.getElementById('dbp-reorder-notice');
+  notice.textContent = unavailable.length ? `Unavailable now: ${unavailable.join(', ')}.` : '';
+  renderRestaurantViews();
+  if (added) showScreen('checkout');
+}
 function updateSearchCartBar() {
   const count = Object.values(menuQtys).reduce((total, n) => total + n, 0);
   const subtotal = Object.entries(menuQtys).reduce((total, [id,n]) => total + (menuPrices[id] || 0) * n, 0);

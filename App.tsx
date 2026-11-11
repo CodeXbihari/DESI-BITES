@@ -23,14 +23,13 @@ import { homeTheme } from './src/theme/homeTheme';
 import type { SearchMenuItem } from './src/data/searchMenuData';
 
 import { HomeScreen } from './src/screens/HomeScreen';
-import { ExploreScreen } from './src/screens/ExploreScreen';
 import { OrdersScreen } from './src/screens/OrdersScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
 import { SearchResultsScreen } from './src/screens/SearchResultsScreen';
-import { SearchMenuScreen } from './src/screens/SearchMenuScreen';
+import { ReorderScreen } from './src/screens/ReorderScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
 import { PaymentScreen } from './src/screens/PaymentScreen';
 import { OrderTrackingScreen } from './src/screens/OrderTrackingScreen';
@@ -47,8 +46,7 @@ export type RootStackParamList = {
   Login: undefined;
   Otp: { phoneNumber?: string };
   Main: undefined;
-  SearchResults: { query?: string } | undefined;
-  SearchMenu: { category?: SearchMenuItem['category'] } | undefined;
+  SearchResults: { query?: string; collection?: 'popular' | 'recommended'; category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
   Payment: { amount?: number } | undefined;
   OrderTracking: { orderId?: string; totalAmount?: number } | undefined;
@@ -56,16 +54,15 @@ export type RootStackParamList = {
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type Tab = 'home' | 'explore' | 'orders' | 'profile';
+type Tab = 'home' | 'orders' | 'reorder' | 'profile';
 
 interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
-  onOpenSearchMenu?: (category?: SearchMenuItem['category']) => void;
-  onOpenSearch: (query: string) => void;
+  onOpenSearch: (query: string, collection?: 'popular' | 'recommended', category?: SearchMenuItem['category']) => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onOpenSearch }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
@@ -91,12 +88,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onOpenSearch 
           <HomeScreen
             bottomContentInset={homeBottomInset}
             onOpenSearch={onOpenSearch}
-            onOpenMenu={category => onOpenSearchMenu ? onOpenSearchMenu(category) : setCurrentTab('explore')}
+            onOpenMenu={category => onOpenSearch('', undefined, category)}
             onOpenProfile={() => setCurrentTab('profile')}
           />
         )}
-        {currentTab === 'explore' && <ExploreScreen />}
         {currentTab === 'orders' && <OrdersScreen />}
+        {currentTab === 'reorder' && <ReorderScreen />}
         {currentTab === 'profile' && (
           <ProfileScreen
             onReplayOnboarding={onReplayOnboarding}
@@ -138,47 +135,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onOpenSearch 
 
         <TouchableOpacity
           style={styles.tabItem}
-          onPress={() => {
-            if (onOpenSearchMenu) {
-              onOpenSearchMenu();
-            } else {
-              setCurrentTab('explore');
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={currentTab === 'explore' ? 'grid' : 'grid-outline'}
-            size={22}
-            color={currentTab === 'explore' ? activeTabColor : inactiveTabColor}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              isHome && styles.homeTabLabel,
-              currentTab === 'explore' && styles.tabLabelActive,
-            ]}
-          >
-            Menu
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
           onPress={() => setCurrentTab('orders')}
           activeOpacity={0.7}
         >
           <View style={styles.tabIconWrap}>
-            <Ionicons
-              name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'}
-              size={22}
-              color={currentTab === 'orders' ? activeTabColor : inactiveTabColor}
-            />
-            {orders.length > 0 && (
-              <View style={styles.ordersBadge}>
-                <Text style={styles.ordersBadgeText}>{orders.length}</Text>
-              </View>
-            )}
+            <Ionicons name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'} size={22} color={currentTab === 'orders' ? activeTabColor : inactiveTabColor} />
+            {orders.length > 0 && <View style={styles.ordersBadge}><Text style={styles.ordersBadgeText}>{orders.length}</Text></View>}
           </View>
           <Text
             style={[
@@ -188,6 +150,23 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onOpenSearch 
             ]}
           >
             Orders
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => setCurrentTab('reorder')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name={currentTab === 'reorder' ? 'repeat' : 'repeat-outline'} size={22} color={currentTab === 'reorder' ? activeTabColor : inactiveTabColor} />
+          <Text
+            style={[
+              styles.tabLabel,
+              isHome && styles.homeTabLabel,
+              currentTab === 'reorder' && styles.tabLabelActive,
+            ]}
+          >
+            Reorder
           </Text>
         </TouchableOpacity>
 
@@ -307,31 +286,14 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
               onOnboardingChange(false);
               navigation.replace('Onboarding');
             }}
-            onOpenSearch={query => navigation.navigate('SearchResults', { query })}
-            onOpenSearchMenu={(category = 'All') => {
-              navigation.navigate('SearchMenu', { category });
-            }}
+            onOpenSearch={(query, collection, category) => navigation.navigate('SearchResults', { query, collection, category })}
           />
         )}
       </Stack.Screen>
 
       <Stack.Screen name="SearchResults">
         {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchResults'>) => (
-          <SearchResultsScreen initialQuery={route.params?.query} onBack={() => navigation.goBack()} />
-        )}
-      </Stack.Screen>
-      <Stack.Screen name="SearchMenu">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchMenu'>) => (
-          <SearchMenuScreen
-            onSearch={query => navigation.navigate('SearchResults', { query })}
-            initialCategory={route.params?.category}
-            onBack={() => {
-              navigation.goBack();
-            }}
-            onViewCart={() => {
-              setIsCartOpen(true);
-            }}
-          />
+          <SearchResultsScreen initialQuery={route.params?.query} initialCollection={route.params?.collection} initialCategory={route.params?.category} onBack={() => navigation.goBack()} />
         )}
       </Stack.Screen>
 

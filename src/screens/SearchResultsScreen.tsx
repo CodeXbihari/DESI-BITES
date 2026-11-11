@@ -8,12 +8,21 @@ import { RestaurantFoodCard } from '../components/RestaurantFoodCard';
 import { useApp } from '../context/AppContext';
 import { searchMenu } from '../services/menuSearch';
 import { homeTheme as theme } from '../theme/homeTheme';
+import homeSections from '../data/homeSections.json';
 
-interface Props { initialQuery?: string; onBack: () => void }
-export function SearchResultsScreen({ initialQuery = '', onBack }: Props) {
+interface Props { initialQuery?: string; initialCollection?: 'popular' | 'recommended'; initialCategory?: string; onBack: () => void }
+export function SearchResultsScreen({ initialQuery = '', initialCollection, initialCategory, onBack }: Props) {
   const [query, setQuery] = useState(initialQuery);
+  const [collection, setCollection] = useState(initialCollection);
+  const [category, setCategory] = useState(initialCategory);
   const { cartCount, setIsCartOpen } = useApp();
-  const results = useMemo(() => searchMenu(SEARCH_MENU_ITEMS, query), [query]);
+  const results = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (normalized) return searchMenu(SEARCH_MENU_ITEMS, query);
+    if (category) return SEARCH_MENU_ITEMS.filter(item => item.category === category);
+    return collection ? homeSections[collection].map(id => SEARCH_MENU_ITEMS.find(item => item.id === id)).filter((item): item is typeof SEARCH_MENU_ITEMS[number] => !!item) : [];
+  }, [query, collection, category]);
+  const updateQuery = (value: string) => { setCollection(undefined); setCategory(undefined); setQuery(value); };
   return <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
     <StatusBar style="dark" />
     <View style={styles.content}>
@@ -24,12 +33,12 @@ export function SearchResultsScreen({ initialQuery = '', onBack }: Props) {
       </View>
       <View style={styles.search}>
         <Ionicons name="search-outline" size={25} color={theme.text} />
-        <TextInput style={styles.input} value={query} onChangeText={setQuery} placeholder="Search for food…" placeholderTextColor={theme.muted} autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="search" accessibilityLabel="Search the restaurant menu" />
-        {!!query && <TouchableOpacity onPress={() => setQuery('')} style={styles.icon} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close" size={25} color={theme.muted} /></TouchableOpacity>}
+        <TextInput style={styles.input} value={query} onChangeText={updateQuery} placeholder="Search for food…" placeholderTextColor={theme.muted} autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="search" accessibilityLabel="Search the restaurant menu" />
+        {!!query && <TouchableOpacity onPress={() => updateQuery('')} style={styles.icon} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close" size={25} color={theme.muted} /></TouchableOpacity>}
       </View>
       <View style={styles.resultHeading}>
-        <Text style={styles.heading}>{query.trim() ? <>Showing results for “<Text style={styles.query}>{query.trim()}</Text>”</> : 'Search the Desi Bites menu'}</Text>
-        {!!query.trim() && <TouchableOpacity onPress={() => setQuery('')} accessibilityRole="button" accessibilityLabel="Clear query"><Text style={styles.clear}>Clear</Text></TouchableOpacity>}
+        <Text style={styles.heading}>{query.trim() ? <>Showing results for “<Text style={styles.query}>{query.trim()}</Text>”</> : category ? `Showing results for “${category}”` : collection ? collection === 'popular' ? 'Popular Items' : 'Recommended for You' : 'Search the Desi Bites menu'}</Text>
+        {!!query.trim() && <TouchableOpacity onPress={() => updateQuery('')} accessibilityRole="button" accessibilityLabel="Clear query"><Text style={styles.clear}>Clear</Text></TouchableOpacity>}
       </View>
       <FlatList data={results} numColumns={2} keyExtractor={item => item.id} columnWrapperStyle={styles.row} contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" renderItem={({ item }) => <View style={styles.cell}><RestaurantFoodCard item={item} /></View>} ListEmptyComponent={<View style={styles.empty}><Ionicons name="search-outline" size={40} color={theme.muted} /><Text style={styles.emptyTitle}>{query.trim() ? 'No matching dishes' : 'What are you craving?'}</Text><Text style={styles.emptyText}>{query.trim() ? 'Try another food name or clear your search.' : 'Type a food name to find dishes across our full menu.'}</Text></View>} />
     </View>

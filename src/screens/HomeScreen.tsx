@@ -11,11 +11,11 @@ interface Props {
   bottomContentInset?: number;
   onOpenMenu: (category: SearchMenuItem['category']) => void;
   onOpenProfile: () => void;
-  onOpenSearch: (query: string) => void;
+  onOpenSearch: (query: string, collection?: 'popular' | 'recommended') => void;
 }
 export function HomeScreen({ bottomContentInset = 0, onOpenMenu, onOpenProfile, onOpenSearch }: Props) {
   const section = (title: string, icon: string, ids: string[], testID: string) => <View>
-    <View style={styles.headingRow}><Text style={styles.heading}>{icon} {title}</Text><TouchableOpacity onPress={() => onOpenMenu('All')} accessibilityRole="button" accessibilityLabel={`View all ${title}`}><Text style={styles.viewAll}>View All →</Text></TouchableOpacity></View>
+    <View style={styles.headingRow}><Text style={styles.heading}>{icon} {title}</Text><TouchableOpacity onPress={() => onOpenSearch('', testID === 'home-popular-row' ? 'popular' : 'recommended')} accessibilityRole="button" accessibilityLabel={`View all ${title}`}><Text style={styles.viewAll}>View All →</Text></TouchableOpacity></View>
     <ScrollView
       horizontal
       nestedScrollEnabled
