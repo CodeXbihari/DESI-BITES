@@ -14,12 +14,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useApp } from '../context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import {
   SEARCH_THEME,
   SEARCH_HEADER_IMAGE,
   SEARCH_FOOTER_LANDSCAPE,
   SEARCH_MENU_ITEMS,
+  MENU_CATEGORIES,
+  asCartProduct,
   SearchMenuItem,
 } from '../data/searchMenuData';
 
@@ -27,22 +30,25 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type MenuCategory = SearchMenuItem['category'];
 
-const CATEGORY_PILLS: MenuCategory[] = ['All', 'Nashta', 'Thali', 'Mithai', 'Chai'];
+const CATEGORY_PILLS: MenuCategory[] = MENU_CATEGORIES;
 
 interface SearchMenuScreenProps {
+  onSearch?: (query: string) => void;
   onBack?: () => void;
   onViewCart?: () => void;
   initialCategory?: MenuCategory;
 }
 
 export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
+  onSearch,
   onBack,
   onViewCart,
   initialCategory = 'All',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<MenuCategory>(initialCategory);
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const app = useApp();
+  const cart: Record<string, number> = Object.fromEntries(app.cart.map(entry => [entry.product.id, entry.quantity]));
   const searchInputRef = useRef<any>(null);
 
   useEffect(() => {
@@ -52,7 +58,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
   // Filter items by search + category
   const filteredItems = useMemo(() => {
     return SEARCH_MENU_ITEMS.filter((item) => {
-      const matchesCat = activeCategory === 'All' || item.category === activeCategory;
+      const matchesCat = !!searchQuery.trim() || activeCategory === 'All' || item.category === activeCategory;
       const matchesSearch =
         searchQuery.trim() === '' ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -75,20 +81,10 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
   }, [cart]);
 
   const addToCart = (id: string) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    const item = SEARCH_MENU_ITEMS.find(entry => entry.id === id);
+    if (item?.available) app.addToCart(asCartProduct(item));
   };
-
-  const removeFromCart = (id: string) => {
-    setCart((prev) => {
-      const qty = (prev[id] || 0) - 1;
-      if (qty <= 0) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      return { ...prev, [id]: qty };
-    });
-  };
+  const removeFromCart = (id: string) => app.updateQuantity(id, (cart[id] || 0) - 1);
 
   const renderMenuItem = ({ item }: { item: SearchMenuItem }) => {
     const qty = cart[item.id] || 0;
@@ -241,10 +237,11 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
           <TextInput
             ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Search litti, chai, thekua"
+            placeholder="Search for food…"
             placeholderTextColor="#A48978"
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onFocus={() => onSearch?.(searchQuery)}
+            onChangeText={query => onSearch ? onSearch(query) : setSearchQuery(query)}
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (

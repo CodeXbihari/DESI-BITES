@@ -1,131 +1,44 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Header } from '../components/Header';
-import { BannerSlider } from '../components/BannerSlider';
-import { CategoryPills } from '../components/CategoryPills';
-import { ProductCard } from '../components/ProductCard';
-import { HomeServiceCards } from '../components/HomeServiceCards';
 import { HomeFoodCategories } from '../components/HomeFoodCategories';
-import { HomeFoodDiscovery } from '../components/HomeFoodDiscovery';
-import { useApp } from '../context/AppContext';
+import { RestaurantFoodCard } from '../components/RestaurantFoodCard';
+import { SEARCH_MENU_ITEMS, type SearchMenuItem } from '../data/searchMenuData';
 import { homeTheme as theme } from '../theme/homeTheme';
-import type { SearchMenuItem } from '../data/searchMenuData';
-import type { Product } from '../types';
 
-interface HomeScreenProps {
+interface Props {
   bottomContentInset?: number;
   onOpenMenu: (category: SearchMenuItem['category']) => void;
   onOpenProfile: () => void;
+  onOpenSearch: (query: string) => void;
 }
+const popularIds = ['db-veg-pizza', 'db-veg-cheese-burger'];
+const recommendedIds = ['db-paneer-pizza', 'db-veg-pasta'];
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({
-  bottomContentInset = 0,
-  onOpenMenu,
-  onOpenProfile,
-}) => {
-  const { products, activeCategory, searchQuery } = useApp();
-  const listRef = useRef<FlatList<Product>>(null);
-  const [essentialsOffset, setEssentialsOffset] = useState(0);
-  const query = searchQuery.trim().toLowerCase();
-
-  const filteredProducts = products.filter(product => {
-    const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
-    const matchesSearch = !query || product.name.toLowerCase().includes(query)
-      || product.hindiName?.includes(query);
-    return matchesCategory && matchesSearch;
-  });
-
-  const openEssentials = () => {
-    listRef.current?.scrollToOffset({ offset: essentialsOffset, animated: true });
-  };
-
-  return (
-    <View style={styles.container}>
-      <Header variant="home" onOpenProfile={onOpenProfile} />
-      <FlatList
-        ref={listRef}
-        testID="home-product-list"
-        style={styles.list}
-        data={filteredProducts}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={[styles.listContent, { paddingBottom: bottomContentInset }]}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View>
-            {!query && (
-              <>
-                <Text style={styles.welcome}>What sounds <Text style={styles.welcomeAccent}>good today?</Text></Text>
-                <HomeServiceCards onOpenFood={() => onOpenMenu('All')} onOpenEssentials={openEssentials} />
-                <BannerSlider variant="home" />
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>What's on your mind?</Text>
-                  <TouchableOpacity onPress={() => onOpenMenu('All')} accessibilityRole="button" accessibilityLabel="Browse all food categories">
-                    <Text style={styles.sectionLink}>See all →</Text>
-                  </TouchableOpacity>
-                </View>
-                <HomeFoodCategories onOpenMenu={onOpenMenu} />
-                <View style={styles.divider} accessible={false}>
-                  <View style={styles.dividerLine} />
-                  <Ionicons name="leaf-outline" size={15} color={theme.gold} />
-                  <View style={styles.dividerLine} />
-                </View>
-              </>
-            )}
-            <HomeFoodDiscovery searchQuery={searchQuery} onOpenMenu={onOpenMenu} />
-            <View onLayout={({ nativeEvent: { layout } }) => setEssentialsOffset(layout.y)}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{query ? 'Matching essentials' : 'Your daily essentials'}</Text>
-                <Text style={styles.itemsCount}>{filteredProducts.length} items</Text>
-              </View>
-              <CategoryPills variant="home" />
-            </View>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.cardWrapper}>
-            <ProductCard product={item} variant="home" />
-          </View>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={38} color={theme.muted} />
-            <Text style={styles.emptyText}>No matching essentials</Text>
-            <Text style={styles.emptySubText}>Try another search or choose a different grocery category.</Text>
-          </View>
-        }
-        ListFooterComponent={
-          <Image
-            source={require('../../assets/images/login_footer_landscape.jpg')}
-            style={styles.footer}
-            resizeMode="cover"
-            accessible={false}
-          />
-        }
-      />
-    </View>
-  );
-};
-
+export function HomeScreen({ bottomContentInset = 0, onOpenMenu, onOpenProfile, onOpenSearch }: Props) {
+  const section = (title: string, icon: string, ids: string[]) => <View>
+    <View style={styles.headingRow}><Text style={styles.heading}>{icon} {title}</Text><TouchableOpacity onPress={() => onOpenMenu('All')} accessibilityRole="button" accessibilityLabel={`View all ${title}`}><Text style={styles.viewAll}>View All →</Text></TouchableOpacity></View>
+    <View style={styles.row}>{ids.map(id => { const item = SEARCH_MENU_ITEMS.find(entry => entry.id === id); return item ? <View key={id} style={styles.cell}><RestaurantFoodCard item={item} /></View> : null; })}</View>
+  </View>;
+  return <View style={styles.container}>
+    <ScrollView testID="home-content" style={styles.scroll} contentContainerStyle={{ paddingBottom: bottomContentInset + 12 }} showsVerticalScrollIndicator={false}>
+      <Header variant="home" onOpenProfile={onOpenProfile} onOpenSearch={onOpenSearch} />
+      <TouchableOpacity style={styles.banner} onPress={() => onOpenMenu('Pizza')} accessibilityRole="button" accessibilityLabel="Good Food Good Mood. Order pizza">
+        <Image source={require('../../assets/images/menu/pizza.jpg')} style={styles.bannerImage} />
+        <View style={styles.bannerCopy}><Text style={styles.bannerTitle}>Good Food</Text><Text style={styles.bannerAccent}>Good Mood!</Text><View style={styles.orderButton}><Text style={styles.orderText}>Order Now →</Text></View></View>
+        <View style={styles.dots}><View style={styles.activeDot} />{[1,2,3,4].map(i => <View key={i} style={styles.dot} />)}</View>
+      </TouchableOpacity>
+      <HomeFoodCategories onOpenMenu={onOpenMenu} />
+      {section('Popular Items', '🔥', popularIds)}
+      {section('Recommended for You', '⭐', recommendedIds)}
+    </ScrollView>
+  </View>;
+}
 const styles = StyleSheet.create({
-  container: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center', backgroundColor: theme.background },
-  list: { flex: 1 },
-  listContent: { flexGrow: 1 },
-  welcome: { fontFamily: theme.headingFont, fontSize: 24, lineHeight: 31, fontWeight: '700', color: theme.text, marginHorizontal: 16, marginTop: 20, marginBottom: 14 },
-  welcomeAccent: { color: theme.primary },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, paddingHorizontal: 16, marginTop: 22, marginBottom: 14 },
-  sectionTitle: { flexShrink: 1, fontFamily: theme.headingFont, fontSize: 20, fontWeight: '700', color: theme.text },
-  sectionLink: { color: theme.primary, fontSize: 11, fontWeight: '700' },
-  itemsCount: { fontSize: 11, color: theme.muted },
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginTop: 24, marginBottom: 22 },
-  dividerLine: { flex: 1, height: 1, backgroundColor: theme.border },
-  columnWrapper: { paddingHorizontal: 16, justifyContent: 'space-between' },
-  cardWrapper: { width: '48.5%', paddingTop: 8 },
-  emptyContainer: { alignItems: 'center', padding: 28 },
-  emptyText: { fontFamily: theme.headingFont, fontSize: 17, color: theme.text, fontWeight: '700', marginTop: 12 },
-  emptySubText: { color: theme.muted, fontSize: 12, textAlign: 'center', lineHeight: 18, marginTop: 6 },
-  footer: { width: '100%', height: 96 },
+  container: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center', backgroundColor: theme.background }, scroll: { flex: 1 },
+  banner: { marginHorizontal: 14, height: 166, borderRadius: 14, overflow: 'hidden', backgroundColor: '#351C0C' }, bannerImage: { width: '68%', height: '100%', position: 'absolute', right: 0 }, bannerCopy: { width: '55%', backgroundColor: 'rgba(53,28,12,0.75)', paddingLeft: 18, paddingTop: 19, height: '100%' },
+  bannerTitle: { fontFamily: Platform.OS === 'android' ? 'serif' : 'Georgia', color: '#fff', fontSize: 27, fontWeight: '700', fontStyle: 'italic' }, bannerAccent: { fontFamily: Platform.OS === 'android' ? 'serif' : 'Georgia', color: '#FFD02F', fontSize: 29, fontWeight: '700', fontStyle: 'italic' }, orderButton: { alignSelf: 'flex-start', marginTop: 14, paddingHorizontal: 13, paddingVertical: 7, borderRadius: 22, backgroundColor: '#FFD02F' }, orderText: { color: '#241800', fontSize: 13, fontWeight: '600' },
+  dots: { position: 'absolute', bottom: 7, left: '41%', flexDirection: 'row', alignItems: 'center', gap: 5 }, dot: { width: 5, height: 5, borderRadius: 3, borderWidth: 1, borderColor: '#fff' }, activeDot: { width: 17, height: 5, borderRadius: 4, backgroundColor: '#FFD02F' },
+  headingRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 14, marginTop: 18, marginBottom: 10, gap: 8 }, heading: { flexShrink: 1, color: '#15191E', fontSize: 20, fontWeight: '700' }, viewAll: { color: theme.primary, fontSize: 13, fontWeight: '600' },
+  row: { flexDirection: 'row', gap: 12, paddingHorizontal: 14 }, cell: { flex: 1, minWidth: 0 },
 });

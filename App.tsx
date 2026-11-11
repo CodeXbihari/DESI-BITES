@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,6 +29,7 @@ import { ProfileScreen } from './src/screens/ProfileScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
+import { SearchResultsScreen } from './src/screens/SearchResultsScreen';
 import { SearchMenuScreen } from './src/screens/SearchMenuScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
 import { PaymentScreen } from './src/screens/PaymentScreen';
@@ -46,6 +47,7 @@ export type RootStackParamList = {
   Login: undefined;
   Otp: { phoneNumber?: string };
   Main: undefined;
+  SearchResults: { query?: string } | undefined;
   SearchMenu: { category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
   Payment: { amount?: number } | undefined;
@@ -60,12 +62,14 @@ interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
   onOpenSearchMenu?: (category?: SearchMenuItem['category']) => void;
+  onOpenSearch: (query: string) => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu, onOpenSearch }: MainAppProps) {
+  const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
-  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height);
+  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height + insets.bottom);
   const { orders, cartCount } = useApp();
   const isHome = currentTab === 'home';
   const activeTabColor = isHome ? homeTheme.primary : colors.primary;
@@ -86,6 +90,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
         {currentTab === 'home' && (
           <HomeScreen
             bottomContentInset={homeBottomInset}
+            onOpenSearch={onOpenSearch}
             onOpenMenu={category => onOpenSearchMenu ? onOpenSearchMenu(category) : setCurrentTab('explore')}
             onOpenProfile={() => setCurrentTab('profile')}
           />
@@ -101,16 +106,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       </View>
 
       {/* Floating Cart bar (shows when cart has items) */}
-      <CartFloatingBar onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : 'default'} />
+      <CartFloatingBar bottomOffset={tabBarHeight + 4} onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : 'default'} />
 
-      {/* Slide-up Modals */}
-      <CartModal />
-      <CheckoutModal />
-      <OrderTrackingModal />
 
       {/* Bottom Tab Bar */}
       <View
-        style={[styles.tabBar, isHome && styles.homeTabBar]}
+        style={[styles.tabBar, isHome && styles.homeTabBar, { height: 56 + insets.bottom, paddingBottom: insets.bottom }]}
         onLayout={({ nativeEvent: { layout } }) => setTabBarHeight(layout.height)}
       >
         <TouchableOpacity
@@ -147,7 +148,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           activeOpacity={0.7}
         >
           <Ionicons
-            name={currentTab === 'explore' ? 'restaurant' : 'restaurant-outline'}
+            name={currentTab === 'explore' ? 'grid' : 'grid-outline'}
             size={22}
             color={currentTab === 'explore' ? activeTabColor : inactiveTabColor}
           />
@@ -238,6 +239,7 @@ function SplashScreen() {
 // ── ROOT STACK NAVIGATOR ──
 function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'Onboarding' | 'Login'; onOnboardingChange: (completed: boolean) => void }) {
   const { user, logout } = useAuth();
+  const { setIsCartOpen } = useApp();
   return (
     <Stack.Navigator
       initialRouteName={user ? 'Main' : initialRoute}
@@ -305,6 +307,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
               onOnboardingChange(false);
               navigation.replace('Onboarding');
             }}
+            onOpenSearch={query => navigation.navigate('SearchResults', { query })}
             onOpenSearchMenu={(category = 'All') => {
               navigation.navigate('SearchMenu', { category });
             }}
@@ -312,15 +315,21 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
         )}
       </Stack.Screen>
 
+      <Stack.Screen name="SearchResults">
+        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchResults'>) => (
+          <SearchResultsScreen initialQuery={route.params?.query} onBack={() => navigation.goBack()} />
+        )}
+      </Stack.Screen>
       <Stack.Screen name="SearchMenu">
         {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchMenu'>) => (
           <SearchMenuScreen
+            onSearch={query => navigation.navigate('SearchResults', { query })}
             initialCategory={route.params?.category}
             onBack={() => {
               navigation.goBack();
             }}
             onViewCart={() => {
-              navigation.navigate('Checkout');
+              setIsCartOpen(true);
             }}
           />
         )}
@@ -399,6 +408,9 @@ function AppContent() {
         <NavigationContainer>
           <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
         </NavigationContainer>
+        <CartModal />
+        <CheckoutModal />
+        <OrderTrackingModal />
       </AppProvider>
     </SafeAreaProvider>
   );

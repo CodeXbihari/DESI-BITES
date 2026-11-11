@@ -70,6 +70,8 @@ export const CartModal: React.FC = () => {
             </View>
             <TouchableOpacity
               style={styles.closeBtn}
+              accessibilityRole="button"
+              accessibilityLabel="Close cart"
               onPress={() => setIsCartOpen(false)}
             >
               <Ionicons name="close" size={20} color={colors.text} />

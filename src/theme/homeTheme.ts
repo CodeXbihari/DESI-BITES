@@ -1,17 +1,17 @@
 import { Platform } from 'react-native';
 import { LOGIN_THEME } from '../data/loginData';
 
-// Home uses the Login palette without changing the shared theme of other tabs.
+// Home and restaurant search share the approved cream and maroon palette.
 export const homeTheme = {
-  background: LOGIN_THEME.parchmentBg,
-  header: LOGIN_THEME.warmCream,
-  card: LOGIN_THEME.inputBg,
-  primary: LOGIN_THEME.deepMaroon,
+  background: '#FFF8F0',
+  header: '#FFF3E5',
+  card: '#FFFDFC',
+  primary: '#8B0912',
   primaryDark: LOGIN_THEME.buttonMaroonDark,
-  text: LOGIN_THEME.darkBrownText,
-  muted: '#8C6C58',
-  border: LOGIN_THEME.inputDivider,
+  text: '#231A17',
+  muted: '#785746',
+  border: '#F0D9CB',
   gold: LOGIN_THEME.decorativeGold,
   olive: '#4D5138',
-  headingFont: Platform.OS === 'ios' || Platform.OS === 'web' ? 'Georgia' : 'serif',
+  headingFont: Platform.OS === 'android' ? 'sans-serif' : 'Arial',
 };
