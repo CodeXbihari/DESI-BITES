@@ -136,21 +136,45 @@
 
     .ob-foot {
       padding: 14px 22px 20px;
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
       align-items: center;
-      justify-content: space-between;
-      gap: 16px;
       z-index: 20;
     }
 
-    .ob-dots { display: flex; align-items: center; gap: 7px; }
-    .ob-dots i {
+    .ob-prev {
+      grid-column: 1;
+      justify-self: start;
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #FFF1D8;
+      font: 700 14px 'Mukta', sans-serif;
+      cursor: pointer;
+    }
+    .ob-prev[aria-hidden="true"] { visibility: hidden; pointer-events: none; }
+
+    .ob-dots {
+      grid-column: 2;
+      justify-self: center;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .ob-dots button {
       width: 7px; height: 7px; border-radius: 999px; background: rgba(255, 241, 216, .35);
       transition: width .3s, background .3s; display: inline-block;
+      border: 0; padding: 0; cursor: pointer;
     }
-    .ob-dots i.on { width: 26px; background: #F9E2BE; }
+    .ob-dots button.on { width: 26px; background: #F9E2BE; }
 
     .ob-next {
+      grid-column: 3;
+      justify-self: end;
       background: #FFF1D8;
       color: #341C14;
       font-family: 'Mukta', sans-serif;
@@ -2012,12 +2036,16 @@
       </div>
 
       <div class="ob-foot">
+        <button class="ob-prev" id="ob-prev" type="button" aria-hidden="true" disabled aria-label="Previous onboarding screen">
+          <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+          <span>Previous</span>
+        </button>
         <div class="ob-dots" id="ob-dots">
-          <i class="on"></i>
-          <i></i>
-          <i></i>
+          <button class="on" type="button" aria-label="Go to onboarding screen 1" aria-current="step"></button>
+          <button type="button" aria-label="Go to onboarding screen 2"></button>
+          <button type="button" aria-label="Go to onboarding screen 3"></button>
         </div>
-        <button class="ob-next" id="ob-next">आगे बढ़ें</button>
+        <button class="ob-next" id="ob-next" type="button">आगे बढ़ें</button>
       </div>
     </div>
 
@@ -3412,7 +3440,8 @@ Email: help@desiexpress.in')">
     // ── Onboarding slider ──
     const obPager = document.getElementById('ob-pager');
     const obDotsContainer = document.getElementById('ob-dots');
-    const obDots = obDotsContainer ? obDotsContainer.querySelectorAll('i') : [];
+    const obDots = obDotsContainer ? obDotsContainer.querySelectorAll('button') : [];
+    const obPrevious = document.getElementById('ob-prev');
     const obNext = document.getElementById('ob-next');
     let obIndex = 0;
 
@@ -3422,11 +3451,40 @@ Email: help@desiexpress.in')">
         obDots.forEach((d, i) => {
           if (i === idx) d.classList.add('on');
           else d.classList.remove('on');
+          if (i === idx) d.setAttribute('aria-current', 'step');
+          else d.removeAttribute('aria-current');
         });
+      }
+      if (obPrevious) {
+        obPrevious.setAttribute('aria-hidden', String(idx === 0));
+        obPrevious.disabled = idx === 0;
       }
       if (obNext) {
         obNext.textContent = idx === 2 ? 'शुरू करें (Get Started)' : 'आगे बढ़ें';
       }
+    }
+
+    if (obPrevious && obPager) {
+      obPrevious.addEventListener('click', () => {
+        if (obIndex > 0) {
+          obIndex--;
+          setObSlide(obIndex);
+          obPager.scrollTo({ left: obIndex * obPager.clientWidth, behavior: 'smooth' });
+        }
+      });
+    }
+
+    if (obDots && obPager) {
+      obDots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          setObSlide(index);
+          obPager.scrollTo({ left: index * obPager.clientWidth, behavior: 'smooth' });
+        });
+      });
+      obPager.addEventListener('scroll', () => {
+        const index = Math.round(obPager.scrollLeft / obPager.clientWidth);
+        if (index >= 0 && index < obDots.length && index !== obIndex) setObSlide(index);
+      }, { passive: true });
     }
 
     if (obNext && obPager) {
