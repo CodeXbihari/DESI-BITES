@@ -29,13 +29,13 @@ export function RestaurantFoodCard({ item }: { item: SearchMenuItem }) {
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: theme.border, borderRadius: 16, backgroundColor: theme.card, overflow: 'hidden', shadowColor: '#783A24', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
+  card: { flex: 1, minWidth: 0, borderWidth: 1, borderColor: theme.border, borderRadius: 16, backgroundColor: theme.card, overflow: 'hidden', shadowColor: theme.text, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4, elevation: 2 },
   photo: { width: '100%', aspectRatio: 1.8 }, image: { width: '100%', height: '100%' },
   veg: { position: 'absolute', top: 7, right: 7, width: 19, height: 19, backgroundColor: '#fff', borderWidth: 2, borderColor: '#149B42', borderRadius: 3, alignItems: 'center', justifyContent: 'center' },
   dot: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#149B42' }, nonVeg: { borderColor: '#B72C2C' }, nonVegDot: { backgroundColor: '#B72C2C' },
-  body: { padding: 9 }, name: { color: '#171717', fontSize: 14, fontWeight: '600', minHeight: 36 },
-  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4, flexWrap: 'wrap' }, price: { fontSize: 18, color: '#15191E', fontWeight: '800' },
+  body: { padding: 9 }, name: { color: theme.text, fontSize: 14, fontWeight: '600', minHeight: 36 },
+  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 4, flexWrap: 'wrap' }, price: { fontSize: 18, color: theme.text, fontWeight: '800' },
   add: { backgroundColor: theme.primary, borderRadius: 24, paddingHorizontal: 15, minHeight: 36, justifyContent: 'center' },
-  buttonText: { color: '#fff', fontSize: 15, textAlign: 'center' }, stepper: { flexDirection: 'row', backgroundColor: theme.primary, borderRadius: 24, alignItems: 'center' },
-  step: { minWidth: 30, minHeight: 36, justifyContent: 'center' }, quantity: { color: '#fff', minWidth: 16, textAlign: 'center', fontSize: 14, fontWeight: '700' }, unavailable: { color: theme.muted, fontSize: 12 },
+  buttonText: { color: theme.card, fontSize: 15, textAlign: 'center' }, stepper: { flexDirection: 'row', backgroundColor: theme.primary, borderRadius: 24, alignItems: 'center' },
+  step: { minWidth: 30, minHeight: 36, justifyContent: 'center' }, quantity: { color: theme.card, minWidth: 16, textAlign: 'center', fontSize: 14, fontWeight: '700' }, unavailable: { color: theme.muted, fontSize: 12 },
 });

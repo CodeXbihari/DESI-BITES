@@ -1,16 +1,16 @@
 import { Platform } from 'react-native';
 import { LOGIN_THEME } from '../data/loginData';
 
-// Home and restaurant search share the approved cream and maroon palette.
+// Reuse Login's color tokens so Home and search stay in sync with it.
 export const homeTheme = {
-  background: '#FFF8F0',
-  header: '#FFF3E5',
-  card: '#FFFDFC',
-  primary: '#8B0912',
+  background: LOGIN_THEME.parchmentBg,
+  header: LOGIN_THEME.warmCream,
+  card: LOGIN_THEME.inputBg,
+  primary: LOGIN_THEME.deepMaroon,
   primaryDark: LOGIN_THEME.buttonMaroonDark,
-  text: '#231A17',
-  muted: '#785746',
-  border: '#F0D9CB',
+  text: LOGIN_THEME.darkBrownText,
+  muted: LOGIN_THEME.darkTerracotta,
+  border: LOGIN_THEME.inputDivider,
   gold: LOGIN_THEME.decorativeGold,
   olive: '#4D5138',
   headingFont: Platform.OS === 'android' ? 'sans-serif' : 'Arial',

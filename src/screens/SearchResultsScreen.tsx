@@ -23,7 +23,7 @@ export function SearchResultsScreen({ initialQuery = '', onBack }: Props) {
         <TouchableOpacity style={styles.icon} onPress={() => setIsCartOpen(true)} accessibilityRole="button" accessibilityLabel={`Open cart, ${cartCount} items`}><Ionicons name="cart-outline" size={29} color={theme.primary} />{cartCount > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{cartCount}</Text></View>}</TouchableOpacity>
       </View>
       <View style={styles.search}>
-        <Ionicons name="search-outline" size={25} color="#171717" />
+        <Ionicons name="search-outline" size={25} color={theme.text} />
         <TextInput style={styles.input} value={query} onChangeText={setQuery} placeholder="Search for food…" placeholderTextColor={theme.muted} autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="search" accessibilityLabel="Search the restaurant menu" />
         {!!query && <TouchableOpacity onPress={() => setQuery('')} style={styles.icon} accessibilityRole="button" accessibilityLabel="Clear search"><Ionicons name="close" size={25} color={theme.muted} /></TouchableOpacity>}
       </View>
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: theme.background }, content: { flex: 1, width: '100%', maxWidth: 720, alignSelf: 'center', paddingHorizontal: 14 },
   header: { flexDirection: 'row', alignItems: 'center', paddingVertical: 13 }, icon: { width: 42, height: 42, alignItems: 'center', justifyContent: 'center' },
   title: { flex: 1, textAlign: 'center', color: theme.primary, fontSize: 25, fontWeight: '700' }, badge: { position: 'absolute', right: 0, top: 0, backgroundColor: '#EE102A', borderRadius: 12, minWidth: 20, paddingHorizontal: 4, alignItems: 'center' }, badgeText: { color: '#fff', fontSize: 12, lineHeight: 20 },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 15, paddingRight: 5, borderRadius: 30, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, shadowColor: theme.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 5, elevation: 2 }, input: { flex: 1, minWidth: 0, paddingVertical: 14, fontSize: 17, color: '#171717' },
-  resultHeading: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20 }, heading: { flex: 1, color: '#674736', fontSize: 16, fontWeight: '500' }, query: { color: theme.primary, fontWeight: '700' }, clear: { color: theme.primary, fontSize: 16 },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 15, paddingRight: 5, borderRadius: 30, backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, shadowColor: theme.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 5, elevation: 2 }, input: { flex: 1, minWidth: 0, paddingVertical: 14, fontSize: 17, color: theme.text },
+  resultHeading: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 20 }, heading: { flex: 1, color: theme.text, fontSize: 16, fontWeight: '500' }, query: { color: theme.primary, fontWeight: '700' }, clear: { color: theme.primary, fontSize: 16 },
   row: { justifyContent: 'space-between', marginBottom: 14 }, cell: { width: '48.5%', flexGrow: 0, flexShrink: 1 }, list: { paddingBottom: 20 }, empty: { alignItems: 'center', paddingVertical: 65, paddingHorizontal: 20 }, emptyTitle: { color: theme.text, fontSize: 19, fontWeight: '600', marginTop: 14 }, emptyText: { color: theme.muted, fontSize: 14, textAlign: 'center', lineHeight: 21, marginTop: 8 },
 });

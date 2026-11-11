@@ -1,0 +1,18 @@
+{
+  "popular": [
+    "db-veg-pizza",
+    "db-veg-cheese-burger",
+    "db-paneer-pizza",
+    "db-veg-maggi",
+    "db-litti-2pc-chokha",
+    "db-french-fry-masala"
+  ],
+  "recommended": [
+    "db-paneer-tikka-pizza",
+    "db-paneer-pasta",
+    "db-paneer-cheese-burger",
+    "db-paneer-sandwich",
+    "db-paneer-roll",
+    "db-mango-lassi"
+  ]
+}

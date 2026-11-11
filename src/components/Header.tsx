@@ -198,7 +198,7 @@ function HomeHeader({ onOpenSearch }: Pick<HeaderProps, 'onOpenProfile' | 'onOpe
         </View>
         <Image source={require('../../assets/images/desi-logo.png')} style={{ width: '82%', height: 78, alignSelf: 'center', marginTop: -12, marginBottom: 10 }} resizeMode="contain" accessibilityLabel="Desi Bites Café" />
         <TouchableOpacity style={homeStyles.search} onPress={() => onOpenSearch?.(searchQuery)} accessibilityRole="button" accessibilityLabel="Search for food">
-          <Ionicons name="search-outline" size={23} color="#171717" /><Text style={homeStyles.input}>{searchQuery || 'Search for food…'}</Text>
+          <Ionicons name="search-outline" size={23} color={theme.text} /><Text style={homeStyles.input}>{searchQuery || 'Search for food…'}</Text>
         </TouchableOpacity>
       </View>
       <Modal visible={showAddresses} transparent animationType="fade" onRequestClose={() => setShowAddresses(false)}>
