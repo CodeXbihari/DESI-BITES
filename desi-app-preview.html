@@ -2157,10 +2157,10 @@ Email: help@desiexpress.in')">
     <!-- ── SCREEN 4: SWIGGY-STYLE DESI BITES HOME SCREEN ── -->
     <div id="screen-home" class="app-screen">
       <div class="dbp-scroll"><header class="dbp-home-header"><div class="dbp-top"><button class="dbp-location" style="border:0;background:none" onclick="promptAddress()">📍 Delivery location ⌄</button><button class="dbp-icon" onclick="showScreen('checkout')" aria-label="Open cart"><i class="fa-solid fa-cart-shopping"></i><span class="dbp-cart-count" hidden></span></button></div><img class="dbp-logo" src="assets/images/desi-logo.png" alt="Desi Bites Café"><button class="dbp-search-home" onclick="openFoodSearch()"><i class="fa-solid fa-magnifying-glass"></i> Search for food…</button></header>
-      <div class="dbp-banner" role="button" tabindex="0" onclick="openRestaurantMenu('Pizza')" onkeydown="if(event.key==='Enter')openRestaurantMenu('Pizza')"><img src="assets/images/menu/pizza.jpg" alt="Vegetarian pizza"><div class="dbp-banner-copy">Good Food<br><em>Good Mood!</em><span>Order Now →</span></div><div class="dbp-dots">━ ○ ○ ○ ○</div></div>
+      <div class="dbp-banner"><div class="dbp-banner-track" id="dbp-banner-track"></div><div class="dbp-dots" id="dbp-banner-dots" aria-label="Promotional slides"></div></div>
       <div class="dbp-categories" id="dbp-categories"></div>
-      <div class="dbp-section-heading"><h2>🔥 Popular Items</h2><button onclick="openFoodSearch('', 'home', 'popular')">View All →</button></div><div class="dbp-carousel" id="dbp-popular" role="region" aria-label="Popular Items, scroll horizontally" tabindex="0"></div>
-      <div class="dbp-section-heading"><h2>⭐ Recommended for You</h2><button onclick="openFoodSearch('', 'home', 'recommended')">View All →</button></div><div class="dbp-carousel" id="dbp-recommended" role="region" aria-label="Recommended dishes, scroll horizontally" tabindex="0"></div></div>
+      <div class="dbp-section-heading"><h2>🔥 Popular Items</h2><div><button class="dbp-scroll-next" onclick="scrollHomeRow('dbp-popular')" aria-label="Scroll Popular Items">›</button><button onclick="openFoodSearch('', 'home', 'popular')">View All →</button></div></div><div class="dbp-carousel" id="dbp-popular" role="region" aria-label="Popular Items, scroll horizontally" tabindex="0"></div>
+      <div class="dbp-section-heading"><h2>⭐ Recommended for You</h2><div><button class="dbp-scroll-next" onclick="scrollHomeRow('dbp-recommended')" aria-label="Scroll Recommended dishes">›</button><button onclick="openFoodSearch('', 'home', 'recommended')">View All →</button></div></div><div class="dbp-carousel" id="dbp-recommended" role="region" aria-label="Recommended dishes, scroll horizontally" tabindex="0"></div></div>
       <button class="dbp-cart-bar" id="dbp-home-cart" onclick="showScreen('checkout')" hidden></button>
       <nav class="dbp-nav"><button class="active" onclick="showScreen('home')"><i class="fa-solid fa-house"></i>Home</button><button onclick="showScreen('orders')"><i class="fa-solid fa-bag-shopping"></i>Orders</button><button onclick="showScreen('reorder')"><i class="fa-solid fa-repeat"></i>Reorder</button><button onclick="showScreen('profile')"><i class="fa-regular fa-user"></i>Profile</button></nav>
     </div>
@@ -2172,6 +2172,7 @@ Email: help@desiexpress.in')">
     </div>
     <div id="screen-orders" class="app-screen dbp-history"><header class="dbp-header"><span></span><h2>Your Orders</h2><span></span></header><div class="dbp-scroll" id="dbp-orders-list"></div><nav class="dbp-nav"><button onclick="showScreen('home')"><i class="fa-solid fa-house"></i>Home</button><button class="active" onclick="showScreen('orders')"><i class="fa-solid fa-bag-shopping"></i>Orders</button><button onclick="showScreen('reorder')"><i class="fa-solid fa-repeat"></i>Reorder</button><button onclick="showScreen('profile')"><i class="fa-regular fa-user"></i>Profile</button></nav></div>
     <div id="screen-reorder" class="app-screen dbp-history"><header class="dbp-header"><span></span><h2>Reorder</h2><span></span></header><p class="dbp-history-intro">Add dishes from a past order to your cart</p><p id="dbp-reorder-notice" class="dbp-history-notice" role="alert"></p><div class="dbp-scroll" id="dbp-reorder-list"></div><nav class="dbp-nav"><button onclick="showScreen('home')"><i class="fa-solid fa-house"></i>Home</button><button onclick="showScreen('orders')"><i class="fa-solid fa-bag-shopping"></i>Orders</button><button class="active" onclick="showScreen('reorder')"><i class="fa-solid fa-repeat"></i>Reorder</button><button onclick="showScreen('profile')"><i class="fa-regular fa-user"></i>Profile</button></nav></div>
+    <div id="dbp-address-modal" class="dbp-address-modal" hidden><div class="dbp-address-form"><h2>Add new address</h2><input id="dbp-address-line" placeholder="Street address"><input id="dbp-address-area" placeholder="Area / locality"><input id="dbp-address-city" placeholder="City"><input id="dbp-address-pincode" placeholder="PIN code" inputmode="numeric" maxlength="6"><p id="dbp-address-error" role="alert"></p><div class="dbp-address-actions"><button onclick="closeAddressForm()">Cancel</button><button onclick="savePreviewAddress()">Save address</button></div></div></div>
     <div id="screen-profile" class="app-screen"><header class="dbp-header"><button class="dbp-icon" onclick="showScreen('home')" aria-label="Back">←</button><h2>Profile</h2><span></span></header><div style="padding:20px;flex:1">Desi Bites Customer<br><br><button onclick="showScreen('onboarding')">Replay onboarding</button><br><br><button onclick="showScreen('login')">Sign out</button></div><nav class="dbp-nav"><button onclick="showScreen('home')"><i class="fa-solid fa-house"></i>Home</button><button onclick="showScreen('orders')"><i class="fa-solid fa-bag-shopping"></i>Orders</button><button onclick="showScreen('reorder')"><i class="fa-solid fa-repeat"></i>Reorder</button><button class="active" onclick="showScreen('profile')"><i class="fa-regular fa-user"></i>Profile</button></nav></div>
     <div id="screen-checkout" class="app-screen checkout-screen no-scrollbar">
       
@@ -2865,14 +2866,16 @@ Email: help@desiexpress.in')">
     }
 
     function promptAddress() {
-      const addrElem = document.getElementById('co-addr-text');
-      const current = addrElem ? addrElem.textContent : '123, Green Park, New Delhi – 110016';
-      const updated = prompt('Enter delivery address:', current);
-      if (updated && updated.trim()) {
-        if (addrElem) addrElem.textContent = updated.trim();
-        const trackAddr = document.querySelector('.tracking-summary-card .truncate');
-        if (trackAddr) trackAddr.textContent = updated.trim();
-      }
+      document.getElementById('dbp-address-modal').hidden = false;
+    }
+    function closeAddressForm() { document.getElementById('dbp-address-modal').hidden = true; ['line','area','city','pincode'].forEach(key=>document.getElementById(`dbp-address-${key}`).value=''); document.getElementById('dbp-address-error').textContent=''; }
+    function savePreviewAddress() {
+      const line=document.getElementById('dbp-address-line').value.trim(),area=document.getElementById('dbp-address-area').value.trim(),city=document.getElementById('dbp-address-city').value.trim(),pincode=document.getElementById('dbp-address-pincode').value.trim();
+      if(!line||!area||!city||!/^\d{6}$/.test(pincode)){document.getElementById('dbp-address-error').textContent='Enter the address details and a valid 6-digit PIN code.';return;}
+      const value=`${line}, ${area}, ${city} – ${pincode}`;
+      document.getElementById('co-addr-text').textContent=value;
+      const trackAddr=document.querySelector('.tracking-summary-card .truncate');if(trackAddr)trackAddr.textContent=value;
+      closeAddressForm();
     }
 
     function updateTrackingSummary(total) {

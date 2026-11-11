@@ -46,6 +46,9 @@ function renderRestaurantViews() {
     const item = menuCatalog.find(item => item.category === category);
     return item ? `<button onclick="openRestaurantMenu('${category}')"><img src="${item.image}" alt=""><span>${category}</span></button>` : '';
   }).join('');
+  const slides = ['db-veg-pizza','db-paneer-tikka-pizza','db-veg-cheese-burger','db-veg-pasta','db-litti-2pc-chokha'].map(id => menuCatalog.find(item => item.id === id)).filter(Boolean);
+  document.getElementById('dbp-banner-track').innerHTML = slides.map(item => `<div class="dbp-banner-slide"><img src="${item.image}" alt="${item.name}"><div class="dbp-banner-copy">Good Food<br><em>Good Mood!</em><button onclick="openRestaurantMenu('${item.category}')">Order Now →</button></div></div>`).join('');
+  document.getElementById('dbp-banner-dots').innerHTML = slides.map((_,i) => `<button class="${i===0?'active':''}" onclick="document.getElementById('dbp-banner-track').scrollTo({left:${i}*document.getElementById('dbp-banner-track').clientWidth,behavior:'smooth'})" aria-label="Show promotion ${i+1}"></button>`).join('');
   rowOffsets.forEach(([id, offset]) => { document.getElementById(id).scrollLeft = offset; });
   filterMenuItems();
   updateSearchCartBar();
@@ -64,7 +67,16 @@ function filterMenuItems() {
   empty.hidden = results.length > 0;
   empty.textContent = query ? 'No matching dishes. Try another food name or clear your search.' : 'Type a food name to search across our full menu.';
 }
+document.addEventListener('DOMContentLoaded', () => {
+  const track = document.getElementById('dbp-banner-track');
+  if (!track) return;
+  track.addEventListener('scroll', () => {
+    const index = Math.round(track.scrollLeft / Math.max(track.clientWidth, 1));
+    document.querySelectorAll('#dbp-banner-dots button').forEach((dot,i) => dot.classList.toggle('active',i===index));
+  }, { passive: true });
+});
 function clearFoodSearch() { searchCollection = null; searchCategory = null; document.getElementById('dbp-search-input').value = ''; filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
+function scrollHomeRow(id) { const row=document.getElementById(id); row.scrollBy({left:178,behavior:'smooth'}); }
 function openFoodSearch(query = '', from = 'home', collection = null, category = null) { searchBackScreen = from; searchCollection = collection; searchCategory = category; document.getElementById('dbp-search-input').value = query; showScreen('search'); filterMenuItems(); document.getElementById('dbp-search-input').focus(); }
 function openRestaurantMenu(category = 'All') { openFoodSearch('', 'home', null, category === 'All' ? null : category); }
 function openMenuWithCat(category) { openRestaurantMenu(category); }

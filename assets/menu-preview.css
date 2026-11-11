@@ -16,11 +16,34 @@
   display: flex;
   gap: 12px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
   padding: 0 14px 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--db-border) var(--db-bg);
 }
 .dbp-carousel > .dbp-card { flex: 0 0 166px; }
+.dbp-banner-track { display:flex; width:100%; height:100%; overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scrollbar-width:none; -webkit-overflow-scrolling:touch; touch-action:pan-x; overscroll-behavior-x:contain; }
+.dbp-banner-track::-webkit-scrollbar { display:none; }
+.dbp-banner-slide { position:relative; flex:0 0 100%; height:100%; padding:0; border:0; background:#351c0c; text-align:left; scroll-snap-align:start; }
+.dbp-banner-copy button { display:block; width:max-content; margin-top:14px; padding:7px 13px; border:0; border-radius:22px; background:#ffd02f; color:#241800; font:600 13px Arial; cursor:pointer; }
+.dbp-banner-slide>img { height:100%; width:68%; position:absolute; right:0; object-fit:cover; }
+.dbp-dots { position:absolute; bottom:8px; left:43%; display:flex; align-items:center; gap:6px; }
+.dbp-dots span { width:8px; height:8px; border:2px solid #fff; border-radius:50%; }
+.dbp-dots span.active { width:20px; background:#ffd02f; border-color:#ffd02f; border-radius:9px; }
+.dbp-dots button { width:10px; height:10px; padding:0; border:2px solid #fff; border-radius:50%; background:transparent; cursor:pointer; }
+.dbp-dots button.active { width:20px; border-color:#ffd02f; border-radius:10px; background:#ffd02f; }
+.dbp-address-modal { position:absolute; inset:32px 0 0; z-index:50; display:grid; place-items:center; padding:20px; background:#2c181899; }
+.dbp-address-modal[hidden] { display:none; }
+.dbp-address-form { width:100%; padding:20px; border:1px solid var(--db-border,#d4b8a5); border-radius:18px; background:var(--db-bg,#fff0d7); color:var(--db-text,#542719); }
+.dbp-address-form h2 { margin:0 0 14px; color:var(--db-primary,#861c24); font-size:20px; }
+.dbp-address-form input { box-sizing:border-box; width:100%; margin:5px 0; padding:11px; border:1px solid var(--db-border,#d4b8a5); border-radius:10px; background:var(--db-card,#fff9ef); color:var(--db-text,#542719); font-size:14px; }
+.dbp-address-form p { min-height:18px; margin:5px 0; color:var(--db-primary,#861c24); font-size:12px; }
+.dbp-address-actions { display:flex; gap:9px; }
+.dbp-address-actions button { flex:1; padding:11px; border:1px solid var(--db-primary,#861c24); border-radius:10px; background:var(--db-card,#fff9ef); color:var(--db-primary,#861c24); font-weight:700; }
+.dbp-address-actions button:last-child { background:var(--db-primary,#861c24); color:var(--db-card,#fff9ef); }
+.dbp-scroll-next { width:26px; height:26px; margin-right:8px; padding:0; border:1px solid var(--db-border,#d4b8a5); border-radius:50%; background:transparent; color:var(--db-primary,#861c24); font-size:21px!important; line-height:22px; cursor:pointer; }
 .dbp-history { display: flex; flex-direction: column; }
 .dbp-history .dbp-header { background: var(--db-header,#fce5c1); }
 .dbp-history-intro { margin: 0; padding: 0 16px 12px; color: var(--db-muted,#7b321f); font-size: 13px; }
