@@ -47,8 +47,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<MenuCategory>(initialCategory);
-  const app = useApp();
-  const cart: Record<string, number> = Object.fromEntries(app.cart.map(entry => [entry.product.id, entry.quantity]));
+  const { cart, addToCart, updateQuantity, cartCount: cartItemCount, finalTotal: cartTotal } = useApp();
   const searchInputRef = useRef<any>(null);
 
   useEffect(() => {
@@ -68,26 +67,8 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
     });
   }, [searchQuery, activeCategory]);
 
-  // Cart helpers
-  const cartItemCount = useMemo(() => {
-    return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
-  }, [cart]);
-
-  const cartTotal = useMemo(() => {
-    return Object.entries(cart).reduce((sum, [id, qty]) => {
-      const item = SEARCH_MENU_ITEMS.find((m) => m.id === id);
-      return sum + (item ? item.price * qty : 0);
-    }, 0);
-  }, [cart]);
-
-  const addToCart = (id: string) => {
-    const item = SEARCH_MENU_ITEMS.find(entry => entry.id === id);
-    if (item?.available) app.addToCart(asCartProduct(item));
-  };
-  const removeFromCart = (id: string) => app.updateQuantity(id, (cart[id] || 0) - 1);
-
   const renderMenuItem = ({ item }: { item: SearchMenuItem }) => {
-    const qty = cart[item.id] || 0;
+    const qty = cart.find(entry => entry.product.id === item.id)?.quantity ?? 0;
 
     return (
       <View style={styles.menuItemCard}>
@@ -137,7 +118,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
             <View style={styles.stepperContainer}>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => removeFromCart(item.id)}
+                onPress={() => updateQuantity(item.id, qty - 1)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.stepperBtnText}>−</Text>
@@ -145,7 +126,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
               <Text style={styles.stepperQty}>{qty}</Text>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => addToCart(item.id)}
+                onPress={() => { if (item.available) addToCart(asCartProduct(item)); }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.stepperBtnText}>+</Text>
@@ -154,7 +135,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
           ) : (
             <TouchableOpacity
               style={styles.addBtn}
-              onPress={() => addToCart(item.id)}
+              onPress={() => { if (item.available) addToCart(asCartProduct(item)); }}
               activeOpacity={0.7}
             >
               <Text style={styles.addBtnText}>ADD</Text>
@@ -333,7 +314,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
             <Text style={styles.cartBarItemCount}>
               {cartItemCount} {cartItemCount === 1 ? 'Item' : 'Items'}
             </Text>
-            <Text style={styles.cartBarTotal}>₹{cartTotal}</Text>
+            <Text style={styles.cartBarTotal}>₹{cartTotal} estimate</Text>
           </View>
           <View style={styles.cartBarRight}>
             <Text style={styles.cartBarBtnText}>View cart</Text>

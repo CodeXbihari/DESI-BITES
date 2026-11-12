@@ -41,7 +41,7 @@ export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceC
             <Text style={[styles.totalText, isProfile && profileStyles.totalText]}>
               ₹{isHome ? cartSubtotal : finalTotal}
             </Text>
-            <Text style={[styles.extraText, usesLoginPalette && homeStyles.extraText]}>Plus taxes & delivery</Text>
+            <Text style={[styles.extraText, usesLoginPalette && homeStyles.extraText]}>Estimate · no payment collected</Text>
           </View>
         </View>
 

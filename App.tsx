@@ -31,13 +31,9 @@ import { OtpScreen } from './src/screens/OtpScreen';
 import { SearchResultsScreen } from './src/screens/SearchResultsScreen';
 import { ReorderScreen } from './src/screens/ReorderScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
-import { PaymentScreen } from './src/screens/PaymentScreen';
-import { OrderTrackingScreen } from './src/screens/OrderTrackingScreen';
 
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
-import { CheckoutModal } from './src/components/CheckoutModal';
-import { OrderTrackingModal } from './src/components/OrderTrackingModal';
 import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
@@ -49,8 +45,6 @@ export type RootStackParamList = {
   Main: undefined;
   SearchResults: { query?: string; collection?: 'popular' | 'recommended'; category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
-  Payment: { amount?: number } | undefined;
-  OrderTracking: { orderId?: string; totalAmount?: number } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -61,9 +55,10 @@ interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
   onOpenSearch: (query: string, collection?: 'popular' | 'recommended', category?: SearchMenuItem['category']) => void;
+  onCheckout: () => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout }: MainAppProps) {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
@@ -108,6 +103,8 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
       {/* Floating Cart bar (shows when cart has items) */}
       <CartFloatingBar bottomOffset={tabBarHeight + 4} onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : isProfile ? 'profile' : 'default'} />
 
+      {/* Slide-up Modals */}
+      <CartModal onCheckout={onCheckout} />
 
       {/* Bottom Tab Bar */}
       <View
@@ -284,6 +281,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
       <Stack.Screen name="Main">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
+            onCheckout={() => navigation.navigate('Checkout')}
             onLogout={() => {
               void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
             }}
@@ -313,38 +311,10 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
             onBack={() => {
               navigation.goBack();
             }}
-            onPaymentSuccess={() => {
-              navigation.navigate('Payment', { amount: 502 });
-            }}
           />
         )}
       </Stack.Screen>
 
-      <Stack.Screen name="Payment">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Payment'>) => (
-          <PaymentScreen
-            amount={route.params?.amount ?? 502}
-            onBack={() => {
-              navigation.goBack();
-            }}
-            onPaymentSuccess={() => {
-              navigation.navigate('OrderTracking', { orderId: '#DB-84920', totalAmount: route.params?.amount ?? 502 });
-            }}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="OrderTracking">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'OrderTracking'>) => (
-          <OrderTrackingScreen
-            orderId={route.params?.orderId ?? '#DB-84920'}
-            totalAmount={route.params?.totalAmount ?? 502}
-            onBackToHome={() => {
-              navigation.replace('Main');
-            }}
-          />
-        )}
-      </Stack.Screen>
       </Stack.Group>}
     </Stack.Navigator>
   );
@@ -380,9 +350,6 @@ function AppContent() {
         <NavigationContainer>
           <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
         </NavigationContainer>
-        <CartModal />
-        <CheckoutModal />
-        <OrderTrackingModal />
       </AppProvider>
     </SafeAreaProvider>
   );

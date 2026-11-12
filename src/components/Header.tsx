@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfile, onOpenSearch }) => {
-  const { selectedAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+  const { fulfillment, deliveryAddressDraft, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
 
   if (variant === 'home') return <HomeHeader onOpenProfile={onOpenProfile} onOpenSearch={onOpenSearch} />;
 
@@ -23,16 +23,16 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfi
         <View style={styles.locationContainer}>
           <View style={styles.deliveryBadge}>
             <Ionicons name="flash" size={12} color="#FFFFFF" />
-            <Text style={styles.deliveryBadgeText}>12 MINS</Text>
+            <Text style={styles.deliveryBadgeText}>DESI BYTES</Text>
           </View>
           <TouchableOpacity style={styles.addressSelector} activeOpacity={0.7}>
             <Text style={styles.addressTitle} numberOfLines={1}>
-              {selectedAddress.tag} - {selectedAddress.area}
+              {fulfillment === 'pickup' ? 'Pickup' : 'Delivery'}
             </Text>
             <Ionicons name="chevron-down" size={16} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.addressSubtitle} numberOfLines={1}>
-            {selectedAddress.addressLine}
+            {fulfillment === 'pickup' ? 'No delivery address needed' : deliveryAddressDraft.trim() || 'Enter address at checkout'}
           </Text>
         </View>
 
