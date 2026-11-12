@@ -32,6 +32,7 @@ interface AppContextType {
   addresses: DeliveryAddress[];
   selectedAddress: DeliveryAddress;
   setSelectedAddress: (addr: DeliveryAddress) => void;
+  addAddress: (addr: DeliveryAddress) => void;
 
   // Orders
   orders: Order[];
@@ -56,8 +57,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [addresses] = useState<DeliveryAddress[]>(INITIAL_ADDRESSES);
+  const [addresses, setAddresses] = useState<DeliveryAddress[]>(INITIAL_ADDRESSES);
   const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress>(INITIAL_ADDRESSES[0]);
+  const addAddress = (address: DeliveryAddress) => { setAddresses(prev => [...prev, address]); setSelectedAddress(address); };
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -202,6 +204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addresses,
         selectedAddress,
         setSelectedAddress,
+        addAddress,
         orders,
         activeOrder,
         placeOrder,

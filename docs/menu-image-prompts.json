@@ -1,0 +1,554 @@
+{
+  "method": "Built-in image_gen tool",
+  "type": "Representative AI-generated food photography, not actual restaurant photographs",
+  "common_prompt": "Use case: photorealistic-natural. Restaurant menu photograph of the subject below. One serving on a warm dark wooden caf\u00e9 table, close-up three-quarter angle, appetizing natural light, realistic food textures, landscape crop. No text, logos, watermarks or collage.",
+  "subjects": [
+    {
+      "asset": "assets/images/menu/burger-combo.jpg",
+      "subject": "burger combo",
+      "used_for": [
+        "Veg Cheese Burger with Flavored Lassi",
+        "Paneer Cheese Burger with Flavored Lassi",
+        "Veg Mushroom Burger with Flavored Lassi",
+        "Veg Mushroom Cheese Burger with Flavored Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/burger-mushroom.jpg",
+      "subject": "burger mushroom",
+      "used_for": [
+        "Veg Mushroom Burger",
+        "Veg Mushroom Cheese Burger"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/burger-paneer.jpg",
+      "subject": "burger paneer",
+      "used_for": [
+        "Paneer Cheese Burger"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/burger.jpg",
+      "subject": "burger",
+      "used_for": [
+        "Veg Cheese Burger"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/cheese-balls.jpg",
+      "subject": "cheese balls",
+      "used_for": [
+        "Potato Cheese Ball (4PC)"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/chhola.jpg",
+      "subject": "chhola",
+      "used_for": [
+        "Chhola Bhatture"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/coffee.jpg",
+      "subject": "coffee",
+      "used_for": [
+        "Hot Coffee"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/cold-coffee.jpg",
+      "subject": "cold coffee",
+      "used_for": [
+        "Cold Coffee"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/corn-boiled.jpg",
+      "subject": "corn boiled",
+      "used_for": [
+        "Boiled Corn"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/corn.jpg",
+      "subject": "corn",
+      "used_for": [
+        "Crispy Corn"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/fries.jpg",
+      "subject": "fries",
+      "used_for": [
+        "French Fry Masala",
+        "French Fry Periperi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-apple.jpg",
+      "subject": "juice apple",
+      "used_for": [
+        "Apple Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-avocado.jpg",
+      "subject": "juice avocado",
+      "used_for": [
+        "Butter Fruit Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-chiku.jpg",
+      "subject": "juice chiku",
+      "used_for": [
+        "Chiku Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-grape.jpg",
+      "subject": "juice grape",
+      "used_for": [
+        "Pulpy Grape Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-green.jpg",
+      "subject": "juice green",
+      "used_for": [
+        "Fresh Lime Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-jaljira.jpg",
+      "subject": "juice jaljira",
+      "used_for": [
+        "Jaljira"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-litchi.jpg",
+      "subject": "juice litchi",
+      "used_for": [
+        "Litchi Juice (Seasonal)"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-mango.jpg",
+      "subject": "juice mango",
+      "used_for": [
+        "Mango Juice (Seasonal)"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-masal-soda.jpg",
+      "subject": "juice masal soda",
+      "used_for": [
+        "Masal Soda"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-mixed.jpg",
+      "subject": "juice mixed",
+      "used_for": [
+        "Mixed Fruit Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-mosambi.jpg",
+      "subject": "juice mosambi",
+      "used_for": [
+        "Mosambi Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-muskmelon.jpg",
+      "subject": "juice muskmelon",
+      "used_for": [
+        "Muskmelon Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-papaya.jpg",
+      "subject": "juice papaya",
+      "used_for": [
+        "Papaya Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-pineapple.jpg",
+      "subject": "juice pineapple",
+      "used_for": [
+        "Pineapple Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-pomegranate.jpg",
+      "subject": "juice pomegranate",
+      "used_for": [
+        "Pomegranate Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-red.jpg",
+      "subject": "juice red",
+      "used_for": [
+        "Watermelon Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-soda.jpg",
+      "subject": "juice soda",
+      "used_for": [
+        "Lemonate (Fresh Lemon Soda)"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice-wheat-grass.jpg",
+      "subject": "juice wheat grass",
+      "used_for": [
+        "Wheat grass Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/juice.jpg",
+      "subject": "juice",
+      "used_for": [
+        "Orange Juice (Seasonal)"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-chocolate.jpg",
+      "subject": "lassi chocolate",
+      "used_for": [
+        "Chocolate Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-dry-fruit.jpg",
+      "subject": "lassi dry fruit",
+      "used_for": [
+        "Dry Fruit Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-litchi.jpg",
+      "subject": "lassi litchi",
+      "used_for": [
+        "Litchi Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-mango.jpg",
+      "subject": "lassi mango",
+      "used_for": [
+        "Mango Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-orange.jpg",
+      "subject": "lassi orange",
+      "used_for": [
+        "Orange Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-pineapple.jpg",
+      "subject": "lassi pineapple",
+      "used_for": [
+        "Pineapple Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-rose.jpg",
+      "subject": "lassi rose",
+      "used_for": [
+        "Rose Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi-strawberry.jpg",
+      "subject": "lassi strawberry",
+      "used_for": [
+        "Strawberry Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/lassi.jpg",
+      "subject": "lassi",
+      "used_for": [
+        "Sweet Lassi",
+        "Salt Lassi",
+        "Butter Milk"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/litti.jpg",
+      "subject": "litti",
+      "used_for": [
+        "Litti (2pc) Chokha",
+        "Litti (2pc) Chokha with Lassi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/maggi-corn.jpg",
+      "subject": "maggi corn",
+      "used_for": [
+        "Sweet Corn Maggi",
+        "Sweet Corn Cheese Maggi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/maggi-mushroom.jpg",
+      "subject": "maggi mushroom",
+      "used_for": [
+        "Mushroom Maggi",
+        "Mushroom Cheese Maggi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/maggi-paneer.jpg",
+      "subject": "maggi paneer",
+      "used_for": [
+        "Paneer Maggi",
+        "Paneer Cheese Maggi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/maggi.jpg",
+      "subject": "maggi",
+      "used_for": [
+        "Veg Maggi",
+        "Veg Cheese Maggi"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/paratha.jpg",
+      "subject": "paratha",
+      "used_for": [
+        "Aaloo Paratha",
+        "Gobhi Paratha",
+        "Aaloo Methi Paratha",
+        "Sattu Paratha",
+        "Onion Paratha",
+        "Sweetcorn Paratha",
+        "Aaloo Paneer Paratha",
+        "Paneer Paratha",
+        "Cheese Paratha"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pasta-mushroom.jpg",
+      "subject": "pasta mushroom",
+      "used_for": [
+        "Mushroom Pasta"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pasta-paneer.jpg",
+      "subject": "pasta paneer",
+      "used_for": [
+        "Paneer Pasta"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pasta.jpg",
+      "subject": "pasta",
+      "used_for": [
+        "Veg Pasta",
+        "Sweet Corn Pasta",
+        "White Saus Pasta",
+        "White Cheese Saus Pasta"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pav-bhaji-paneer.jpg",
+      "subject": "pav bhaji paneer",
+      "used_for": [
+        "Paneer Pav Bhaji",
+        "Paneer Cheese Pav Bhaji"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pav-bhaji.jpg",
+      "subject": "pav bhaji",
+      "used_for": [
+        "Pav Bhaji"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pav.jpg",
+      "subject": "pav",
+      "used_for": [
+        "Extra Pav"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza-combo.jpg",
+      "subject": "pizza combo",
+      "used_for": [
+        "Veg Pizza + Juice",
+        "Mushroom Pizza + Juice",
+        "Paneer Pizza + Juice",
+        "Sweet Corn Pizza + Juice",
+        "Tomato Pizza + Juice",
+        "Paneer Tikka Pizza + Juice",
+        "Pineapple Pizza + Juice",
+        "Spicy Paneer Pizza + Juice",
+        "Cheese Corn Pizza + Juice",
+        "Desi Bites Special Pizza + Juice"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza-corn.jpg",
+      "subject": "pizza corn",
+      "used_for": [
+        "Sweet Corn Pizza",
+        "Cheese Corn Pizza"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza-mushroom.jpg",
+      "subject": "pizza mushroom",
+      "used_for": [
+        "Mushroom Pizza"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza-paneer.jpg",
+      "subject": "pizza paneer",
+      "used_for": [
+        "Paneer Pizza",
+        "Paneer Tikka Pizza",
+        "Spicy Paneer Pizza"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza-pineapple.jpg",
+      "subject": "pizza pineapple",
+      "used_for": [
+        "Pineapple Pizza"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/pizza.jpg",
+      "subject": "pizza",
+      "used_for": [
+        "Veg Pizza",
+        "Tomato Pizza",
+        "Desi Bites Special Pizza"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/potato-twister.jpg",
+      "subject": "potato twister",
+      "used_for": [
+        "Potato Twister"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/roll-mushroom.jpg",
+      "subject": "roll mushroom",
+      "used_for": [
+        "Mushroom Roll",
+        "Mushroom Cheese Roll"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/roll-veg.jpg",
+      "subject": "roll veg",
+      "used_for": [
+        "Veg Roll",
+        "Veg Sweet Corn Roll",
+        "Veg Cheese Roll"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/roll.jpg",
+      "subject": "roll",
+      "used_for": [
+        "Paneer Roll",
+        "Paneer Cheese Roll"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/sandwich-corn.jpg",
+      "subject": "sandwich corn",
+      "used_for": [
+        "Corn Sandwich",
+        "Corn Cheese Sandwich"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/sandwich-mushroom.jpg",
+      "subject": "sandwich mushroom",
+      "used_for": [
+        "Mushroom Sandwich",
+        "Mushroom Cheese Sandwich"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/sandwich-veg.jpg",
+      "subject": "sandwich veg",
+      "used_for": [
+        "Veg Sandwich",
+        "Veg Cheese Sandwich",
+        "Aaloo Sandwich",
+        "Aaloo Cheese Sandwich",
+        "Cheese Tomato Sandwich"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/sandwich.jpg",
+      "subject": "sandwich",
+      "used_for": [
+        "Paneer Sandwich",
+        "Paneer Mushroom Sandwich",
+        "Paneer Cheese Sandwich",
+        "Paneer Tikka Sandwich"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/spring-roll.jpg",
+      "subject": "spring roll",
+      "used_for": [
+        "Spring Roll"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/tea.jpg",
+      "subject": "tea",
+      "used_for": [
+        "Hot Tea"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/toast.jpg",
+      "subject": "toast",
+      "used_for": [
+        "Bread Toast",
+        "Bread Butter Jam"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/vada-pav.jpg",
+      "subject": "vada pav",
+      "used_for": [
+        "Vada Pav"
+      ]
+    },
+    {
+      "asset": "assets/images/menu/veg-lollipop.jpg",
+      "subject": "veg lollipop",
+      "used_for": [
+        "Veg Lolly Pop"
+      ]
+    }
+  ],
+  "logo": {
+    "asset": "assets/images/desi-logo.png",
+    "reference": "docs/desi-bites-menu-reference.jpeg",
+    "prompt": "Extract ONLY the DESI BITES CAF\u00c9 wordmark from the upper-left of the reference menu. Preserve distinctive lettering and spoon/fork design, spelling and layout. Remove every other image, menu text, prices, food and black background. Deep warm brown #562509 on a transparent background, tight horizontal crop."
+  }
+}

@@ -16,10 +16,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  OTP_THEME,
   OTP_HEADER_IMAGE,
   OTP_BOTTOM_IMAGE,
 } from '../data/otpData';
+import { LOGIN_THEME } from '../data/loginData';
 
 import { useAuth } from '../context/AuthContext';
 import { authErrorMessage, OTP_LENGTH } from '../services/authValidation';
@@ -35,7 +35,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   phoneNumber,
   onBack,
 }) => {
-  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt } = useAuth();
+  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt, isMockAuth } = useAuth();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -75,7 +75,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
     try {
       await sendOtp(requestedPhone ?? phoneNumber ?? '');
       setOtp(Array(OTP_LENGTH).fill(''));
-      setNotice('A new six-digit code has been sent.');
+      setNotice(isMockAuth ? 'Demo verification is ready.' : 'A new six-digit code has been sent.');
       inputRefs.current[0]?.focus();
     } catch (error) { setErrorMessage(authErrorMessage(error)); }
   };
@@ -193,7 +193,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
               <Ionicons
                 name="time-outline"
                 size={16}
-                color={OTP_THEME.darkMaroon}
+                color={LOGIN_THEME.darkBrownText}
                 style={styles.clockIcon}
               />
 
@@ -234,7 +234,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
                 {/* Inner Maroon Core with second gold rim */}
                 <View style={styles.verifyButtonInner}>
                   {isVerifying ? (
-                    <ActivityIndicator size="small" color={OTP_THEME.lightCream} />
+                    <ActivityIndicator size="small" color={LOGIN_THEME.parchmentBg} />
                   ) : (
                     <>
                       <Text style={styles.verifyButtonText}>Verify</Text>
@@ -249,8 +249,9 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             {/* Verification destination */}
             <View style={styles.demoHelperRow}>
               <Text style={styles.demoHelperText}>
-                Code sent to {requestedPhone ?? phoneNumber}
+                {isMockAuth ? 'Demo sign-in for ' : 'Code sent to '}{requestedPhone ?? phoneNumber}
               </Text>
+              {isMockAuth && <Text style={styles.demoHelperText}>Demo code: 123123</Text>}
             </View>
           </View>
 
@@ -271,15 +272,15 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDE0A8',
+    backgroundColor: LOGIN_THEME.parchmentBg,
   },
   scrollView: {
     flex: 1,
-    backgroundColor: '#FDE0A8',
+    backgroundColor: LOGIN_THEME.parchmentBg,
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#FDE0A8',
+    backgroundColor: LOGIN_THEME.parchmentBg,
     justifyContent: 'space-between',
   },
 
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     width: '100%',
     height: Math.min(SCREEN_HEIGHT * 0.28, 245),
-    backgroundColor: OTP_THEME.deepCrimson,
+    backgroundColor: LOGIN_THEME.heroBg,
     position: 'relative',
     overflow: 'hidden',
   },
@@ -306,12 +307,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     minHeight: 30,
     paddingVertical: 5,
-    backgroundColor: '#950B18',
+    backgroundColor: LOGIN_THEME.buttonMaroon,
     borderRadius: 4,
     justifyContent: 'center',
   },
   codeInstructionText: {
-    color: OTP_THEME.lightCream,
+    color: LOGIN_THEME.parchmentBg,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -377,34 +378,34 @@ const styles = StyleSheet.create({
     height: Math.min((SCREEN_WIDTH - 100) / 6, 52),
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: '#790B16',
-    backgroundColor: 'rgba(255, 240, 206, 0.7)',
+    borderColor: LOGIN_THEME.inputBorder,
+    backgroundColor: LOGIN_THEME.inputBg,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#71351E',
+    shadowColor: LOGIN_THEME.darkBrownText,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 3,
     elevation: 2,
   },
   otpBoxFocused: {
-    borderColor: '#D99A42',
-    backgroundColor: '#FFF8EC',
+    borderColor: LOGIN_THEME.decorativeGold,
+    backgroundColor: LOGIN_THEME.inputBg,
     borderWidth: 2,
-    shadowColor: '#D99A42',
+    shadowColor: LOGIN_THEME.decorativeGold,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.35,
     shadowRadius: 5,
     elevation: 4,
   },
   otpBoxFilled: {
-    borderColor: '#790B16',
-    backgroundColor: '#FFF3DB',
+    borderColor: LOGIN_THEME.inputBorder,
+    backgroundColor: LOGIN_THEME.inputBg,
   },
   otpInput: {
     fontSize: 26,
     fontWeight: '700',
-    color: '#790B16',
+    color: LOGIN_THEME.darkBrownText,
     textAlign: 'center',
     width: '100%',
     height: '100%',
@@ -424,21 +425,21 @@ const styles = StyleSheet.create({
   resendTimerText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#790B16',
+    color: LOGIN_THEME.darkBrownText,
     letterSpacing: 0.2,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
   resendDivider: {
     width: 1,
     height: 14,
-    backgroundColor: '#790B16',
+    backgroundColor: LOGIN_THEME.darkBrownText,
     marginHorizontal: 12,
     opacity: 0.6,
   },
   resendLinkText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#790B16',
+    color: LOGIN_THEME.darkBrownText,
     textDecorationLine: 'underline',
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
   verifyButtonWrapper: {
     width: '100%',
     maxWidth: 340,
-    shadowColor: '#6D0B13',
+    shadowColor: LOGIN_THEME.buttonMaroonDark,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
     borderColor: '#F2BD62',
   },
   verifyButtonInner: {
-    backgroundColor: '#880A17',
+    backgroundColor: LOGIN_THEME.buttonMaroon,
     borderRadius: 28,
     height: 52,
     flexDirection: 'row',
@@ -472,10 +473,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
     borderWidth: 1,
-    borderColor: '#6D0B13',
+    borderColor: LOGIN_THEME.buttonMaroonDark,
   },
   verifyButtonText: {
-    color: '#FFF0CE',
+    color: LOGIN_THEME.parchmentBg,
     fontSize: 18,
     fontWeight: '700',
     letterSpacing: 0.8,
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
   },
   demoHelperText: {
     fontSize: 12,
-    color: '#71351E',
+    color: LOGIN_THEME.darkBrownText,
     opacity: 0.7,
     fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif',
   },
@@ -501,7 +502,7 @@ const styles = StyleSheet.create({
   bottomIllustrationContainer: {
     width: '100%',
     height: Math.min(SCREEN_HEIGHT * 0.34, 250),
-    backgroundColor: '#FDE0A8',
+    backgroundColor: LOGIN_THEME.parchmentBg,
     overflow: 'hidden',
   },
   bottomArtworkImage: {

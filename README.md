@@ -24,6 +24,16 @@ cp .env.example .env
 npm run web
 ```
 
+### Expo Web and Android mock sign-in (development only)
+
+To preview the authenticated app without Firebase phone verification on Expo Web or Android, add this to the **project-root** `.env` file and restart Expo:
+
+```sh
+EXPO_PUBLIC_AUTH_MODE=mock
+```
+
+On Expo Web or Android, enter a valid Indian mobile number, select **Send OTP**, then use `123123` on the existing OTP screen. No SMS or Firebase authentication call is made in this mode. Mock auth is restricted to development builds and these two platforms; iOS and builds without this setting continue using Firebase. Do not use mock auth for production or as an access-control mechanism. Restart Metro with `npx expo start --dev-client --clear` after changing the setting so Android receives the current environment value.
+
 Native phone authentication requires a custom development build, not Expo Go:
 
 ```sh

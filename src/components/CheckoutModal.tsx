@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
+import { homeTheme } from '../theme/homeTheme';
 
 const { height } = Dimensions.get('window');
 
@@ -64,7 +65,7 @@ export const CheckoutModal: React.FC = () => {
               style={styles.closeBtn}
               onPress={() => setIsCheckoutOpen(false)}
             >
-              <Ionicons name="close" size={20} color={colors.text} />
+              <Ionicons name="close" size={20} color={homeTheme.text} />
             </TouchableOpacity>
           </View>
 
@@ -73,7 +74,7 @@ export const CheckoutModal: React.FC = () => {
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <View style={styles.titleWithIcon}>
-                  <Ionicons name="location" size={18} color={colors.primary} />
+                  <Ionicons name="location" size={18} color={homeTheme.primary} />
                   <Text style={styles.cardTitle}>Deliver to</Text>
                 </View>
               </View>
@@ -93,7 +94,7 @@ export const CheckoutModal: React.FC = () => {
                     <Ionicons
                       name={isSelected ? 'radio-button-on' : 'radio-button-off'}
                       size={20}
-                      color={isSelected ? colors.primary : colors.textMuted}
+                      color={isSelected ? homeTheme.primary : homeTheme.muted}
                     />
                     <View style={styles.addressInfo}>
                       <View style={styles.tagBadge}>
@@ -158,7 +159,7 @@ export const CheckoutModal: React.FC = () => {
                         <Ionicons
                           name={method.icon as any}
                           size={18}
-                          color={colors.primary}
+                          color={homeTheme.primary}
                         />
                       </View>
                       <Text style={styles.paymentName}>{method.name}</Text>
@@ -166,7 +167,7 @@ export const CheckoutModal: React.FC = () => {
                     <Ionicons
                       name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                       size={22}
-                      color={isSelected ? colors.secondary : colors.border}
+                      color={isSelected ? homeTheme.primary : homeTheme.border}
                     />
                   </TouchableOpacity>
                 );
@@ -186,7 +187,7 @@ export const CheckoutModal: React.FC = () => {
               onPress={handleConfirmOrder}
             >
               <Text style={styles.payBtnText}>Place Desi Order</Text>
-              <Ionicons name="checkmark-sharp" size={18} color="#FFFFFF" />
+              <Ionicons name="checkmark-sharp" size={18} color={homeTheme.background} />
             </TouchableOpacity>
           </View>
         </View>
@@ -202,7 +203,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.background,
+    backgroundColor: homeTheme.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: height * 0.85,
@@ -213,27 +214,27 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 18,
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.header,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: homeTheme.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.text,
+    color: homeTheme.text,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: homeTheme.muted,
     marginTop: 2,
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.background,
+    backgroundColor: homeTheme.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -241,12 +242,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   card: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     borderRadius: 14,
     padding: 14,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: homeTheme.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
+    color: homeTheme.text,
     marginBottom: 8,
   },
   addressItem: {
@@ -271,19 +272,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: homeTheme.border,
     marginBottom: 8,
     gap: 10,
   },
   addressItemSelected: {
-    borderColor: colors.primary,
-    backgroundColor: '#FFF7ED',
+    borderColor: homeTheme.primary,
+    backgroundColor: homeTheme.header,
   },
   addressInfo: {
     flex: 1,
   },
   tagBadge: {
-    backgroundColor: colors.text,
+    backgroundColor: homeTheme.primaryDark,
     alignSelf: 'flex-start',
     paddingHorizontal: 6,
     paddingVertical: 1,
@@ -291,18 +292,18 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   tagText: {
-    color: '#FFFFFF',
+    color: homeTheme.background,
     fontSize: 10,
     fontWeight: '700',
   },
   addrText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.text,
+    color: homeTheme.text,
   },
   addrSubText: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: homeTheme.muted,
     marginTop: 2,
   },
   chipsRow: {
@@ -315,20 +316,20 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
+    borderColor: homeTheme.border,
+    backgroundColor: homeTheme.background,
   },
   chipSelected: {
-    backgroundColor: '#FFF7ED',
-    borderColor: colors.primary,
+    backgroundColor: homeTheme.header,
+    borderColor: homeTheme.primary,
   },
   chipText: {
     fontSize: 12,
-    color: colors.text,
+    color: homeTheme.text,
     fontWeight: '500',
   },
   chipTextSelected: {
-    color: colors.primary,
+    color: homeTheme.primary,
     fontWeight: '700',
   },
   paymentItem: {
@@ -338,10 +339,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: homeTheme.border,
   },
   paymentItemSelected: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: homeTheme.header,
     borderRadius: 8,
   },
   paymentLeft: {
@@ -353,38 +354,38 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: homeTheme.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   paymentName: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.text,
+    color: homeTheme.text,
   },
   footer: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     paddingHorizontal: 18,
     paddingTop: 12,
     paddingBottom: 24,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: homeTheme.border,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   footerLabel: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: homeTheme.muted,
     fontWeight: '500',
   },
   footerAmount: {
     fontSize: 18,
     fontWeight: '900',
-    color: colors.text,
+    color: homeTheme.text,
   },
   payBtn: {
-    backgroundColor: colors.secondary,
+    backgroundColor: homeTheme.primary,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 22,
@@ -393,7 +394,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   payBtnText: {
-    color: '#FFFFFF',
+    color: homeTheme.background,
     fontSize: 14,
     fontWeight: '800',
   },
