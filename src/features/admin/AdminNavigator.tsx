@@ -1,6 +1,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { homeTheme as theme } from '../../theme/homeTheme';
+import { AdminPreviewIndicator } from './components/AdminUI';
 import { AdminCustomerDetailsScreen } from './screens/AdminCustomerDetailsScreen';
 import { AdminMenuItemFormScreen } from './screens/AdminMenuItemFormScreen';
 import { AdminOrderDetailsScreen } from './screens/AdminOrderDetailsScreen';
@@ -16,6 +17,7 @@ export function AdminNavigator({ onExit }: { onExit: () => void }) {
       headerTintColor: theme.primary,
       headerTitleStyle: { color: theme.text, fontWeight: '800' },
       headerShadowVisible: false,
+      headerRight: () => <AdminPreviewIndicator compact />,
       contentStyle: { backgroundColor: theme.background },
       animation: 'fade_from_bottom',
     }}>

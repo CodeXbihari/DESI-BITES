@@ -32,7 +32,7 @@ export function AdminProfileScreen({ onLogout }: { onLogout: () => void }) {
         <Text style={styles.logoutText}>Exit Admin preview</Text>
       </Pressable>
       <Text style={styles.note}>This local preview uses fictional data. It does not sign in an Admin or connect to Firebase.</Text>
-      <AdminConfirmModal visible={confirmLogout} title="Exit Admin preview?" message="You will return to the Customer app. Demo changes will be reset for the next preview session." confirmLabel="Exit preview" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
+      <AdminConfirmModal visible={confirmLogout} title="Exit Admin preview?" message="You will return to Developer Tools. Demo changes will be reset for the next preview session." confirmLabel="Exit preview" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
     </ScrollView>
   );
 }

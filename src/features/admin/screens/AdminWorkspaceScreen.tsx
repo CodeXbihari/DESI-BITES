@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { homeTheme as theme } from '../../../theme/homeTheme';
-import { AdminDemoLabel, AdminErrorNotice, AdminLoadingState, AdminToast } from '../components/AdminUI';
+import { AdminDemoLabel, AdminErrorNotice, AdminLoadingState, AdminPreviewIndicator, AdminToast } from '../components/AdminUI';
 import { AdminCategoriesScreen } from './AdminCategoriesScreen';
 import { AdminCustomersScreen } from './AdminCustomersScreen';
 import { AdminDashboardScreen } from './AdminDashboardScreen';
@@ -65,6 +65,10 @@ export function AdminWorkspaceScreen({ navigation, onExit }: Props) {
           onTools={() => setToolsVisible(true)}
           showTools={!isWide}
         />
+        <View style={styles.previewNotice}>
+          <AdminPreviewIndicator />
+          <Text style={styles.previewNoticeText}>Mock Admin session · no Firebase sign-in</Text>
+        </View>
         <View style={styles.body}>
           {isWide ? <SideNavigation page={page} onNavigate={openPage} /> : null}
           <View style={styles.main}>
@@ -160,6 +164,8 @@ const styles = StyleSheet.create({
   workspace: { flex: 1, backgroundColor: theme.background },
   header: { minHeight: 74, paddingHorizontal: 20, paddingVertical: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 14, borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.card },
   headerCompact: { minHeight: 124, paddingHorizontal: 12, paddingVertical: 8, flexWrap: 'wrap', rowGap: 2 },
+  previewNotice: { minHeight: 36, paddingHorizontal: 14, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8, borderBottomWidth: 1, borderBottomColor: theme.border, backgroundColor: theme.header },
+  previewNoticeText: { color: theme.muted, fontSize: 9, fontWeight: '700' },
   brandGroup: { flexDirection: 'row', alignItems: 'center', gap: 10, minWidth: 145 },
   logo: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center', backgroundColor: theme.primary },
   logoImage: { width: 40, height: 40, borderRadius: 13, backgroundColor: theme.primary },
