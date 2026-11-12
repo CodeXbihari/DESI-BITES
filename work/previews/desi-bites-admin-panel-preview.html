@@ -1,0 +1,365 @@
+<div id="desi-admin-preview" aria-label="Desi Bites Admin Panel preview">
+  <style>
+    #desi-admin-preview {
+      --db-bg: #fff0d7;
+      --db-header: #fce5c1;
+      --db-paper: #fff9ef;
+      --db-maroon: #861c24;
+      --db-maroon-dark: #6f1219;
+      --db-brown: #542719;
+      --db-terracotta: #7b321f;
+      --db-gold: #d6a45b;
+      --db-border: #d4b8a5;
+      --db-green: #477547;
+      color: var(--db-brown);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      width: 100%;
+      position: relative;
+    }
+    #desi-admin-preview * { box-sizing: border-box; }
+    #desi-admin-preview .db-frame {
+      min-height: 700px;
+      display: grid;
+      grid-template-columns: 218px minmax(0, 1fr);
+      background: var(--db-bg);
+      border: 1px solid var(--db-border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 18px 52px rgba(84,39,25,.14);
+    }
+    #desi-admin-preview .db-side {
+      background: var(--db-header);
+      border-right: 1px solid var(--db-border);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 14px 16px;
+      gap: 20px;
+    }
+    #desi-admin-preview .db-brand { display:flex; align-items:center; gap:10px; padding:4px 8px 14px; }
+    #desi-admin-preview .db-mark { width:38px;height:38px;display:grid;place-items:center;border-radius:13px;background:var(--db-maroon);color:var(--db-bg);font-family:Georgia,serif;font-weight:800;font-size:15px;box-shadow:0 4px 10px rgba(111,18,25,.2); }
+    #desi-admin-preview .db-brand-name { font-family:Georgia,serif;font-weight:800;font-size:17px;letter-spacing:.2px;line-height:1.05; }
+    #desi-admin-preview .db-brand-sub { color:var(--db-terracotta);font-size:10px;letter-spacing:1.4px;text-transform:uppercase;margin-top:4px; }
+    #desi-admin-preview .db-nav-label { color:var(--db-terracotta);font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;padding:0 10px;margin-bottom:-10px; }
+    #desi-admin-preview .db-nav { display:grid;gap:5px; }
+    #desi-admin-preview button { font:inherit; }
+    #desi-admin-preview .db-nav button,#desi-admin-preview .db-more-menu button { display:flex;align-items:center;gap:11px;min-height:42px;padding:0 11px;border:0;border-radius:11px;background:transparent;color:var(--db-terracotta);font-size:13px;font-weight:650;text-align:left; }
+    #desi-admin-preview .db-nav button:hover,#desi-admin-preview .db-more-menu button:hover { background:rgba(134,28,36,.08); }
+    #desi-admin-preview .db-nav button.is-active { background:var(--db-maroon);color:var(--db-paper);box-shadow:0 5px 13px rgba(111,18,25,.17); }
+    #desi-admin-preview .db-nav i,#desi-admin-preview .db-more-menu i { width:17px;height:17px;display:grid;place-items:center; }
+    #desi-admin-preview .db-side-spacer { flex:1; }
+    #desi-admin-preview .db-demo { display:flex;align-items:center;gap:9px;padding:12px;border:1px solid rgba(123,50,31,.18);border-radius:13px;background:rgba(255,249,239,.65);font-size:11px;line-height:1.4;color:var(--db-terracotta); }
+    #desi-admin-preview .db-demo-dot { width:8px;height:8px;border-radius:50%;background:var(--db-gold);box-shadow:0 0 0 4px rgba(214,164,91,.17);flex:0 0 auto; }
+    #desi-admin-preview .db-admin-mini { display:flex;align-items:center;gap:10px;padding:13px 5px 0;border-top:1px solid rgba(123,50,31,.2); }
+    #desi-admin-preview .db-avatar { width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--db-terracotta);color:var(--db-paper);font-size:12px;font-weight:800; }
+    #desi-admin-preview .db-admin-mini strong { display:block;font-size:12px; }
+    #desi-admin-preview .db-admin-mini small { color:var(--db-terracotta);font-size:10px; }
+    #desi-admin-preview .db-main { min-width:0;display:flex;flex-direction:column; }
+    #desi-admin-preview .db-topbar { min-height:64px;padding:12px 25px;display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,249,239,.66);border-bottom:1px solid rgba(212,184,165,.8); }
+    #desi-admin-preview .db-breadcrumb { display:flex;align-items:center;gap:8px;color:var(--db-terracotta);font-size:12px; }
+    #desi-admin-preview .db-breadcrumb strong { color:var(--db-brown);font-weight:750; }
+    #desi-admin-preview .db-top-actions { display:flex;align-items:center;gap:10px; }
+    #desi-admin-preview .db-status-pill { display:inline-flex;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#edf2e7;color:#395b36;font-size:11px;font-weight:750; }
+    #desi-admin-preview .db-status-pill i { width:8px;height:8px;border-radius:50%;background:#668852; }
+    #desi-admin-preview .db-icon-button { height:36px;width:36px;display:grid;place-items:center;border:1px solid var(--db-border);border-radius:11px;background:var(--db-paper);color:var(--db-terracotta); }
+    #desi-admin-preview .db-content { padding:25px;min-width:0; }
+    #desi-admin-preview .db-page { display:none; }
+    #desi-admin-preview .db-page.is-visible { display:block; }
+    #desi-admin-preview .db-heading-row { display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px; }
+    #desi-admin-preview h1 { color:var(--db-brown);font-size:25px;line-height:1.2;margin:0;font-weight:790;letter-spacing:-.5px; }
+    #desi-admin-preview .db-subtitle { color:var(--db-terracotta);font-size:12px;margin:6px 0 0; }
+    #desi-admin-preview .db-eyebrow { text-transform:uppercase;color:var(--db-terracotta);font-size:10px;font-weight:800;letter-spacing:1.1px;margin:0 0 7px; }
+    #desi-admin-preview .db-date { color:var(--db-terracotta);font-size:11px;font-weight:650;padding-top:4px;white-space:nowrap; }
+    #desi-admin-preview .db-button { display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 13px;border:1px solid var(--db-border);border-radius:10px;background:var(--db-paper);color:var(--db-brown);font-size:12px;font-weight:750;white-space:nowrap; }
+    #desi-admin-preview .db-button-primary { background:var(--db-maroon);border-color:var(--db-maroon);color:var(--db-paper);box-shadow:0 4px 10px rgba(111,18,25,.14); }
+    #desi-admin-preview .db-button-quiet { border-color:transparent;background:transparent;color:var(--db-maroon); }
+    #desi-admin-preview .db-stats { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px; }
+    #desi-admin-preview .db-stat { padding:15px 16px;border:1px solid rgba(212,184,165,.85);border-radius:15px;background:var(--db-paper);min-width:0; }
+    #desi-admin-preview .db-stat-top { display:flex;align-items:center;justify-content:space-between;gap:8px;color:var(--db-terracotta);font-size:11px;font-weight:650; }
+    #desi-admin-preview .db-stat-icon { display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:var(--db-header);color:var(--db-maroon); }
+    #desi-admin-preview .db-stat strong { display:block;margin-top:11px;color:var(--db-brown);font-size:23px;line-height:1.1;letter-spacing:-.4px; }
+    #desi-admin-preview .db-stat-note { color:var(--db-green);font-size:10px;font-weight:700;margin-top:5px; }
+    #desi-admin-preview .db-stat-note.neutral { color:var(--db-terracotta); }
+    #desi-admin-preview .db-quick-actions { display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-3px 0 14px; }
+    #desi-admin-preview .db-quick-actions > span { color:var(--db-terracotta);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-right:3px; }
+    #desi-admin-preview .db-grid-main { display:grid;grid-template-columns:minmax(0,1.6fr) minmax(245px,.9fr);gap:14px;margin-bottom:14px; }
+    #desi-admin-preview .db-panel { border:1px solid rgba(212,184,165,.9);border-radius:16px;background:var(--db-paper);padding:17px;min-width:0; }
+    #desi-admin-preview .db-panel-head { display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px; }
+    #desi-admin-preview h2 { font-size:14px;line-height:1.3;margin:0;color:var(--db-brown);font-weight:780; }
+    #desi-admin-preview .db-panel-head small { display:block;color:var(--db-terracotta);font-size:10px;margin-top:4px; }
+    #desi-admin-preview .db-select { border:1px solid var(--db-border);border-radius:8px;padding:7px 9px;background:#fffdf8;color:var(--db-terracotta);font:inherit;font-size:10px; }
+    #desi-admin-preview .db-chart { height:164px;display:flex;align-items:end;gap:11px;padding:12px 4px 0;border-bottom:1px solid rgba(212,184,165,.8);background:repeating-linear-gradient(to bottom,transparent 0,transparent 39px,rgba(212,184,165,.3) 40px); }
+    #desi-admin-preview .db-chart-col { flex:1;display:flex;align-items:end;justify-content:center;height:100%;position:relative; }
+    #desi-admin-preview .db-bar { width:min(28px,70%);min-width:13px;border-radius:7px 7px 2px 2px;background:linear-gradient(180deg,#a9473d,var(--db-maroon));box-shadow:0 4px 9px rgba(134,28,36,.12); }
+    #desi-admin-preview .db-chart-col:nth-child(2n) .db-bar { background:linear-gradient(180deg,#d8aa63,var(--db-gold)); }
+    #desi-admin-preview .db-chart-labels { display:flex;justify-content:space-around;color:var(--db-terracotta);font-size:9px;padding-top:8px; }
+    #desi-admin-preview .db-popular { display:grid;gap:12px; }
+    #desi-admin-preview .db-pop-item { display:flex;align-items:center;gap:10px; }
+    #desi-admin-preview .db-food-thumb { width:43px;height:43px;display:grid;place-items:center;flex:0 0 auto;border-radius:11px;background:var(--db-header);font-size:21px; }
+    #desi-admin-preview .db-pop-copy { min-width:0;flex:1; }
+    #desi-admin-preview .db-pop-copy strong { display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    #desi-admin-preview .db-pop-copy small { display:block;color:var(--db-terracotta);font-size:9px;margin-top:4px; }
+    #desi-admin-preview .db-pop-sales { font-size:10px;font-weight:750;white-space:nowrap; }
+    #desi-admin-preview .db-orders-preview { display:grid;gap:0; }
+    #desi-admin-preview .db-order-row { display:grid;grid-template-columns:1fr 1.2fr .9fr .8fr .7fr;align-items:center;gap:10px;padding:12px 4px;border-top:1px solid rgba(212,184,165,.65);font-size:10px; }
+    #desi-admin-preview .db-order-row:first-child { border-top:0; }
+    #desi-admin-preview .db-order-row strong { font-size:10px; }
+    #desi-admin-preview .db-muted { color:var(--db-terracotta); }
+    #desi-admin-preview .db-badge { display:inline-flex;align-items:center;justify-content:center;width:max-content;max-width:100%;padding:5px 8px;border-radius:99px;background:#f4e7d2;color:var(--db-terracotta);font-size:9px;font-weight:800;white-space:nowrap; }
+    #desi-admin-preview .db-badge.pending { color:#82551c;background:#f8edce; }
+    #desi-admin-preview .db-badge.preparing { color:#8a4d25;background:#f7e6d5; }
+    #desi-admin-preview .db-badge.ready { color:#3c6140;background:#e8efe0; }
+    #desi-admin-preview .db-badge.cancelled { color:#873c35;background:#f4e1dc; }
+    #desi-admin-preview .db-table-tools { display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px; }
+    #desi-admin-preview .db-search { min-height:37px;min-width:190px;flex:1;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--db-border);border-radius:10px;background:#fffdf8;color:var(--db-terracotta); }
+    #desi-admin-preview .db-search input { width:100%;border:0;outline:0;background:transparent;color:var(--db-brown);font:inherit;font-size:12px; }
+    #desi-admin-preview .db-filters { display:flex;gap:7px;overflow:auto;padding:1px 0 7px;margin:0 0 8px; }
+    #desi-admin-preview .db-filter { flex:0 0 auto;padding:7px 10px;border:1px solid var(--db-border);border-radius:999px;background:transparent;color:var(--db-terracotta);font-size:10px;font-weight:700; }
+    #desi-admin-preview .db-filter.is-active { border-color:var(--db-maroon);background:var(--db-maroon);color:var(--db-paper); }
+    #desi-admin-preview .db-list-head { display:grid;grid-template-columns:1.2fr 1.4fr .8fr .8fr .8fr;gap:10px;padding:9px 4px;color:var(--db-terracotta);font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.7px; }
+    #desi-admin-preview .db-list-row { display:grid;grid-template-columns:1.2fr 1.4fr .8fr .8fr .8fr;align-items:center;gap:10px;padding:13px 4px;border-top:1px solid rgba(212,184,165,.7);font-size:10px; }
+    #desi-admin-preview .db-item-primary { display:flex;align-items:center;gap:9px;min-width:0; }
+    #desi-admin-preview .db-item-primary .db-food-thumb { width:39px;height:39px;font-size:18px; }
+    #desi-admin-preview .db-item-primary strong,#desi-admin-preview .db-item-primary small { display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    #desi-admin-preview .db-item-primary small { color:var(--db-terracotta);font-size:9px;margin-top:4px; }
+    #desi-admin-preview .db-toggle { width:38px;height:22px;padding:2px;border:0;border-radius:99px;background:#c7b19c; }
+    #desi-admin-preview .db-toggle::after { content:"";display:block;width:18px;height:18px;border-radius:50%;background:var(--db-paper);transition:transform .18s ease;box-shadow:0 1px 3px rgba(0,0,0,.18); }
+    #desi-admin-preview .db-toggle[aria-pressed="true"] { background:#668852; }
+    #desi-admin-preview .db-toggle[aria-pressed="true"]::after { transform:translateX(16px); }
+    #desi-admin-preview .db-more-wrap { position:relative; }
+    #desi-admin-preview .db-more-menu { display:none;position:absolute;z-index:5;left:0;top:46px;width:190px;padding:7px;background:var(--db-paper);border:1px solid var(--db-border);border-radius:13px;box-shadow:0 12px 26px rgba(84,39,25,.16); }
+    #desi-admin-preview .db-more-menu.is-open { display:grid; }
+    #desi-admin-preview .db-more-menu button { min-height:37px;font-size:11px; }
+    #desi-admin-preview .db-settings-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px; }
+    #desi-admin-preview .db-settings-field { display:grid;gap:6px;color:var(--db-terracotta);font-size:10px;font-weight:750; }
+    #desi-admin-preview .db-settings-field input { min-height:40px;width:100%;padding:0 10px;border:1px solid var(--db-border);border-radius:10px;background:#fffdf8;color:var(--db-brown);font:inherit;font-size:12px; }
+    #desi-admin-preview .db-empty { padding:34px 15px;text-align:center;color:var(--db-terracotta);font-size:12px; }
+    #desi-admin-preview .db-toast { display:none;position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:10;padding:10px 14px;border-radius:10px;background:var(--db-maroon-dark);color:var(--db-paper);font-size:12px;box-shadow:0 8px 20px rgba(84,39,25,.22); }
+    #desi-admin-preview .db-toast.is-open { display:block; }
+    #desi-admin-preview .db-mobile-tabs { display:none; }
+    @media (max-width: 820px) {
+      #desi-admin-preview .db-frame { grid-template-columns:74px minmax(0,1fr); }
+      #desi-admin-preview .db-side { padding:18px 9px 13px;align-items:center; }
+      #desi-admin-preview .db-brand { padding:0; }
+      #desi-admin-preview .db-brand-copy,#desi-admin-preview .db-nav-label,#desi-admin-preview .db-nav button span,#desi-admin-preview .db-demo,#desi-admin-preview .db-admin-copy,#desi-admin-preview .db-more-main-label { display:none; }
+      #desi-admin-preview .db-nav { width:100%; }
+      #desi-admin-preview .db-nav button { justify-content:center;padding:0; }
+      #desi-admin-preview .db-nav i { width:19px;height:19px; }
+      #desi-admin-preview .db-admin-mini { padding-top:12px;justify-content:center; }
+      #desi-admin-preview .db-more-wrap > .db-nav button { justify-content:center; }
+      #desi-admin-preview .db-more-menu { left:45px;top:-8px; }
+      #desi-admin-preview .db-content { padding:21px 18px; }
+    }
+    @media (max-width: 620px) {
+      #desi-admin-preview .db-frame { display:flex;flex-direction:column;min-height:720px;border-radius:18px; }
+      #desi-admin-preview .db-side { display:none; }
+      #desi-admin-preview .db-topbar { min-height:55px;padding:9px 15px; }
+      #desi-admin-preview .db-content { padding:18px 14px 86px; }
+      #desi-admin-preview .db-heading-row { margin-bottom:15px; }
+      #desi-admin-preview h1 { font-size:21px; }
+      #desi-admin-preview .db-status-pill { font-size:10px;padding:6px 8px; }
+      #desi-admin-preview .db-stats { grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }
+      #desi-admin-preview .db-stat { padding:12px; }
+      #desi-admin-preview .db-stat strong { font-size:20px; }
+      #desi-admin-preview .db-grid-main { grid-template-columns:1fr; }
+      #desi-admin-preview .db-order-row { grid-template-columns:1fr 1fr .8fr;gap:8px; }
+      #desi-admin-preview .db-order-row > :nth-child(4),#desi-admin-preview .db-order-row > :nth-child(5) { display:none; }
+      #desi-admin-preview .db-list-head { display:none; }
+      #desi-admin-preview .db-list-row { grid-template-columns:1fr auto;gap:7px; }
+      #desi-admin-preview .db-list-row > :nth-child(2),#desi-admin-preview .db-list-row > :nth-child(3) { display:none; }
+      #desi-admin-preview .db-settings-grid { grid-template-columns:1fr; }
+      #desi-admin-preview .db-mobile-tabs { position:sticky;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:8px 6px max(9px, env(safe-area-inset-bottom));background:var(--db-paper);border-top:1px solid var(--db-border); }
+      #desi-admin-preview .db-mobile-tabs button { display:grid;justify-items:center;gap:4px;min-height:46px;padding:5px 0;border:0;border-radius:10px;background:transparent;color:var(--db-terracotta);font-size:9px;font-weight:700; }
+      #desi-admin-preview .db-mobile-tabs button.is-active { color:var(--db-maroon);background:rgba(134,28,36,.07); }
+      #desi-admin-preview .db-mobile-tabs i { width:17px;height:17px; }
+      #desi-admin-preview .db-more-menu { left:auto;right:0;top:auto;bottom:55px; }
+    }
+  </style>
+  <div class="db-frame">
+    <aside class="db-side" aria-label="Admin navigation">
+      <div class="db-brand"><div class="db-mark">DB</div><div class="db-brand-copy"><div class="db-brand-name">Desi Bites</div><div class="db-brand-sub">Cafe Admin</div></div></div>
+      <div class="db-nav-label">Workspace</div>
+      <nav class="db-nav">
+        <button class="is-active" data-view-target="dashboard" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span>Dashboard</span></button>
+        <button data-view-target="orders"><i data-lucide="receipt-text" aria-hidden="true"></i><span>Orders</span></button>
+        <button data-view-target="menu"><i data-lucide="utensils" aria-hidden="true"></i><span>Menu</span></button>
+        <button data-view-target="reports"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i><span>Reports</span></button>
+        <div class="db-more-wrap">
+          <button data-more-toggle aria-expanded="false"><i data-lucide="ellipsis" aria-hidden="true"></i><span class="db-more-main-label">More tools</span></button>
+          <div class="db-more-menu" aria-label="More admin tools">
+            <button data-view-target="categories"><i data-lucide="tags" aria-hidden="true"></i>Categories</button>
+            <button data-view-target="inventory"><i data-lucide="boxes" aria-hidden="true"></i>Inventory</button>
+            <button data-view-target="customers"><i data-lucide="users" aria-hidden="true"></i>Customers</button>
+            <button data-view-target="settings"><i data-lucide="settings-2" aria-hidden="true"></i>Settings</button>
+          </div>
+        </div>
+      </nav>
+      <div class="db-side-spacer"></div>
+      <div class="db-demo"><span class="db-demo-dot"></span><span>DEMO DATA<br>Changes stay on this device preview</span></div>
+      <div class="db-admin-mini"><div class="db-avatar">RK</div><div class="db-admin-copy"><strong>Riya Kapoor</strong><small>Restaurant admin</small></div></div>
+    </aside>
+    <main class="db-main">
+      <header class="db-topbar">
+        <div class="db-breadcrumb"><span>Desi Bites</span><span aria-hidden="true">/</span><strong data-current-title>Dashboard</strong></div>
+        <div class="db-top-actions"><span class="db-status-pill"><i aria-hidden="true"></i><span data-restaurant-status>Restaurant open</span></span><button class="db-icon-button" aria-label="Notifications"><i data-lucide="bell" aria-hidden="true"></i></button></div>
+      </header>
+      <div class="db-content">
+        <section class="db-page is-visible" data-page="dashboard">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Thursday, 12 November</p><h1>Good morning, Riya 👋</h1><p class="db-subtitle">Here’s what’s happening at your restaurant today.</p></div><span class="db-date">Live demo overview</span></div>
+          <div class="db-stats dashboard-stats">
+            <div class="db-stat"><div class="db-stat-top"><span>Today’s sales</span><span class="db-stat-icon"><i data-lucide="indian-rupee" aria-hidden="true"></i></span></div><strong>₹24,860</strong><div class="db-stat-note">↗ 12.8% vs yesterday</div></div>
+            <div class="db-stat"><div class="db-stat-top"><span>Orders today</span><span class="db-stat-icon"><i data-lucide="shopping-bag" aria-hidden="true"></i></span></div><strong>86</strong><div class="db-stat-note">↗ 8 new in the last hour</div></div>
+            <div class="db-stat"><div class="db-stat-top"><span>Pending orders</span><span class="db-stat-icon"><i data-lucide="timer" aria-hidden="true"></i></span></div><strong>12</strong><div class="db-stat-note neutral">Needs your attention</div></div>
+            <div class="db-stat"><div class="db-stat-top"><span>Completed</span><span class="db-stat-icon"><i data-lucide="circle-check" aria-hidden="true"></i></span></div><strong>43</strong><div class="db-stat-note">50% of today’s orders</div></div>
+            <div class="db-stat"><div class="db-stat-top"><span>Customers</span><span class="db-stat-icon"><i data-lucide="users" aria-hidden="true"></i></span></div><strong>1,284</strong><div class="db-stat-note">+24 this week</div></div>
+          </div>
+          <div class="db-quick-actions"><span>Quick actions</span><button class="db-button db-button-primary" data-view-target="menu">+ Add dish</button><button class="db-button" data-view-target="inventory">Manage inventory</button><button class="db-button" data-view-target="orders">Review new orders</button></div>
+          <div class="db-grid-main">
+            <section class="db-panel">
+              <div class="db-panel-head"><div><h2>Sales overview</h2><small>Revenue across the day</small></div><select class="db-select" aria-label="Sales chart period"><option>Today</option><option>This week</option><option>This month</option></select></div>
+              <div class="db-chart" role="img" aria-label="Hourly sales chart: sales build to a lunch peak and rise again in the evening"><div class="db-chart-col"><div class="db-bar" style="height:23%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:37%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:48%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:71%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:53%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:84%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:62%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:100%"></div></div></div>
+              <div class="db-chart-labels"><span>9 AM</span><span>11 AM</span><span>1 PM</span><span>3 PM</span><span>5 PM</span><span>7 PM</span><span>9 PM</span><span>Now</span></div>
+            </section>
+            <section class="db-panel">
+              <div class="db-panel-head"><div><h2>Popular dishes</h2><small>Top sellers today</small></div><button class="db-button db-button-quiet" data-view-target="menu">View menu →</button></div>
+              <div class="db-popular">
+                <div class="db-pop-item"><div class="db-food-thumb">🍕</div><div class="db-pop-copy"><strong>Veg Pizza</strong><small>28 sold · Pizza</small></div><span class="db-pop-sales">₹3,640</span></div>
+                <div class="db-pop-item"><div class="db-food-thumb">🍔</div><div class="db-pop-copy"><strong>Veg Cheese Burger</strong><small>22 sold · Burgers</small></div><span class="db-pop-sales">₹1,980</span></div>
+                <div class="db-pop-item"><div class="db-food-thumb">🍝</div><div class="db-pop-copy"><strong>Veg Pasta</strong><small>18 sold · Pasta</small></div><span class="db-pop-sales">₹1,260</span></div>
+                <div class="db-pop-item"><div class="db-food-thumb">🥤</div><div class="db-pop-copy"><strong>Mango Juice</strong><small>14 sold · Juice</small></div><span class="db-pop-sales">₹840</span></div>
+              </div>
+            </section>
+          </div>
+          <section class="db-panel">
+            <div class="db-panel-head"><div><h2>Recent orders</h2><small>Latest activity from your customers</small></div><button class="db-button db-button-quiet" data-view-target="orders">All orders →</button></div>
+            <div class="db-orders-preview">
+              <div class="db-order-row"><strong>#DB-48291</strong><span>Arjun Sharma</span><span>3 items</span><span>₹640</span><span class="db-badge pending">New</span></div>
+              <div class="db-order-row"><strong>#DB-48290</strong><span>Meera Nair</span><span>2 items</span><span>₹420</span><span class="db-badge preparing">Preparing</span></div>
+              <div class="db-order-row"><strong>#DB-48289</strong><span>Kabir Rao</span><span>4 items</span><span>₹890</span><span class="db-badge ready">Ready</span></div>
+            </div>
+          </section>
+        </section>
+        <section class="db-page" data-page="orders">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Restaurant operations</p><h1>Orders</h1><p class="db-subtitle">Review incoming orders and move them through the kitchen.</p></div><button class="db-button db-button-primary" data-demo-action="New order view">+ New order</button></div>
+          <div class="db-panel">
+            <div class="db-table-tools"><label class="db-search"><i data-lucide="search" aria-hidden="true"></i><input data-order-search placeholder="Search order or customer" aria-label="Search orders"></label><button class="db-button" data-demo-action="Date filter">Today⌄</button></div>
+            <div class="db-filters" aria-label="Filter orders by status"><button class="db-filter is-active" data-order-filter="All">All <b>86</b></button><button class="db-filter" data-order-filter="New">New 12</button><button class="db-filter" data-order-filter="Accepted">Accepted 8</button><button class="db-filter" data-order-filter="Preparing">Preparing 15</button><button class="db-filter" data-order-filter="Ready">Ready 6</button><button class="db-filter" data-order-filter="Completed">Completed 43</button><button class="db-filter" data-order-filter="Cancelled">Cancelled 2</button></div>
+            <div class="db-list-head"><span>Order</span><span>Customer</span><span>Total</span><span>Payment</span><span>Status</span></div>
+            <div class="db-list-row" data-order-row data-status="New" data-search="db-48291 arjun sharma"><div class="db-item-primary"><div class="db-avatar">#</div><div><strong>#DB-48291</strong><small>Today, 12:42 PM · 3 items</small></div></div><span>Arjun Sharma</span><strong>₹640</strong><span class="db-muted">Paid · UPI</span><span class="db-badge pending">New</span></div>
+            <div class="db-list-row" data-order-row data-status="Preparing" data-search="db-48290 meera nair"><div class="db-item-primary"><div class="db-avatar">#</div><div><strong>#DB-48290</strong><small>Today, 12:38 PM · 2 items</small></div></div><span>Meera Nair</span><strong>₹420</strong><span class="db-muted">Paid · Card</span><span class="db-badge preparing">Preparing</span></div>
+            <div class="db-list-row" data-order-row data-status="Ready" data-search="db-48289 kabir rao"><div class="db-item-primary"><div class="db-avatar">#</div><div><strong>#DB-48289</strong><small>Today, 12:31 PM · 4 items</small></div></div><span>Kabir Rao</span><strong>₹890</strong><span class="db-muted">Paid · UPI</span><span class="db-badge ready">Ready</span></div>
+            <div class="db-list-row" data-order-row data-status="Completed" data-search="db-48288 sana khan"><div class="db-item-primary"><div class="db-avatar">#</div><div><strong>#DB-48288</strong><small>Today, 12:22 PM · 1 item</small></div></div><span>Sana Khan</span><strong>₹260</strong><span class="db-muted">Paid · Cash</span><span class="db-badge">Completed</span></div>
+          </div>
+        </section>
+        <section class="db-page" data-page="menu">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Food catalog</p><h1>Menu management</h1><p class="db-subtitle">Manage dishes, prices and availability from the shared restaurant menu.</p></div><button class="db-button db-button-primary" data-demo-action="Add food item form">+ Add food item</button></div>
+          <div class="db-panel">
+            <div class="db-table-tools"><label class="db-search"><i data-lucide="search" aria-hidden="true"></i><input data-menu-search placeholder="Find a dish" aria-label="Search menu items"></label><button class="db-button" data-demo-action="Category filter">All categories⌄</button><button class="db-button" data-demo-action="Sort menu">Sort: A–Z⌄</button></div>
+            <div class="db-list-head"><span>Food item</span><span>Category</span><span>Price</span><span>Availability</span><span>Actions</span></div>
+            <div class="db-list-row" data-menu-row data-search="veg pizza pizza"><div class="db-item-primary"><div class="db-food-thumb">🍕</div><div><strong>Veg Pizza</strong><small>Classic vegetable topping</small></div></div><span>Pizza</span><strong>₹130</strong><button class="db-toggle" aria-label="Veg Pizza available" aria-pressed="true"></button><button class="db-button" data-demo-action="Edit Veg Pizza">Edit</button></div>
+            <div class="db-list-row" data-menu-row data-search="paneer pizza pizza"><div class="db-item-primary"><div class="db-food-thumb">🍕</div><div><strong>Paneer Pizza</strong><small>Paneer, capsicum & onion</small></div></div><span>Pizza</span><strong>₹190</strong><button class="db-toggle" aria-label="Paneer Pizza available" aria-pressed="true"></button><button class="db-button" data-demo-action="Edit Paneer Pizza">Edit</button></div>
+            <div class="db-list-row" data-menu-row data-search="veg cheese burger burgers"><div class="db-item-primary"><div class="db-food-thumb">🍔</div><div><strong>Veg Cheese Burger</strong><small>Cheese slice, house sauce</small></div></div><span>Burgers</span><strong>₹90</strong><button class="db-toggle" aria-label="Veg Cheese Burger available" aria-pressed="false"></button><button class="db-button" data-demo-action="Edit Veg Cheese Burger">Edit</button></div>
+            <div class="db-list-row" data-menu-row data-search="mango juice juice"><div class="db-item-primary"><div class="db-food-thumb">🥭</div><div><strong>Mango Juice</strong><small>Seasonal fresh juice</small></div></div><span>Juice</span><strong>₹60</strong><button class="db-toggle" aria-label="Mango Juice available" aria-pressed="true"></button><button class="db-button" data-demo-action="Edit Mango Juice">Edit</button></div>
+          </div>
+        </section>
+        <section class="db-page" data-page="categories">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Organize the catalog</p><h1>Categories</h1><p class="db-subtitle">Group menu items and choose which categories are visible.</p></div><button class="db-button db-button-primary" data-demo-action="Add category form">+ Add category</button></div>
+          <div class="db-panel"><div class="db-list-head"><span>Category</span><span>Items</span><span>Status</span><span>Image</span><span>Actions</span></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍕</div><strong>Pizza</strong></div><span>10 items</span><span class="db-badge ready">Active</span><span>Image selected</span><button class="db-button" data-demo-action="Edit Pizza category">Edit</button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍔</div><strong>Burgers</strong></div><span>4 items</span><span class="db-badge ready">Active</span><span>Image selected</span><button class="db-button" data-demo-action="Edit Burgers category">Edit</button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍹</div><strong>Juice</strong></div><span>20 items</span><span class="db-badge">Inactive</span><span>Image selected</span><button class="db-button" data-demo-action="Edit Juice category">Edit</button></div></div>
+        </section>
+        <section class="db-page" data-page="inventory">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Availability control</p><h1>Inventory</h1><p class="db-subtitle">Quickly pause sold-out dishes and review low stock.</p></div><button class="db-button" data-demo-action="Refresh inventory">Refresh status</button></div>
+          <div class="db-stats"><div class="db-stat"><div class="db-stat-top">Available dishes</div><strong>48</strong><div class="db-stat-note">Ready to order</div></div><div class="db-stat"><div class="db-stat-top">Low stock</div><strong>3</strong><div class="db-stat-note neutral">Check before rush</div></div><div class="db-stat"><div class="db-stat-top">Sold out</div><strong>2</strong><div class="db-stat-note neutral">Currently hidden</div></div><div class="db-stat"><div class="db-stat-top">Menu items</div><strong>53</strong><div class="db-stat-note neutral">Across 12 categories</div></div></div>
+          <div class="db-panel"><div class="db-list-head"><span>Dish</span><span>Category</span><span>Stock</span><span>Availability</span><span>Action</span></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍕</div><strong>Veg Pizza</strong></div><span>Pizza</span><span>18 portions</span><span class="db-badge ready">In stock</span><button class="db-toggle" aria-label="Veg Pizza available" aria-pressed="true"></button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍔</div><strong>Veg Cheese Burger</strong></div><span>Burgers</span><span>4 portions</span><span class="db-badge pending">Low stock</span><button class="db-toggle" aria-label="Veg Cheese Burger available" aria-pressed="true"></button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-food-thumb">🍝</div><strong>Paneer Pasta</strong></div><span>Pasta</span><span>0 portions</span><span class="db-badge cancelled">Sold out</span><button class="db-toggle" aria-label="Paneer Pasta available" aria-pressed="false"></button></div></div>
+        </section>
+        <section class="db-page" data-page="customers">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Guest relationships</p><h1>Customers</h1><p class="db-subtitle">A quick view of repeat guests and their order activity.</p></div><span class="db-date">1,284 customers</span></div>
+          <div class="db-panel"><div class="db-table-tools"><label class="db-search"><i data-lucide="search" aria-hidden="true"></i><input placeholder="Search name or masked phone" aria-label="Search customers"></label></div><div class="db-list-head"><span>Customer</span><span>Phone</span><span>Orders</span><span>Total spend</span><span>Last order</span></div><div class="db-list-row"><div class="db-item-primary"><div class="db-avatar">AS</div><strong>Arjun Sharma</strong></div><span>•••••• 4821</span><span>18</span><strong>₹8,420</strong><button class="db-button" data-demo-action="Open Arjun history">History</button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-avatar">MN</div><strong>Meera Nair</strong></div><span>•••••• 1904</span><span>12</span><strong>₹6,180</strong><button class="db-button" data-demo-action="Open Meera history">History</button></div><div class="db-list-row"><div class="db-item-primary"><div class="db-avatar">KR</div><strong>Kabir Rao</strong></div><span>•••••• 7732</span><span>9</span><strong>₹4,960</strong><button class="db-button" data-demo-action="Open Kabir history">History</button></div></div>
+        </section>
+        <section class="db-page" data-page="reports">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Business performance</p><h1>Sales & reports</h1><p class="db-subtitle">Sales, order volume and best-selling dishes — demo data.</p></div><button class="db-button" data-demo-action="Export report">Export report ↓</button></div>
+          <div class="db-table-tools"><button class="db-filter is-active" data-period="Today">Today</button><button class="db-filter" data-period="This week">This week</button><button class="db-filter" data-period="This month">This month</button></div>
+          <div class="db-stats"><div class="db-stat"><div class="db-stat-top">Sales</div><strong>₹24,860</strong><div class="db-stat-note">Selected period</div></div><div class="db-stat"><div class="db-stat-top">Orders</div><strong>86</strong><div class="db-stat-note neutral">All order statuses</div></div><div class="db-stat"><div class="db-stat-top">Avg. order value</div><strong>₹289</strong><div class="db-stat-note neutral">Sales ÷ orders</div></div><div class="db-stat"><div class="db-stat-top">Completed</div><strong>43</strong><div class="db-stat-note">50% of orders</div></div></div>
+          <div class="db-grid-main"><section class="db-panel"><div class="db-panel-head"><div><h2>Sales trend</h2><small>Revenue by hour · INR</small></div></div><div class="db-chart" role="img" aria-label="Demo sales trend chart"><div class="db-chart-col"><div class="db-bar" style="height:30%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:42%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:57%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:77%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:64%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:91%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:70%"></div></div><div class="db-chart-col"><div class="db-bar" style="height:100%"></div></div></div><div class="db-chart-labels"><span>9 AM</span><span>11 AM</span><span>1 PM</span><span>3 PM</span><span>5 PM</span><span>7 PM</span><span>9 PM</span><span>Now</span></div></section><section class="db-panel"><div class="db-panel-head"><div><h2>Best sellers</h2><small>By quantity sold</small></div></div><div class="db-popular"><div class="db-pop-item"><div class="db-food-thumb">🍕</div><div class="db-pop-copy"><strong>Veg Pizza</strong><small>28 sold</small></div><b>#1</b></div><div class="db-pop-item"><div class="db-food-thumb">🍔</div><div class="db-pop-copy"><strong>Veg Cheese Burger</strong><small>22 sold</small></div><b>#2</b></div><div class="db-pop-item"><div class="db-food-thumb">🍝</div><div class="db-pop-copy"><strong>Veg Pasta</strong><small>18 sold</small></div><b>#3</b></div></div></section></div>
+        </section>
+        <section class="db-page" data-page="settings">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Restaurant profile</p><h1>Settings</h1><p class="db-subtitle">These edits are a local frontend demo; no restaurant data is sent.</p></div><button class="db-button db-button-primary" data-demo-action="Settings saved">Save changes</button></div>
+          <div class="db-panel"><div class="db-panel-head"><div><h2>Restaurant details</h2><small>Basic information visible to customers</small></div></div><div class="db-settings-grid"><label class="db-settings-field">Restaurant name<input value="Desi Bites Cafe" aria-label="Restaurant name"></label><label class="db-settings-field">Contact phone<input value="+91 80 4567 8900" aria-label="Contact phone"></label><label class="db-settings-field">Address<input value="12th Main Road, Indiranagar, Bengaluru" aria-label="Restaurant address"></label><label class="db-settings-field">Opening hours<input value="9:00 AM – 11:00 PM" aria-label="Opening hours"></label></div><hr style="border:0;border-top:1px solid rgba(212,184,165,.7);margin:18px 0"><div class="db-pop-item"><div><h2>Restaurant open</h2><small class="db-muted">Customers can browse your menu.</small></div><button class="db-toggle" data-toggle-status aria-label="Restaurant open" aria-pressed="true"></button></div><div class="db-pop-item" style="margin-top:15px"><div><h2>Accepting orders</h2><small class="db-muted">Pause new incoming orders anytime.</small></div><button class="db-toggle" aria-label="Accepting orders" aria-pressed="true"></button></div></div>
+        </section>
+        <section class="db-page" data-page="profile">
+          <div class="db-heading-row"><div><p class="db-eyebrow">Account & access</p><h1>Admin profile</h1><p class="db-subtitle">Demo admin session for frontend preview only.</p></div><button class="db-button" data-demo-action="Admin demo session ended">Log out</button></div>
+          <div class="db-panel" style="max-width:640px"><div class="db-pop-item" style="margin-bottom:20px"><div class="db-avatar" style="width:58px;height:58px;font-size:18px">RK</div><div class="db-pop-copy"><strong>Riya Kapoor</strong><small>Restaurant administrator</small></div><span class="db-badge">DEMO SESSION</span></div><div class="db-settings-grid"><label class="db-settings-field">Admin name<input value="Riya Kapoor" readonly></label><label class="db-settings-field">Email address<input value="riya.admin@desibites.demo" readonly></label><label class="db-settings-field">Restaurant<input value="Desi Bites Cafe" readonly></label><label class="db-settings-field">Access mode<input value="Development preview" readonly></label></div></div>
+        </section>
+      </div>
+      <nav class="db-mobile-tabs" aria-label="Admin sections">
+        <button class="is-active" data-view-target="dashboard" aria-current="page"><i data-lucide="layout-dashboard" aria-hidden="true"></i>Dashboard</button>
+        <button data-view-target="orders"><i data-lucide="receipt-text" aria-hidden="true"></i>Orders</button>
+        <button data-view-target="menu"><i data-lucide="utensils" aria-hidden="true"></i>Menu</button>
+        <button data-view-target="reports"><i data-lucide="chart-no-axes-column-increasing" aria-hidden="true"></i>Reports</button>
+        <button data-view-target="profile"><i data-lucide="user-round" aria-hidden="true"></i>Profile</button>
+      </nav>
+    </main>
+  </div>
+  <div class="db-toast" role="status" aria-live="polite" data-toast></div>
+  <script>
+    (() => {
+      const root = document.getElementById('desi-admin-preview');
+      if (!root) return;
+      const titleNames = {dashboard:'Dashboard',orders:'Orders',menu:'Menu management',categories:'Categories',inventory:'Inventory',customers:'Customers',reports:'Sales & reports',settings:'Settings',profile:'Admin profile'};
+      const showPage = (name) => {
+        root.querySelectorAll('[data-page]').forEach(page => page.classList.toggle('is-visible', page.dataset.page === name));
+        root.querySelectorAll('[data-view-target]').forEach(button => {
+          const active = button.dataset.viewTarget === name;
+          button.classList.toggle('is-active', active);
+          if (active) button.setAttribute('aria-current','page'); else button.removeAttribute('aria-current');
+        });
+        root.querySelector('[data-current-title]').textContent = titleNames[name] || name;
+        root.querySelector('[data-more-toggle]').setAttribute('aria-expanded','false');
+        root.querySelector('.db-more-menu').classList.remove('is-open');
+      };
+      root.querySelectorAll('[data-view-target]').forEach(button => button.addEventListener('click', () => showPage(button.dataset.viewTarget)));
+      const moreToggle = root.querySelector('[data-more-toggle]');
+      moreToggle.addEventListener('click', () => {
+        const menu = root.querySelector('.db-more-menu');
+        const open = !menu.classList.contains('is-open');
+        menu.classList.toggle('is-open', open);
+        moreToggle.setAttribute('aria-expanded', String(open));
+      });
+      const toast = root.querySelector('[data-toast]');
+      let toastTimer;
+      const announce = message => {
+        toast.textContent = message;
+        toast.classList.add('is-open');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove('is-open'), 1800);
+      };
+      root.querySelectorAll('[data-demo-action]').forEach(button => button.addEventListener('click', () => announce(`${button.dataset.demoAction} · demo only`)));
+      root.querySelectorAll('.db-toggle').forEach(button => button.addEventListener('click', () => {
+        const enabled = button.getAttribute('aria-pressed') !== 'true';
+        button.setAttribute('aria-pressed', String(enabled));
+        if (button.hasAttribute('data-toggle-status')) {
+          const label = enabled ? 'Restaurant open' : 'Restaurant closed';
+          root.querySelector('[data-restaurant-status]').textContent = label;
+          announce(`${label} · demo only`);
+        } else announce(`Availability ${enabled ? 'enabled' : 'paused'} · demo only`);
+      }));
+      root.querySelectorAll('[data-order-filter]').forEach(button => button.addEventListener('click', () => {
+        root.querySelectorAll('[data-order-filter]').forEach(filter => filter.classList.toggle('is-active', filter === button));
+        const status = button.dataset.orderFilter;
+        root.querySelectorAll('[data-order-row]').forEach(row => row.hidden = status !== 'All' && row.dataset.status !== status);
+      }));
+      const bindSearch = (inputSelector, rowSelector) => {
+        const input = root.querySelector(inputSelector);
+        if (!input) return;
+        input.addEventListener('input', () => {
+          const query = input.value.trim().toLowerCase();
+          root.querySelectorAll(rowSelector).forEach(row => row.hidden = !row.dataset.search.includes(query));
+        });
+      };
+      bindSearch('[data-order-search]','[data-order-row]');
+      bindSearch('[data-menu-search]','[data-menu-row]');
+      root.querySelectorAll('[data-period]').forEach(button => button.addEventListener('click', () => {
+        root.querySelectorAll('[data-period]').forEach(period => period.classList.toggle('is-active',period === button));
+        announce(`${button.dataset.period} report · demo data`);
+      }));
+    })();
+  </script>
+</div>

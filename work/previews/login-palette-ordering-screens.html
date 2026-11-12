@@ -1,0 +1,142 @@
+<div id="login-palette-ordering-preview" class="viz-dotted-background">
+  <style>
+    #login-palette-ordering-preview {
+      --lp-parchment: #FFF0D7;
+      --lp-cream: #FCE5C1;
+      --lp-card: #FFF9EF;
+      --lp-maroon: #861C24;
+      --lp-maroon-dark: #6F1219;
+      --lp-brown: #542719;
+      --lp-terracotta: #7B321F;
+      --lp-gold: #D6A45B;
+      --lp-border: #D4B8A5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 10px;
+      color: var(--lp-brown);
+      font: 14px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    #login-palette-ordering-preview * { box-sizing: border-box; }
+    #login-palette-ordering-preview .lp-palette {
+      width: min(100%, 390px);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--lp-card);
+      color: var(--lp-brown);
+      font-size: 11px;
+    }
+    #login-palette-ordering-preview .lp-token { display: inline-flex; align-items: center; gap: 4px; }
+    #login-palette-ordering-preview .lp-swatch { width: 12px; height: 12px; border: 1px solid var(--lp-border); border-radius: 50%; }
+    #login-palette-ordering-preview .lp-screen {
+      width: min(100%, 390px);
+      padding: 12px;
+      overflow: hidden;
+      border: 1px solid var(--lp-border);
+      border-radius: 22px;
+      background: var(--lp-parchment);
+      box-shadow: 0 4px 14px rgba(84, 39, 25, .12);
+    }
+    #login-palette-ordering-preview .lp-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: -12px -12px 12px;
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--lp-border);
+      background: var(--lp-cream);
+    }
+    #login-palette-ordering-preview .lp-title { font-size: 17px; font-weight: 750; color: var(--lp-brown); }
+    #login-palette-ordering-preview .lp-subtitle, #login-palette-ordering-preview .lp-muted { color: var(--lp-terracotta); font-size: 12px; }
+    #login-palette-ordering-preview .lp-icon { color: var(--lp-maroon); font-size: 20px; font-weight: 700; }
+    #login-palette-ordering-preview .lp-label { margin: 12px 2px 7px; color: var(--lp-terracotta); font-size: 12px; font-weight: 700; }
+    #login-palette-ordering-preview .lp-card {
+      margin-bottom: 9px;
+      padding: 11px;
+      border: 1px solid var(--lp-border);
+      border-radius: 13px;
+      background: var(--lp-card);
+    }
+    #login-palette-ordering-preview .lp-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    #login-palette-ordering-preview .lp-item + .lp-item { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--lp-border); }
+    #login-palette-ordering-preview .lp-name { font-weight: 700; }
+    #login-palette-ordering-preview .lp-price { font-weight: 750; }
+    #login-palette-ordering-preview .lp-stepper { padding: 4px 9px; border: 1px solid var(--lp-maroon); border-radius: 8px; color: var(--lp-maroon); font-weight: 750; }
+    #login-palette-ordering-preview .lp-badge { padding: 4px 8px; border-radius: 999px; background: rgba(214, 164, 91, .25); color: var(--lp-terracotta); font-size: 11px; font-weight: 700; }
+    #login-palette-ordering-preview .lp-action {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 11px 14px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--lp-maroon);
+      color: var(--lp-parchment);
+      text-align: center;
+      font: inherit;
+      font-weight: 750;
+    }
+    #login-palette-ordering-preview .lp-action-dark { background: var(--lp-maroon-dark); }
+    #login-palette-ordering-preview .lp-track { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    #login-palette-ordering-preview .lp-dot { width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; background: var(--lp-maroon); color: var(--lp-parchment); text-align: center; font-size: 13px; line-height: 22px; }
+    #login-palette-ordering-preview .lp-dot-pending { border: 1px solid var(--lp-border); background: var(--lp-cream); color: var(--lp-terracotta); }
+    #login-palette-ordering-preview .lp-avatar { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 50%; background: var(--lp-maroon); color: var(--lp-parchment); font-weight: 800; }
+  </style>
+
+  <div class="lp-palette" aria-label="Login page palette">
+    <span class="lp-token"><i class="lp-swatch" style="background:#FFF0D7"></i>Page</span>
+    <span class="lp-token"><i class="lp-swatch" style="background:#FCE5C1"></i>Header</span>
+    <span class="lp-token"><i class="lp-swatch" style="background:#FFF9EF"></i>Cards</span>
+    <span class="lp-token"><i class="lp-swatch" style="background:#861C24"></i>Actions</span>
+    <span class="lp-token"><i class="lp-swatch" style="background:#542719"></i>Text</span>
+    <span class="lp-token"><i class="lp-swatch" style="background:#D6A45B"></i>Accent</span>
+  </div>
+
+  <section class="lp-screen" aria-label="My Desi Cart color preview">
+    <header class="lp-header"><div><div class="lp-title">My Desi Cart</div><div class="lp-subtitle">Delivering to Home · Mysore</div></div><span class="lp-icon" aria-hidden="true">×</span></header>
+    <div class="lp-card">
+      <div class="lp-row lp-item"><div><div class="lp-name">Paneer Pizza</div><div class="lp-muted">Regular · ₹190</div></div><span class="lp-stepper">− &nbsp;1&nbsp; +</span></div>
+      <div class="lp-row lp-item"><div><div class="lp-name">Veg Cheese Burger</div><div class="lp-muted">₹90</div></div><span class="lp-stepper">− &nbsp;1&nbsp; +</span></div>
+    </div>
+    <div class="lp-row lp-card"><span class="lp-muted">Delivery</span><span class="lp-badge">Free</span></div>
+    <div class="lp-row"><strong>Total</strong><strong>₹280</strong></div>
+    <button class="lp-action" type="button">Review &amp; Pay</button>
+  </section>
+
+  <section class="lp-screen" aria-label="Review and Pay color preview">
+    <header class="lp-header"><div><div class="lp-title">Review &amp; Pay</div><div class="lp-subtitle">Desi Bites checkout</div></div><span class="lp-icon" aria-hidden="true">×</span></header>
+    <div class="lp-label">Deliver to</div>
+    <div class="lp-card"><div class="lp-row"><strong>Home</strong><span class="lp-badge">Selected</span></div><div class="lp-muted">12th Main, Indiranagar · Mysore</div></div>
+    <div class="lp-label">Payment options</div>
+    <div class="lp-card"><div class="lp-row"><span>◉ &nbsp; UPI</span><span class="lp-muted">Selected</span></div></div>
+    <div class="lp-row"><span class="lp-muted">To Pay</span><strong>₹280</strong></div>
+    <button class="lp-action lp-action-dark" type="button">Pay ₹280</button>
+  </section>
+
+  <section class="lp-screen" aria-label="Order tracking color preview">
+    <header class="lp-header"><div><div class="lp-title">Order Tracking</div><div class="lp-subtitle">Order #DB-84920</div></div><span class="lp-icon" aria-hidden="true">×</span></header>
+    <div class="lp-card" style="background:#861C24;color:#FFF0D7;border-color:#861C24"><div class="lp-row"><strong>Arriving in 14–18 mins</strong><span class="lp-badge">ON TIME</span></div></div>
+    <div class="lp-card">
+      <div class="lp-track"><span class="lp-dot">✓</span><div><strong>Order confirmed</strong><div class="lp-muted">The restaurant accepted your order</div></div></div>
+      <div class="lp-track"><span class="lp-dot">•</span><div><strong>Preparing your food</strong><div class="lp-muted">Freshly made at Desi Bites</div></div></div>
+      <div class="lp-track"><span class="lp-dot lp-dot-pending">•</span><div><strong>Out for delivery</strong><div class="lp-muted">Your delivery partner is on the way</div></div></div>
+    </div>
+    <div class="lp-row lp-card"><span class="lp-name">Rider · Ramesh Kumar</span><span class="lp-icon" aria-hidden="true">☎</span></div>
+    <button class="lp-action" type="button">Back to Shopping</button>
+  </section>
+
+  <section class="lp-screen" aria-label="Profile color preview">
+    <header class="lp-header"><div class="lp-title">Profile</div><span class="lp-icon" aria-hidden="true">‹</span></header>
+    <div class="lp-row lp-card"><span class="lp-avatar">DB</span><div style="flex:1"><strong>Desi Bites Member</strong><div class="lp-muted">Customer account</div></div><span class="lp-badge">GOLD MEMBER</span></div>
+    <div class="lp-card"><div class="lp-row"><span class="lp-muted">Desi Cash Balance</span><strong>₹150.00</strong></div><button class="lp-action" type="button">Top Up</button></div>
+    <div class="lp-label">Account settings</div>
+    <div class="lp-card"><div class="lp-row"><span>Saved Addresses</span><span class="lp-icon">›</span></div></div>
+    <div class="lp-card"><div class="lp-row"><span>Payment Methods</span><span class="lp-icon">›</span></div></div>
+    <div class="lp-card"><div class="lp-row"><span>Customer Support</span><span class="lp-icon">›</span></div></div>
+  </section>
+</div>
