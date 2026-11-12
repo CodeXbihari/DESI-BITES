@@ -17,6 +17,7 @@
       --darkBrownText: #542719;
       --decorativeGold: #D6A45B;
       --loginInputBg: #FFF9EF;
+      --loginInputDivider: #D4B8A5;
       --loginButtonDark: #6F1219;
     }
     
@@ -1891,6 +1892,39 @@
     .tracking-home-btn:active { transform: translateY(2px); }
 
 
+
+    #screen-profile {
+      background: var(--parchmentBg);
+      color: var(--darkBrownText);
+    }
+    #screen-profile > header {
+      background: var(--warmCream);
+      color: var(--darkBrownText);
+      border-bottom: 1px solid var(--loginInputDivider);
+    }
+    #screen-profile > header h2 { color: var(--darkBrownText); }
+    #screen-profile > header .dbp-icon {
+      background: transparent;
+      color: var(--deepMaroon);
+    }
+    #screen-profile .dbp-nav {
+      background: var(--loginInputBg);
+      border-top: 1px solid var(--loginInputDivider);
+    }
+    #screen-profile .dbp-nav button { color: var(--darkTerracotta); }
+    #screen-profile .dbp-nav button.active { color: var(--deepMaroon); }
+    #screen-profile > div[style] {
+      background: var(--parchmentBg);
+      color: var(--darkBrownText);
+    }
+    #screen-profile > div[style] button {
+      padding: 9px 14px;
+      border: 1px solid var(--deepMaroon);
+      border-radius: 10px;
+      background: var(--deepMaroon);
+      color: var(--parchmentBg);
+      font: 700 13px sans-serif;
+    }
 
     [hidden] { display: none !important; }
     body { margin: 0; background: #2C1812; color: #FFF0D7; min-height: 100dvh; padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; }

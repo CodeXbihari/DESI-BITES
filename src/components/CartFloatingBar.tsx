@@ -7,13 +7,15 @@ import { homeTheme as theme } from '../theme/homeTheme';
 
 interface CartFloatingBarProps {
   onBottomSpaceChange?: (height: number) => void;
-  variant?: 'default' | 'home';
+  variant?: 'default' | 'home' | 'profile';
   bottomOffset?: number;
 }
 
 export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceChange, variant = 'default', bottomOffset = 60 }) => {
   const { cartCount, finalTotal, cartSubtotal, setIsCartOpen } = useApp();
   const isHome = variant === 'home';
+  const usesLoginPalette = isHome || variant === 'profile';
+  const isProfile = variant === 'profile';
 
   if (cartCount === 0) return null;
 
@@ -25,25 +27,27 @@ export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceC
       }}
     >
       <TouchableOpacity
-        style={[styles.container, isHome && homeStyles.container]}
+        style={[styles.container, isHome && homeStyles.container, isProfile && profileStyles.container]}
         activeOpacity={0.9}
         onPress={() => setIsCartOpen(true)}
         accessibilityRole="button"
         accessibilityLabel={`View cart, ${cartCount} items, ₹${isHome ? cartSubtotal : finalTotal}`}
       >
         <View style={styles.leftInfo}>
-          <View style={[styles.countBadge, isHome && homeStyles.countBadge]}>
-            <Text style={styles.countText}>{cartCount}</Text>
+          <View style={[styles.countBadge, isHome && homeStyles.countBadge, isProfile && profileStyles.countBadge]}>
+            <Text style={[styles.countText, isProfile && profileStyles.countText]}>{cartCount}</Text>
           </View>
           <View>
-            <Text style={styles.totalText}>₹{isHome ? cartSubtotal : finalTotal}</Text>
-            <Text style={[styles.extraText, isHome && homeStyles.extraText]}>Plus taxes & delivery</Text>
+            <Text style={[styles.totalText, isProfile && profileStyles.totalText]}>
+              ₹{isHome ? cartSubtotal : finalTotal}
+            </Text>
+            <Text style={[styles.extraText, usesLoginPalette && homeStyles.extraText]}>Plus taxes & delivery</Text>
           </View>
         </View>
 
-        <View style={[styles.rightAction, isHome && homeStyles.rightAction]}>
-          <Text style={styles.viewCartText}>View Cart</Text>
-          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+        <View style={[styles.rightAction, isHome && homeStyles.rightAction, isProfile && profileStyles.rightAction]}>
+          <Text style={[styles.viewCartText, isProfile && profileStyles.viewCartText]}>View Cart</Text>
+          <Ionicons name="arrow-forward" size={16} color={isProfile ? theme.background : '#FFFFFF'} />
         </View>
       </TouchableOpacity>
     </View>
@@ -119,5 +123,14 @@ const homeStyles = StyleSheet.create({
   countBadge: { backgroundColor: theme.primaryDark },
   extraText: { color: theme.background },
   rightAction: { backgroundColor: theme.primaryDark, paddingHorizontal: 10 },
+});
+
+const profileStyles = StyleSheet.create({
+  container: { backgroundColor: theme.primary, shadowColor: theme.text },
+  countBadge: { backgroundColor: theme.primaryDark },
+  countText: { color: theme.background },
+  totalText: { color: theme.background },
+  rightAction: { backgroundColor: theme.primaryDark },
+  viewCartText: { color: theme.background },
 });
 

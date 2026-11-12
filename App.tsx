@@ -69,8 +69,10 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
   const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height + insets.bottom);
   const { orders, cartCount } = useApp();
   const isHome = currentTab === 'home';
-  const activeTabColor = isHome ? homeTheme.primary : colors.primary;
-  const inactiveTabColor = isHome ? homeTheme.muted : colors.textMuted;
+  const isProfile = currentTab === 'profile';
+  const usesLoginPalette = isHome || isProfile;
+  const activeTabColor = usesLoginPalette ? homeTheme.primary : colors.primary;
+  const inactiveTabColor = usesLoginPalette ? homeTheme.muted : colors.textMuted;
 
   // The tab bar already sits outside the screen container. Reserve only the
   // part of the cart's measured height and bottom offset that covers Home.
@@ -79,7 +81,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
     : 0;
 
   return (
-    <SafeAreaView style={[styles.container, isHome && styles.homeContainer]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, usesLoginPalette && styles.homeContainer]} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
 
       {/* Screen Container */}
@@ -103,12 +105,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
       </View>
 
       {/* Floating Cart bar (shows when cart has items) */}
-      <CartFloatingBar bottomOffset={tabBarHeight + 4} onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : 'default'} />
+      <CartFloatingBar bottomOffset={tabBarHeight + 4} onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : isProfile ? 'profile' : 'default'} />
 
 
       {/* Bottom Tab Bar */}
       <View
-        style={[styles.tabBar, isHome && styles.homeTabBar, { height: 56 + insets.bottom, paddingBottom: insets.bottom }]}
+        style={[styles.tabBar, usesLoginPalette && styles.homeTabBar, { height: 56 + insets.bottom, paddingBottom: insets.bottom }]}
         onLayout={({ nativeEvent: { layout } }) => setTabBarHeight(layout.height)}
       >
         <TouchableOpacity
@@ -124,9 +126,9 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'home' && styles.tabLabelActive,
-              currentTab === 'home' && styles.homeTabLabelActive,
+              currentTab === 'home' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Home
@@ -140,13 +142,18 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
         >
           <View style={styles.tabIconWrap}>
             <Ionicons name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'} size={22} color={currentTab === 'orders' ? activeTabColor : inactiveTabColor} />
-            {orders.length > 0 && <View style={styles.ordersBadge}><Text style={styles.ordersBadgeText}>{orders.length}</Text></View>}
+            {orders.length > 0 && (
+              <View style={[styles.ordersBadge, isProfile && styles.profileOrdersBadge]}>
+                <Text style={[styles.ordersBadgeText, isProfile && styles.profileOrdersBadgeText]}>{orders.length}</Text>
+              </View>
+            )}
           </View>
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'orders' && styles.tabLabelActive,
+              currentTab === 'orders' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Orders
@@ -162,8 +169,9 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'reorder' && styles.tabLabelActive,
+              currentTab === 'reorder' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Reorder
@@ -183,8 +191,9 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch }: MainAppProps) {
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'profile' && styles.tabLabelActive,
+              currentTab === 'profile' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Profile
@@ -450,6 +459,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '800',
+  },
+  profileOrdersBadge: {
+    backgroundColor: homeTheme.primary,
+  },
+  profileOrdersBadgeText: {
+    color: homeTheme.background,
   },
   tabLabel: {
     fontSize: 11,
