@@ -35,7 +35,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   phoneNumber,
   onBack,
 }) => {
-  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt } = useAuth();
+  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt, isMockAuth } = useAuth();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -75,7 +75,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
     try {
       await sendOtp(requestedPhone ?? phoneNumber ?? '');
       setOtp(Array(OTP_LENGTH).fill(''));
-      setNotice('A new six-digit code has been sent.');
+      setNotice(isMockAuth ? 'Demo verification is ready.' : 'A new six-digit code has been sent.');
       inputRefs.current[0]?.focus();
     } catch (error) { setErrorMessage(authErrorMessage(error)); }
   };
@@ -249,8 +249,9 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
             {/* Verification destination */}
             <View style={styles.demoHelperRow}>
               <Text style={styles.demoHelperText}>
-                Code sent to {requestedPhone ?? phoneNumber}
+                {isMockAuth ? 'Demo sign-in for ' : 'Code sent to '}{requestedPhone ?? phoneNumber}
               </Text>
+              {isMockAuth && <Text style={styles.demoHelperText}>Demo code: 123123</Text>}
             </View>
           </View>
 

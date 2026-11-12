@@ -1,5 +1,5 @@
 export const OTP_LENGTH = 6;
-export const RESEND_COOLDOWN_MS = 60_000;
+export const RESEND_COOLDOWN_MS = 30_000;
 
 export function normalizeIndianPhone(value: string): string {
   const compact = value.replace(/[\s()-]/g, '');

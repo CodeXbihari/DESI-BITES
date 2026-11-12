@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { observeAuth, requestPhoneOtp, signOutUser, saveDisplayName } from '../services/authService';
+import { Platform } from 'react-native';
 import { normalizeIndianPhone, RESEND_COOLDOWN_MS, validateOtp, authErrorMessage } from '../services/authValidation';
+import { isMockAuthEnabled } from '../services/authMode';
 import type { AuthUser, OtpConfirmation } from '../services/authTypes';
+import { requestMockOtp, verifyMockOtp } from '../services/mockAuthService';
+
+const isMockAuthMode = isMockAuthEnabled(
+  Platform.OS,
+  process.env.EXPO_PUBLIC_AUTH_MODE,
+  __DEV__,
+);
 
 interface AuthContextValue {
   user: AuthUser | null;
+  isMockAuth: boolean;
   initializing: boolean;
   setupError: string | null;
   profileError: string | null;
@@ -31,28 +40,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const lock = useRef(false);
   const cooldown = useRef(0);
 
-  useEffect(() => observeAuth(nextUser => {
-    authenticatedUid.current = nextUser?.uid ?? null;
-    setUser(nextUser);
-    setProfileError(null);
-    if (nextUser && pendingName.current) {
-      const name = pendingName.current;
-      pendingName.current = '';
-      void saveDisplayName(name).then(() => {
-        setUser(current => current?.uid === nextUser.uid ? { ...current, displayName: name } : current);
-      }).catch(() => {
-        if (authenticatedUid.current === nextUser.uid) setProfileError('You are signed in, but your profile name could not be saved.');
-      });
+  useEffect(() => {
+    if (isMockAuthMode) {
+      setSetupError(null);
+      setInitializing(false);
+      return;
     }
-    setSetupError(null);
-    setInitializing(false);
-    if (nextUser) confirmation.current = null;
-  }, error => {
-    authenticatedUid.current = null;
-    setUser(null);
-    setSetupError(authErrorMessage(error));
-    setInitializing(false);
-  }), []);
+
+    let active = true;
+    let unsubscribe = () => {};
+    const handleAuthError = (error: unknown) => {
+      if (!active) return;
+      authenticatedUid.current = null;
+      setUser(null);
+      setSetupError(authErrorMessage(error));
+      setInitializing(false);
+    };
+
+    // Defer the platform-specific Firebase adapter so mock mode never
+    // initializes Firebase or evaluates the native Firebase adapter.
+    void import('../services/authService').then(service => {
+      if (!active) return;
+      unsubscribe = service.observeAuth(nextUser => {
+        if (!active) return;
+        authenticatedUid.current = nextUser?.uid ?? null;
+        setUser(nextUser);
+        setProfileError(null);
+        if (nextUser && pendingName.current) {
+          const name = pendingName.current;
+          pendingName.current = '';
+          void service.saveDisplayName(name).then(() => {
+            setUser(current => current?.uid === nextUser.uid ? { ...current, displayName: name } : current);
+          }).catch(() => {
+            if (active && authenticatedUid.current === nextUser.uid) setProfileError('You are signed in, but your profile name could not be saved.');
+          });
+        }
+        setSetupError(null);
+        setInitializing(false);
+        if (nextUser) confirmation.current = null;
+      }, handleAuthError);
+    }).catch(handleAuthError);
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
 
   async function exclusive(action: () => Promise<void>) {
     if (lock.current) throw new Error('Please wait for the current request to finish.');
@@ -67,11 +100,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (Date.now() < cooldown.current) throw new Error('Please wait before requesting another OTP.');
       const previousName = pendingName.current;
       if (displayName !== undefined) pendingName.current = displayName.trim().slice(0, 80);
-      let next: OtpConfirmation;
-      try { next = await requestPhoneOtp(phone); }
-      catch (error) { pendingName.current = previousName; throw error; }
+      try {
+        if (isMockAuthMode) {
+          await requestMockOtp(phone);
+        } else {
+          const service = await import('../services/authService');
+          confirmation.current = await service.requestPhoneOtp(phone);
+        }
+      } catch (error) { pendingName.current = previousName; throw error; }
       if (authenticatedUid.current) return;
-      confirmation.current = next;
       setPhoneNumber(phone);
       cooldown.current = Date.now() + RESEND_COOLDOWN_MS;
       setResendAt(cooldown.current);
@@ -82,6 +119,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function verifyOtp(code: string) {
     validateOtp(code);
     await exclusive(async () => {
+      if (isMockAuthMode) {
+        const mockUser = await verifyMockOtp(phoneNumber ?? '', code, pendingName.current);
+        authenticatedUid.current = mockUser.uid;
+        pendingName.current = '';
+        setUser(mockUser);
+        setSetupError(null);
+        return;
+      }
       if (!confirmation.current) throw new Error('Please request a new OTP from the login screen.');
       await confirmation.current.confirm(code);
       // Only the Firebase observer grants access to protected routes.
@@ -90,7 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function logout() {
     await exclusive(async () => {
-      await signOutUser();
+      if (isMockAuthMode) {
+        authenticatedUid.current = null;
+        setUser(null);
+      } else {
+        const service = await import('../services/authService');
+        await service.signOutUser();
+      }
       confirmation.current = null;
       pendingName.current = '';
       setProfileError(null);
@@ -100,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
-  return <AuthContext.Provider value={{ user, initializing, setupError, profileError, busy, phoneNumber, resendAt, sendOtp, verifyOtp, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, isMockAuth: isMockAuthMode, initializing, setupError, profileError, busy, phoneNumber, resendAt, sendOtp, verifyOtp, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

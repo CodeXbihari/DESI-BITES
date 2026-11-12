@@ -44,7 +44,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const countryCode = '+91';
-  const { sendOtp, busy, setupError, resendAt } = useAuth();
+  const { sendOtp, busy, setupError, resendAt, isMockAuth } = useAuth();
   const [errorMessage, setErrorMessage] = useState('');
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -198,7 +198,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             {(errorMessage || setupError) ? (
               <Text accessibilityRole="alert" style={{ color: LOGIN_THEME.deepMaroon, marginBottom: 12 }}>{errorMessage || setupError}</Text>
             ) : null}
-            <Text style={[styles.termsText, { marginBottom: 12 }]}>We will send an SMS verification code. Standard SMS rates may apply. Your number is processed by Google for verification and abuse prevention.</Text>
+            <Text style={[styles.termsText, { marginBottom: 12 }]}>
+              {isMockAuth
+                ? 'Development preview: no SMS will be sent. Use demo code 123123 on the next screen.'
+                : 'We will send an SMS verification code. Standard SMS rates may apply. Your number is processed by Google for verification and abuse prevention.'}
+            </Text>
 
             {/* Primary Button: "Send OTP" */}
             <TouchableOpacity

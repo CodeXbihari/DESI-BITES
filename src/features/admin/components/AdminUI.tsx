@@ -219,15 +219,6 @@ export function AdminDemoLabel() {
   return <View style={styles.demoLabel}><View style={styles.demoDot} /><Text style={styles.demoLabelText}>DEMO DATA · LOCAL PREVIEW</Text></View>;
 }
 
-export function AdminPreviewIndicator({ compact = false }: { compact?: boolean }) {
-  return (
-    <View accessibilityLabel="Development preview. Mock Admin session; no real authentication." style={[styles.previewIndicator, compact && styles.previewIndicatorCompact]}>
-      <View style={styles.demoDot} />
-      <Text numberOfLines={1} style={[styles.previewIndicatorText, compact && styles.previewIndicatorTextCompact]}>DEVELOPMENT PREVIEW</Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   button: { minHeight: 40, paddingHorizontal: 13, borderWidth: 1, borderColor: theme.border, borderRadius: 11, backgroundColor: theme.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7 },
   button_primary: { backgroundColor: theme.primary, borderColor: theme.primary },
@@ -296,8 +287,4 @@ const styles = StyleSheet.create({
   demoLabel: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 99, backgroundColor: '#F4E7D2' },
   demoDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: theme.gold },
   demoLabelText: { color: theme.muted, fontSize: 9, letterSpacing: 0.5, fontWeight: '800' },
-  previewIndicator: { alignSelf: 'flex-start', minHeight: 27, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99, backgroundColor: '#F4E7D2' },
-  previewIndicatorCompact: { minHeight: 24, paddingHorizontal: 7, paddingVertical: 4, gap: 4 },
-  previewIndicatorText: { color: theme.primary, fontSize: 9, letterSpacing: 0.55, fontWeight: '900' },
-  previewIndicatorTextCompact: { fontSize: 7, letterSpacing: 0.2 },
 });
