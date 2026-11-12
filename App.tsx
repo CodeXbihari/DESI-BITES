@@ -38,6 +38,7 @@ import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
 import { CheckoutModal } from './src/components/CheckoutModal';
 import { OrderTrackingModal } from './src/components/OrderTrackingModal';
+import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -388,6 +389,14 @@ function AppContent() {
 }
 
 export default function App() {
+  const [showAdminPreview, setShowAdminPreview] = useState(
+    __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
+  );
+
+  if (showAdminPreview) {
+    return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
+  }
+
   return <AuthProvider><AppContent /></AuthProvider>;
 }
 
