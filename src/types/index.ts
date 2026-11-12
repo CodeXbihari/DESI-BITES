@@ -24,8 +24,19 @@ export interface Product {
   description: string;
 }
 
+// Shared fields already present in both catalogues; no invented product metadata.
+export interface CartProduct {
+  id: string;
+  name: string;
+  price: number;
+  image: string;
+  weight?: string;
+}
+
+export type FulfillmentType = 'pickup' | 'delivery';
+
 export interface CartItem {
-  product: Product;
+  product: CartProduct;
   quantity: number;
 }
 

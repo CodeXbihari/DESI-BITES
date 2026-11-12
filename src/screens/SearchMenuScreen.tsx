@@ -14,12 +14,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useApp } from '../context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import {
   SEARCH_THEME,
   SEARCH_HEADER_IMAGE,
   SEARCH_FOOTER_LANDSCAPE,
   SEARCH_MENU_ITEMS,
+  MENU_CATEGORIES,
+  asCartProduct,
   SearchMenuItem,
 } from '../data/searchMenuData';
 
@@ -27,22 +30,24 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type MenuCategory = SearchMenuItem['category'];
 
-const CATEGORY_PILLS: MenuCategory[] = ['All', 'Nashta', 'Thali', 'Mithai', 'Chai'];
+const CATEGORY_PILLS: MenuCategory[] = MENU_CATEGORIES;
 
 interface SearchMenuScreenProps {
+  onSearch?: (query: string) => void;
   onBack?: () => void;
   onViewCart?: () => void;
   initialCategory?: MenuCategory;
 }
 
 export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
+  onSearch,
   onBack,
   onViewCart,
   initialCategory = 'All',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<MenuCategory>(initialCategory);
-  const [cart, setCart] = useState<Record<string, number>>({});
+  const { cart, addToCart, updateQuantity, cartCount: cartItemCount, finalTotal: cartTotal } = useApp();
   const searchInputRef = useRef<any>(null);
 
   useEffect(() => {
@@ -52,7 +57,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
   // Filter items by search + category
   const filteredItems = useMemo(() => {
     return SEARCH_MENU_ITEMS.filter((item) => {
-      const matchesCat = activeCategory === 'All' || item.category === activeCategory;
+      const matchesCat = !!searchQuery.trim() || activeCategory === 'All' || item.category === activeCategory;
       const matchesSearch =
         searchQuery.trim() === '' ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,36 +67,8 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
     });
   }, [searchQuery, activeCategory]);
 
-  // Cart helpers
-  const cartItemCount = useMemo(() => {
-    return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
-  }, [cart]);
-
-  const cartTotal = useMemo(() => {
-    return Object.entries(cart).reduce((sum, [id, qty]) => {
-      const item = SEARCH_MENU_ITEMS.find((m) => m.id === id);
-      return sum + (item ? item.price * qty : 0);
-    }, 0);
-  }, [cart]);
-
-  const addToCart = (id: string) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  };
-
-  const removeFromCart = (id: string) => {
-    setCart((prev) => {
-      const qty = (prev[id] || 0) - 1;
-      if (qty <= 0) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      return { ...prev, [id]: qty };
-    });
-  };
-
   const renderMenuItem = ({ item }: { item: SearchMenuItem }) => {
-    const qty = cart[item.id] || 0;
+    const qty = cart.find(entry => entry.product.id === item.id)?.quantity ?? 0;
 
     return (
       <View style={styles.menuItemCard}>
@@ -141,7 +118,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
             <View style={styles.stepperContainer}>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => removeFromCart(item.id)}
+                onPress={() => updateQuantity(item.id, qty - 1)}
                 activeOpacity={0.7}
               >
                 <Text style={styles.stepperBtnText}>−</Text>
@@ -149,7 +126,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
               <Text style={styles.stepperQty}>{qty}</Text>
               <TouchableOpacity
                 style={styles.stepperBtn}
-                onPress={() => addToCart(item.id)}
+                onPress={() => { if (item.available) addToCart(asCartProduct(item)); }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.stepperBtnText}>+</Text>
@@ -158,7 +135,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
           ) : (
             <TouchableOpacity
               style={styles.addBtn}
-              onPress={() => addToCart(item.id)}
+              onPress={() => { if (item.available) addToCart(asCartProduct(item)); }}
               activeOpacity={0.7}
             >
               <Text style={styles.addBtnText}>ADD</Text>
@@ -241,10 +218,11 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
           <TextInput
             ref={searchInputRef}
             style={styles.searchInput}
-            placeholder="Search litti, chai, thekua"
+            placeholder="Search for food…"
             placeholderTextColor="#A48978"
             value={searchQuery}
-            onChangeText={setSearchQuery}
+            onFocus={() => onSearch?.(searchQuery)}
+            onChangeText={query => onSearch ? onSearch(query) : setSearchQuery(query)}
             returnKeyType="search"
           />
           {searchQuery.length > 0 && (
@@ -336,7 +314,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
             <Text style={styles.cartBarItemCount}>
               {cartItemCount} {cartItemCount === 1 ? 'Item' : 'Items'}
             </Text>
-            <Text style={styles.cartBarTotal}>₹{cartTotal}</Text>
+            <Text style={styles.cartBarTotal}>₹{cartTotal} estimate</Text>
           </View>
           <View style={styles.cartBarRight}>
             <Text style={styles.cartBarBtnText}>View cart</Text>

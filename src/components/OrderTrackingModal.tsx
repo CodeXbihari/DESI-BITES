@@ -11,6 +11,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useApp } from '../context/AppContext';
 import { colors } from '../theme/colors';
+import { homeTheme } from '../theme/homeTheme';
 
 const { height } = Dimensions.get('window');
 
@@ -38,7 +39,7 @@ export const OrderTrackingModal: React.FC = () => {
               style={styles.closeBtn}
               onPress={() => setIsTrackingOpen(false)}
             >
-              <Ionicons name="close" size={20} color={colors.text} />
+              <Ionicons name="close" size={20} color={homeTheme.text} />
             </TouchableOpacity>
           </View>
 
@@ -59,7 +60,7 @@ export const OrderTrackingModal: React.FC = () => {
               {/* Step 1 */}
               <View style={styles.stepRow}>
                 <View style={styles.stepIconCompleted}>
-                  <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                  <Ionicons name="checkmark" size={14} color={homeTheme.background} />
                 </View>
                 <View style={styles.stepInfo}>
                   <Text style={styles.stepTitle}>Order Placed & Confirmed</Text>
@@ -72,7 +73,7 @@ export const OrderTrackingModal: React.FC = () => {
               {/* Step 2 */}
               <View style={styles.stepRow}>
                 <View style={styles.stepIconCompleted}>
-                  <Ionicons name="cube" size={14} color="#FFFFFF" />
+                  <Ionicons name="cube" size={14} color={homeTheme.background} />
                 </View>
                 <View style={styles.stepInfo}>
                   <Text style={styles.stepTitle}>Packing Fresh Items</Text>
@@ -85,7 +86,7 @@ export const OrderTrackingModal: React.FC = () => {
               {/* Step 3 */}
               <View style={styles.stepRow}>
                 <View style={styles.stepIconPending}>
-                  <Ionicons name="bicycle" size={14} color={colors.primary} />
+                  <Ionicons name="bicycle" size={14} color={homeTheme.primary} />
                 </View>
                 <View style={styles.stepInfo}>
                   <Text style={styles.stepTitle}>Out for Delivery</Text>
@@ -97,10 +98,10 @@ export const OrderTrackingModal: React.FC = () => {
               {/* Step 4 */}
               <View style={styles.stepRow}>
                 <View style={styles.stepIconPending}>
-                  <Ionicons name="home" size={14} color={colors.textLight} />
+                  <Ionicons name="home" size={14} color={homeTheme.muted} />
                 </View>
                 <View style={styles.stepInfo}>
-                  <Text style={[styles.stepTitle, { color: colors.textMuted }]}>Delivered</Text>
+                  <Text style={[styles.stepTitle, { color: homeTheme.muted }]}>Delivered</Text>
                   <Text style={styles.stepSub}>{activeOrder.deliveryAddress}</Text>
                 </View>
               </View>
@@ -109,7 +110,7 @@ export const OrderTrackingModal: React.FC = () => {
             {/* Delivery Partner Profile Card */}
             <View style={styles.riderCard}>
               <View style={styles.riderAvatar}>
-                <Ionicons name="person" size={24} color="#FFFFFF" />
+                <Ionicons name="person" size={24} color={homeTheme.background} />
               </View>
               <View style={styles.riderDetails}>
                 <Text style={styles.riderName}>Ramesh Kumar</Text>
@@ -117,10 +118,10 @@ export const OrderTrackingModal: React.FC = () => {
               </View>
               <View style={styles.riderActions}>
                 <TouchableOpacity style={styles.actionBtn}>
-                  <Ionicons name="call" size={18} color={colors.primary} />
+                  <Ionicons name="call" size={18} color={homeTheme.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.actionBtn}>
-                  <Ionicons name="chatbubble-ellipses" size={18} color={colors.primary} />
+                  <Ionicons name="chatbubble-ellipses" size={18} color={homeTheme.primary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -166,7 +167,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   sheet: {
-    backgroundColor: colors.background,
+    backgroundColor: homeTheme.background,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: height * 0.9,
@@ -177,20 +178,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 18,
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.header,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderLight,
+    borderBottomColor: homeTheme.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: colors.text,
+    color: homeTheme.text,
   },
   orderIdText: {
     fontSize: 12,
-    color: colors.primary,
+    color: homeTheme.primary,
     fontWeight: '700',
     marginTop: 2,
   },
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.background,
+    backgroundColor: homeTheme.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   timeCard: {
-    backgroundColor: '#0F172A',
+    backgroundColor: homeTheme.primaryDark,
     borderRadius: 14,
     padding: 16,
     flexDirection: 'row',
@@ -215,34 +216,34 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   timeLabel: {
-    color: '#94A3B8',
+    color: homeTheme.header,
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.8,
   },
   timeValue: {
-    color: '#FFFFFF',
+    color: homeTheme.background,
     fontSize: 20,
     fontWeight: '900',
     marginTop: 2,
   },
   deliveryBadge: {
-    backgroundColor: colors.secondary,
+    backgroundColor: homeTheme.gold,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   badgeText: {
-    color: '#FFFFFF',
+    color: homeTheme.text,
     fontSize: 11,
     fontWeight: '800',
   },
   timelineCard: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: homeTheme.border,
     marginBottom: 14,
   },
   stepRow: {
@@ -253,7 +254,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.secondary,
+    backgroundColor: homeTheme.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -261,9 +262,9 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: homeTheme.header,
     borderWidth: 1.5,
-    borderColor: colors.primaryLight,
+    borderColor: homeTheme.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -274,37 +275,37 @@ const styles = StyleSheet.create({
   stepTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.text,
+    color: homeTheme.text,
   },
   stepSub: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: homeTheme.muted,
     marginTop: 1,
   },
   stepTime: {
     fontSize: 11,
-    color: colors.textLight,
+    color: homeTheme.muted,
   },
   stepConnectorActive: {
     width: 2,
     height: 20,
-    backgroundColor: colors.secondary,
+    backgroundColor: homeTheme.primary,
     marginLeft: 13,
     marginVertical: 2,
   },
   stepConnector: {
     width: 2,
     height: 20,
-    backgroundColor: colors.border,
+    backgroundColor: homeTheme.border,
     marginLeft: 13,
     marginVertical: 2,
   },
   riderCard: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: homeTheme.border,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.primary,
+    backgroundColor: homeTheme.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -324,11 +325,11 @@ const styles = StyleSheet.create({
   riderName: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
+    color: homeTheme.text,
   },
   riderRating: {
     fontSize: 11,
-    color: colors.textMuted,
+    color: homeTheme.muted,
     marginTop: 2,
   },
   riderActions: {
@@ -339,22 +340,22 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#FFF7ED',
+    backgroundColor: homeTheme.header,
     justifyContent: 'center',
     alignItems: 'center',
   },
   itemsCard: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     borderRadius: 14,
     padding: 14,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: homeTheme.border,
     marginBottom: 14,
   },
   itemsCardTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.text,
+    color: homeTheme.text,
     marginBottom: 10,
   },
   miniItemRow: {
@@ -364,47 +365,47 @@ const styles = StyleSheet.create({
   },
   miniItemName: {
     fontSize: 12,
-    color: colors.text,
+    color: homeTheme.text,
     flex: 1,
     marginRight: 8,
   },
   miniItemPrice: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.text,
+    color: homeTheme.text,
   },
   miniTotalRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: homeTheme.border,
     paddingTop: 8,
     marginTop: 8,
   },
   miniTotalLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: colors.text,
+    color: homeTheme.text,
   },
   miniTotalValue: {
     fontSize: 14,
     fontWeight: '800',
-    color: colors.primary,
+    color: homeTheme.primary,
   },
   footer: {
-    backgroundColor: colors.card,
+    backgroundColor: homeTheme.card,
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: homeTheme.border,
   },
   doneBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: homeTheme.primary,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
   },
   doneBtnText: {
-    color: '#FFFFFF',
+    color: homeTheme.background,
     fontWeight: '800',
     fontSize: 14,
   },

@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import { LOGIN_THEME } from '../data/loginData';
 
-// Home uses the Login palette without changing the shared theme of other tabs.
+// Reuse Login's color tokens so Home and search stay in sync with it.
 export const homeTheme = {
   background: LOGIN_THEME.parchmentBg,
   header: LOGIN_THEME.warmCream,
@@ -9,9 +9,9 @@ export const homeTheme = {
   primary: LOGIN_THEME.deepMaroon,
   primaryDark: LOGIN_THEME.buttonMaroonDark,
   text: LOGIN_THEME.darkBrownText,
-  muted: '#8C6C58',
+  muted: LOGIN_THEME.darkTerracotta,
   border: LOGIN_THEME.inputDivider,
   gold: LOGIN_THEME.decorativeGold,
   olive: '#4D5138',
-  headingFont: Platform.OS === 'ios' || Platform.OS === 'web' ? 'Georgia' : 'serif',
+  headingFont: Platform.OS === 'android' ? 'sans-serif' : 'Arial',
 };

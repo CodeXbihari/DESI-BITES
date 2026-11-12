@@ -7,42 +7,47 @@ import { homeTheme as theme } from '../theme/homeTheme';
 
 interface CartFloatingBarProps {
   onBottomSpaceChange?: (height: number) => void;
-  variant?: 'default' | 'home';
+  variant?: 'default' | 'home' | 'profile';
+  bottomOffset?: number;
 }
 
-export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceChange, variant = 'default' }) => {
-  const { cartCount, finalTotal, setIsCartOpen } = useApp();
+export const CartFloatingBar: React.FC<CartFloatingBarProps> = ({ onBottomSpaceChange, variant = 'default', bottomOffset = 60 }) => {
+  const { cartCount, finalTotal, cartSubtotal, setIsCartOpen } = useApp();
   const isHome = variant === 'home';
+  const usesLoginPalette = isHome || variant === 'profile';
+  const isProfile = variant === 'profile';
 
   if (cartCount === 0) return null;
 
   return (
     <View
-      style={styles.outerContainer}
+      style={[styles.outerContainer, { bottom: bottomOffset }]}
       onLayout={({ nativeEvent: { layout } }) => {
-        onBottomSpaceChange?.(layout.height + styles.outerContainer.bottom);
+        onBottomSpaceChange?.(layout.height + bottomOffset);
       }}
     >
       <TouchableOpacity
-        style={[styles.container, isHome && homeStyles.container]}
+        style={[styles.container, isHome && homeStyles.container, isProfile && profileStyles.container]}
         activeOpacity={0.9}
         onPress={() => setIsCartOpen(true)}
         accessibilityRole="button"
-        accessibilityLabel={`View grocery cart, ${cartCount} items, ₹${finalTotal}`}
+        accessibilityLabel={`View cart, ${cartCount} items, ₹${isHome ? cartSubtotal : finalTotal}`}
       >
         <View style={styles.leftInfo}>
-          <View style={[styles.countBadge, isHome && homeStyles.countBadge]}>
-            <Text style={styles.countText}>{cartCount}</Text>
+          <View style={[styles.countBadge, isHome && homeStyles.countBadge, isProfile && profileStyles.countBadge]}>
+            <Text style={[styles.countText, isProfile && profileStyles.countText]}>{cartCount}</Text>
           </View>
           <View>
-            <Text style={styles.totalText}>₹{finalTotal}</Text>
-            <Text style={[styles.extraText, isHome && homeStyles.extraText]}>Plus taxes & delivery</Text>
+            <Text style={[styles.totalText, isProfile && profileStyles.totalText]}>
+              ₹{isHome ? cartSubtotal : finalTotal}
+            </Text>
+            <Text style={[styles.extraText, usesLoginPalette && homeStyles.extraText]}>Estimate · no payment collected</Text>
           </View>
         </View>
 
-        <View style={[styles.rightAction, isHome && homeStyles.rightAction]}>
-          <Text style={styles.viewCartText}>View Cart</Text>
-          <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+        <View style={[styles.rightAction, isHome && homeStyles.rightAction, isProfile && profileStyles.rightAction]}>
+          <Text style={[styles.viewCartText, isProfile && profileStyles.viewCartText]}>View Cart</Text>
+          <Ionicons name="arrow-forward" size={16} color={isProfile ? theme.background : '#FFFFFF'} />
         </View>
       </TouchableOpacity>
     </View>
@@ -114,9 +119,18 @@ const styles = StyleSheet.create({
 });
 
 const homeStyles = StyleSheet.create({
-  container: { backgroundColor: theme.primary, borderWidth: 1, borderColor: theme.gold, shadowColor: theme.text, flexWrap: 'wrap', gap: 8 },
+  container: { backgroundColor: theme.primary, borderRadius: 30, borderWidth: 1, borderColor: theme.border, shadowColor: theme.text, flexWrap: 'wrap', gap: 8 },
   countBadge: { backgroundColor: theme.primaryDark },
   extraText: { color: theme.background },
   rightAction: { backgroundColor: theme.primaryDark, paddingHorizontal: 10 },
+});
+
+const profileStyles = StyleSheet.create({
+  container: { backgroundColor: theme.primary, shadowColor: theme.text },
+  countBadge: { backgroundColor: theme.primaryDark },
+  countText: { color: theme.background },
+  totalText: { color: theme.background },
+  rightAction: { backgroundColor: theme.primaryDark },
+  viewCartText: { color: theme.background },
 });
 

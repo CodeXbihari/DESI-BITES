@@ -10,7 +10,6 @@ import {
   Animated,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -67,6 +66,19 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
     } else {
       onComplete();
     }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      const previousIdx = currentIndex - 1;
+      scrollRef.current?.scrollTo({ x: previousIdx * SCREEN_WIDTH, animated: true });
+      setCurrentIndex(previousIdx);
+    }
+  };
+
+  const handleGoToSlide = (index: number) => {
+    scrollRef.current?.scrollTo({ x: index * SCREEN_WIDTH, animated: true });
+    setCurrentIndex(index);
   };
 
   return (
@@ -155,33 +167,56 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }
           ))}
         </ScrollView>
 
-        {/* Footer with Pill Dots & Tactile 3D Next Button */}
+        {/* Footer navigation: equal columns keep pagination centered */}
         <View style={styles.footer}>
-          {/* Progress Dots */}
-          <View style={styles.dotsContainer}>
-            {ONBOARDING_SLIDES.map((_, i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  currentIndex === i ? styles.dotActive : styles.dotInactive,
-                ]}
-              />
-            ))}
+          <View style={styles.footerColumn}>
+            <TouchableOpacity
+              style={[styles.previousButton, currentIndex === 0 && styles.previousButtonHidden]}
+              onPress={handlePrevious}
+              disabled={currentIndex === 0}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="Previous onboarding screen"
+            >
+              <Text style={styles.previousArrow}>←</Text>
+              <Text style={styles.previousButtonText}>Previous</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* 3D Tactile Golden Action Button */}
-          <TouchableOpacity
-            style={styles.nextButton}
-            onPress={handleNext}
-            activeOpacity={0.85}
-          >
-            <View style={styles.nextButtonBevel}>
-              <Text style={styles.nextButtonText}>
-                {currentIndex === ONBOARDING_SLIDES.length - 1 ? 'शुरू करें' : 'आगे बढ़ें'}
-              </Text>
+          <View style={[styles.footerColumn, styles.footerCenterColumn]}>
+            <View style={styles.dotsContainer}>
+              {ONBOARDING_SLIDES.map((_, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={[
+                    styles.dot,
+                    currentIndex === i ? styles.dotActive : styles.dotInactive,
+                  ]}
+                  onPress={() => handleGoToSlide(i)}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Go to onboarding screen ${i + 1}`}
+                  accessibilityState={{ selected: currentIndex === i }}
+                />
+              ))}
             </View>
-          </TouchableOpacity>
+          </View>
+
+          <View style={[styles.footerColumn, styles.footerRightColumn]}>
+            <TouchableOpacity
+              style={styles.nextButton}
+              onPress={handleNext}
+              activeOpacity={0.85}
+              accessibilityRole="button"
+              accessibilityLabel={currentIndex === ONBOARDING_SLIDES.length - 1 ? 'Get started' : 'Next onboarding screen'}
+            >
+              <View style={styles.nextButtonBevel}>
+                <Text style={styles.nextButtonText}>
+                  {currentIndex === ONBOARDING_SLIDES.length - 1 ? 'शुरू करें' : 'आगे बढ़ें'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     </View>
@@ -375,11 +410,42 @@ const styles = StyleSheet.create({
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 26,
+    paddingHorizontal: 18,
     paddingVertical: 18,
     zIndex: 10,
+  },
+  footerColumn: {
+    flex: 1,
+    minWidth: 0,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  footerCenterColumn: {
+    alignItems: 'center',
+  },
+  footerRightColumn: {
+    alignItems: 'flex-end',
+  },
+  previousButton: {
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  previousButtonHidden: {
+    opacity: 0,
+  },
+  previousArrow: {
+    color: '#FFF1D8',
+    fontSize: 23,
+    lineHeight: 26,
+    fontWeight: '600',
+  },
+  previousButtonText: {
+    color: '#FFF1D8',
+    fontSize: 14,
+    fontWeight: '700',
   },
   dotsContainer: {
     flexDirection: 'row',

@@ -8,12 +8,13 @@ import { homeTheme as theme } from '../theme/homeTheme';
 interface HeaderProps {
   variant?: 'default' | 'home';
   onOpenProfile?: () => void;
+  onOpenSearch?: (query: string) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfile }) => {
-  const { selectedAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfile, onOpenSearch }) => {
+  const { fulfillment, deliveryAddressDraft, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
 
-  if (variant === 'home') return <HomeHeader onOpenProfile={onOpenProfile} />;
+  if (variant === 'home') return <HomeHeader onOpenProfile={onOpenProfile} onOpenSearch={onOpenSearch} />;
 
   return (
     <View style={styles.container}>
@@ -22,16 +23,16 @@ export const Header: React.FC<HeaderProps> = ({ variant = 'default', onOpenProfi
         <View style={styles.locationContainer}>
           <View style={styles.deliveryBadge}>
             <Ionicons name="flash" size={12} color="#FFFFFF" />
-            <Text style={styles.deliveryBadgeText}>12 MINS</Text>
+            <Text style={styles.deliveryBadgeText}>DESI BYTES</Text>
           </View>
           <TouchableOpacity style={styles.addressSelector} activeOpacity={0.7}>
             <Text style={styles.addressTitle} numberOfLines={1}>
-              {selectedAddress.tag} - {selectedAddress.area}
+              {fulfillment === 'pickup' ? 'Pickup' : 'Delivery'}
             </Text>
             <Ionicons name="chevron-down" size={16} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.addressSubtitle} numberOfLines={1}>
-            {selectedAddress.addressLine}
+            {fulfillment === 'pickup' ? 'No delivery address needed' : deliveryAddressDraft.trim() || 'Enter address at checkout'}
           </Text>
         </View>
 
@@ -176,9 +177,11 @@ const styles = StyleSheet.create({
   },
 });
 
-function HomeHeader({ onOpenProfile }: Pick<HeaderProps, 'onOpenProfile'>) {
-  const { selectedAddress, addresses, setSelectedAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+function HomeHeader({ onOpenSearch }: Pick<HeaderProps, 'onOpenProfile' | 'onOpenSearch'>) {
+  const { selectedAddress, addresses, setSelectedAddress, addAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
   const [showAddresses, setShowAddresses] = useState(false);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({ addressLine: '', area: '', city: '', pincode: '' });
 
   return (
     <>
@@ -190,55 +193,15 @@ function HomeHeader({ onOpenProfile }: Pick<HeaderProps, 'onOpenProfile'>) {
           accessible={false}
         />
         <View style={homeStyles.topRow}>
-          <TouchableOpacity
-            style={homeStyles.location}
-            onPress={() => setShowAddresses(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Delivery address: ${selectedAddress.tag}, ${selectedAddress.area}. Change address`}
-          >
-            <Text style={homeStyles.delivering}>DELIVERING TO</Text>
-            <View style={homeStyles.addressRow}>
-              <Ionicons name="home-outline" size={18} color={theme.primary} />
-              <Text style={homeStyles.addressTitle} numberOfLines={1}>{selectedAddress.tag}</Text>
-              <Ionicons name="chevron-down" size={14} color={theme.primary} />
-            </View>
-            <Text style={homeStyles.addressDetail} numberOfLines={1}>{selectedAddress.addressLine}, {selectedAddress.area}</Text>
+          <TouchableOpacity style={homeStyles.location} onPress={() => setShowAddresses(true)} accessibilityRole="button" accessibilityLabel="Change delivery address">
+            <View style={homeStyles.addressRow}><Ionicons name="location" size={23} color={theme.primary} /><Text style={homeStyles.addressTitle} numberOfLines={1}>{selectedAddress.city}</Text><Ionicons name="chevron-down" size={16} color={theme.primary} /></View>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={homeStyles.cart}
-            onPress={() => setIsCartOpen(true)}
-            accessibilityRole="button"
-            accessibilityLabel={`Open grocery cart, ${cartCount} items`}
-          >
-            <Ionicons name="bag-outline" size={19} color={theme.primary} />
-            {cartCount > 0 && <Text style={homeStyles.cartBadge}>{cartCount}</Text>}
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={homeStyles.profile}
-            onPress={onOpenProfile}
-            accessibilityRole="button"
-            accessibilityLabel="Open profile"
-          >
-            <Ionicons name="person-outline" size={18} color={theme.card} />
-          </TouchableOpacity>
+          <TouchableOpacity style={homeStyles.cart} onPress={() => setIsCartOpen(true)} accessibilityRole="button" accessibilityLabel={`Open cart, ${cartCount} items`}><Ionicons name="cart-outline" size={32} color={theme.primary} />{cartCount > 0 && <Text style={homeStyles.cartBadge}>{cartCount}</Text>}</TouchableOpacity>
         </View>
-        <View style={homeStyles.search}>
-          <Ionicons name="search" size={20} color={theme.primary} />
-          <TextInput
-            style={homeStyles.input}
-            placeholder="Search for food, chai, groceries…"
-            placeholderTextColor={theme.muted}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-            accessibilityLabel="Search food and daily essentials"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')} accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={10}>
-              <Ionicons name="close-circle" size={18} color={theme.muted} />
-            </TouchableOpacity>
-          )}
-        </View>
+        <Image source={require('../../assets/images/desi-logo.png')} style={{ width: '82%', height: 78, alignSelf: 'center', marginTop: -12, marginBottom: 10 }} resizeMode="contain" accessibilityLabel="Desi Bites Café" />
+        <TouchableOpacity style={homeStyles.search} onPress={() => onOpenSearch?.(searchQuery)} accessibilityRole="button" accessibilityLabel="Search for food">
+          <Ionicons name="search-outline" size={23} color={theme.text} /><Text style={homeStyles.input}>{searchQuery || 'Search for food…'}</Text>
+        </TouchableOpacity>
       </View>
       <Modal visible={showAddresses} transparent animationType="fade" onRequestClose={() => setShowAddresses(false)}>
         <View style={homeStyles.backdrop}>
@@ -263,32 +226,43 @@ function HomeHeader({ onOpenProfile }: Pick<HeaderProps, 'onOpenProfile'>) {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+            <TouchableOpacity style={homeStyles.addAddressButton} onPress={() => setShowAddAddress(true)} accessibilityRole="button"><Ionicons name="add-circle-outline" size={19} color={theme.primary}/><Text style={homeStyles.addAddressText}>Add new address</Text></TouchableOpacity>
           </View>
         </View>
       </Modal>
+      <Modal visible={showAddAddress} transparent animationType="slide" onRequestClose={() => setShowAddAddress(false)}><View style={homeStyles.backdrop}><View style={homeStyles.addressSheet}><Text style={homeStyles.sheetTitle}>Add new address</Text>{(['addressLine','area','city','pincode'] as const).map((field,index)=><TextInput key={field} style={homeStyles.newAddressInput} placeholder={['Street address','Area / locality','City','PIN code'][index]} placeholderTextColor={theme.muted} value={newAddress[field]} onChangeText={value=>setNewAddress(prev=>({...prev,[field]:value}))} keyboardType={field==='pincode'?'number-pad':'default'} />)}<View style={homeStyles.addressActions}><TouchableOpacity style={[homeStyles.addressAction,homeStyles.cancelAddress]} onPress={()=>{setShowAddAddress(false);setNewAddress({addressLine:'',area:'',city:'',pincode:''});}} accessibilityRole="button"><Text style={homeStyles.cancelAddressText}>Cancel</Text></TouchableOpacity><TouchableOpacity style={[homeStyles.addressAction,homeStyles.saveAddress]} onPress={()=>{const {addressLine,area,city,pincode}=newAddress;if(!addressLine.trim()||!area.trim()||!city.trim()||!/^\d{6}$/.test(pincode.trim()))return;const address={id:`address-${Date.now()}`,tag:'Other' as const,addressLine:addressLine.trim(),area:area.trim(),city:city.trim(),pincode:pincode.trim(),isDefault:false};addAddress(address);setNewAddress({addressLine:'',area:'',city:'',pincode:''});setShowAddAddress(false);setShowAddresses(false);}} accessibilityRole="button"><Text style={homeStyles.saveAddressText}>Save address</Text></TouchableOpacity></View></View></View></Modal>
     </>
   );
 }
 
 const homeStyles = StyleSheet.create({
-  header: { backgroundColor: theme.header, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: theme.border, overflow: 'hidden' },
+  header: { backgroundColor: theme.background, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, overflow: 'hidden' },
   texture: { ...StyleSheet.absoluteFill, width: '100%', height: '100%', opacity: 0.09 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
   location: { flex: 1, minWidth: 0 },
   delivering: { fontSize: 9, letterSpacing: 1.2, color: theme.muted, fontWeight: '700', marginBottom: 5 },
   addressRow: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  addressTitle: { flexShrink: 1, color: theme.text, fontSize: 18, fontWeight: '800' },
+  addressTitle: { flexShrink: 1, color: theme.text, fontSize: 15, fontWeight: '600' },
   addressDetail: { fontSize: 10, lineHeight: 16, color: theme.muted, marginTop: 4 },
-  cart: { width: 36, height: 36, borderWidth: 1, borderColor: theme.gold, borderRadius: 18, backgroundColor: theme.card, alignItems: 'center', justifyContent: 'center' },
+  cart: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   cartBadge: { position: 'absolute', top: -5, right: -4, minWidth: 16, borderRadius: 8, textAlign: 'center', paddingHorizontal: 3, backgroundColor: theme.primary, color: theme.card, fontSize: 9, fontWeight: '800' },
   profile: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, borderColor: theme.gold, backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderWidth: 1, borderColor: '#C49B77', borderRadius: 12, backgroundColor: theme.card },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 46, paddingHorizontal: 12, borderWidth: 1, borderColor: theme.border, borderRadius: 28, backgroundColor: theme.card },
   input: { flex: 1, minWidth: 0, fontSize: 13, paddingVertical: 12, color: theme.text },
   backdrop: { flex: 1, backgroundColor: 'rgba(44,24,18,0.55)', alignItems: 'center', justifyContent: 'center', padding: 24 },
   addressSheet: { width: '100%', maxWidth: 420, maxHeight: '80%', borderRadius: 18, padding: 20, backgroundColor: theme.background, borderWidth: 1, borderColor: theme.gold },
   sheetTitle: { flex: 1, fontFamily: theme.headingFont, fontSize: 23, fontWeight: '700', color: theme.text },
   addressOption: { borderWidth: 1, borderColor: theme.border, borderRadius: 12, backgroundColor: theme.card, padding: 12, marginBottom: 10 },
   addressSelected: { borderColor: theme.primary },
+  addAddressButton: { minHeight: 46, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: theme.primary, borderRadius: 12, marginTop: 6 },
+  addAddressText: { color: theme.primary, fontWeight: '700' },
+  newAddressInput: { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, marginTop: 10, color: theme.text },
+  addressActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  addressAction: { flex: 1, minHeight: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  cancelAddress: { backgroundColor: theme.card, borderWidth: 1, borderColor: theme.border },
+  saveAddress: { backgroundColor: theme.primary },
+  cancelAddressText: { color: theme.text, fontWeight: '700' },
+  saveAddressText: { color: theme.card, fontWeight: '700' },
   optionTitle: { fontWeight: '700', color: theme.text, fontSize: 14 },
 });
 

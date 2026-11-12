@@ -1,9 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Dimensions,
   TouchableOpacity,
   TextInput,
   Image,
@@ -18,84 +17,36 @@ import {
   CHECKOUT_THEME,
   CHECKOUT_HEADER_IMAGE,
   CHECKOUT_FOOTER_IMAGE,
-  CHECKOUT_RESTAURANT_ICON,
-  CHECKOUT_ITEMS,
-  CheckoutItem,
 } from '../data/checkoutData';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { useApp } from '../context/AppContext';
+import { canReviewCheckout } from '../services/cart';
 
 interface CheckoutScreenProps {
   onBack?: () => void;
-  onPaymentSuccess?: () => void;
 }
 
-export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
-  onBack,
-  onPaymentSuccess,
-}) => {
-  const [items, setItems] = useState<CheckoutItem[]>(CHECKOUT_ITEMS);
+export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ onBack }) => {
+  const {
+    cart, updateQuantity, cartSubtotal: subtotal, deliveryFee,
+    appliedDiscount: discount, appliedCoupon, applyCoupon, removeCoupon,
+    finalTotal: grandTotal, fulfillment, setFulfillment,
+    deliveryAddressDraft, setDeliveryAddressDraft,
+  } = useApp();
   const [promoCode, setPromoCode] = useState('');
-  const [isPromoApplied, setIsPromoApplied] = useState(true);
-  const [deliveryAddress, setDeliveryAddress] = useState(
-    '123, Green Park, New Delhi – 110016'
-  );
-
-  const updateQuantity = (id: string, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) => {
-          if (item.id === id) {
-            const newQty = Math.max(0, item.quantity + delta);
-            return { ...item, quantity: newQty };
-          }
-          return item;
-        })
-        .filter((item) => item.quantity > 0)
-    );
-  };
+  const [promoError, setPromoError] = useState('');
+  const [reviewed, setReviewed] = useState(false);
+  useEffect(() => {
+    setReviewed(false);
+  }, [cart, appliedCoupon, subtotal, deliveryFee, discount, grandTotal, fulfillment, deliveryAddressDraft]);
+  const ready = canReviewCheckout(cart, fulfillment, deliveryAddressDraft);
+  const items = cart.map(({ product, quantity }) => ({ ...product, quantity }));
 
   const handleApplyPromo = () => {
-    if (isPromoApplied) {
-      setIsPromoApplied(false);
-      Alert.alert('Promo Code', 'Promo code removed.');
-    } else {
-      setIsPromoApplied(true);
-      Alert.alert('बधाई हो! (Success)', '₹50 discount applied successfully!');
-    }
-  };
-
-  const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  }, [items]);
-
-  const deliveryFee = items.length > 0 ? 30 : 0;
-  const taxes = items.length > 0 ? 25 : 0;
-  const discount = isPromoApplied && items.length > 0 ? 50 : 0;
-  const grandTotal = Math.max(0, subtotal + deliveryFee + taxes - discount);
-
-  const handlePayment = () => {
-    if (items.length === 0) {
-      Alert.alert('Empty Cart', 'Please add items to your cart before proceeding.');
-      return;
-    }
-    Alert.alert(
-      'Payment Confirmation',
-      `Pay ₹${grandTotal} for delivery to:\n${deliveryAddress}`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm & Pay',
-          onPress: () => {
-            if (onPaymentSuccess) {
-              onPaymentSuccess();
-            } else {
-              Alert.alert('ऑर्डर सफल! (Order Placed)', 'आपका ऑर्डर तैयार किया जा रहा है।');
-            }
-          },
-        },
-      ]
-    );
+    setPromoError('');
+    if (appliedCoupon) removeCoupon();
+    else if (applyCoupon(promoCode)) setPromoCode('');
+    else setPromoError('Invalid coupon. Try FESTIVE40, SPICE20 or DESIEXPRESS.');
   };
 
   return (
@@ -107,6 +58,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        keyboardShouldPersistTaps="handled"
       >
         {/* ── 1. HEADER SECTION (HERITAGE TEMPLE SILHOUETTE, NO APP NAME) ── */}
         <View style={styles.headerSection}>
@@ -168,19 +120,15 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
             <View style={styles.lotusLeafR} />
           </View>
 
-          {/* ── RESTAURANT CARD ("घर का स्वाद") ── */}
+          {/* Shop card */}
           <View style={styles.restaurantCard}>
             <View style={styles.clocheBadge}>
               <Ionicons name="restaurant" size={20} color="#FFF0D7" />
             </View>
             <View style={styles.restaurantInfo}>
-              <Text style={styles.restaurantName}>घर का स्वाद</Text>
+              <Text style={styles.restaurantName}>Desi Bytes</Text>
               <View style={styles.restaurantMetaRow}>
-                <Ionicons name="star" size={13} color="#D6A45B" />
-                <Text style={styles.ratingText}>4.8</Text>
-                <Text style={styles.metaDivider}>|</Text>
-                <Ionicons name="time-outline" size={13} color="#8C6C58" />
-                <Text style={styles.timeText}>25–35 min</Text>
+                <Text style={styles.timeText}>Checkout review · no payment collected</Text>
               </View>
             </View>
           </View>
@@ -207,14 +155,14 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                   <Text style={styles.itemName} numberOfLines={1}>
                     {item.name}
                   </Text>
-                  <Text style={styles.itemVariant}>{item.variant}</Text>
+                  {item.weight ? <Text style={styles.itemVariant}>{item.weight}</Text> : null}
                 </View>
 
                 {/* Quantity Stepper: [ − 1 + ] */}
                 <View style={styles.stepperBox}>
                   <TouchableOpacity
                     style={styles.stepperBtn}
-                    onPress={() => updateQuantity(item.id, -1)}
+                    onPress={() => updateQuantity(item.id, item.quantity - 1)}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.stepperBtnText}>−</Text>
@@ -222,7 +170,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                   <Text style={styles.stepperQty}>{item.quantity}</Text>
                   <TouchableOpacity
                     style={styles.stepperBtn}
-                    onPress={() => updateQuantity(item.id, 1)}
+                    onPress={() => updateQuantity(item.id, item.quantity + 1)}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.stepperBtnText}>+</Text>
@@ -231,7 +179,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
 
                 {/* Price */}
                 <Text style={styles.itemPrice}>
-                  ₹{item.price * item.quantity}
+                  ₹{((Math.round(item.price * 100) * item.quantity) / 100).toFixed(2)}
                 </Text>
               </View>
             ))}
@@ -253,26 +201,48 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
                 style={styles.promoInput}
                 placeholder="Promo code"
                 placeholderTextColor="#A48978"
-                value={isPromoApplied ? 'DESI50' : promoCode}
+                value={appliedCoupon ?? promoCode}
+                accessibilityLabel="Coupon code"
+                autoCapitalize="characters"
                 onChangeText={setPromoCode}
-                editable={!isPromoApplied}
+                editable={!appliedCoupon}
               />
             </View>
             <TouchableOpacity
               style={[
                 styles.applyPromoBtn,
-                isPromoApplied && styles.appliedPromoBtn,
+                appliedCoupon && styles.appliedPromoBtn,
               ]}
               onPress={handleApplyPromo}
               activeOpacity={0.8}
             >
               <Text style={styles.applyPromoBtnText}>
-                {isPromoApplied ? 'Applied' : 'Apply'}
+                {appliedCoupon ? 'Remove' : 'Apply'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* ── BILL DETAILS / PRICE BREAKDOWN ── */}
+          {promoError ? <Text accessibilityRole="alert" style={styles.errorText}>{promoError}</Text> : null}
+
+          <View style={styles.billCard}>
+            <Text style={styles.totalLabel}>Pickup or Delivery</Text>
+            <View style={styles.fulfillmentOptions}>
+              {(['pickup', 'delivery'] as const).map(option => (
+                <TouchableOpacity
+                  key={option}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: fulfillment === option }}
+                  onPress={() => { setFulfillment(option); setReviewed(false); }}
+                  style={[styles.fulfillmentOption, fulfillment === option && styles.fulfillmentSelected]}
+                >
+                  <Text style={styles.billLabel}>{option === 'pickup' ? 'Pickup' : 'Delivery'}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <Text style={styles.timeText}>{fulfillment === 'pickup' ? 'No delivery address or delivery fee required.' : 'Delivery is handled manually by the shop.'}</Text>
+          </View>
+
+          {/* Shared estimate */}
           <View style={styles.billCard}>
             <View style={styles.billRow}>
               <Text style={styles.billLabel}>Subtotal</Text>
@@ -281,10 +251,6 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
             <View style={styles.billRow}>
               <Text style={styles.billLabel}>Delivery</Text>
               <Text style={styles.billValue}>₹{deliveryFee}</Text>
-            </View>
-            <View style={styles.billRow}>
-              <Text style={styles.billLabel}>Taxes</Text>
-              <Text style={styles.billValue}>₹{taxes}</Text>
             </View>
             {discount > 0 && (
               <View style={styles.billRow}>
@@ -300,62 +266,49 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
             <View style={styles.billDivider} />
 
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>Estimated total</Text>
               <Text style={styles.totalValue}>₹{grandTotal}</Text>
             </View>
           </View>
 
-          {/* ── DELIVERY ADDRESS BAR ── */}
-          <View style={styles.addressBar}>
-            <Ionicons
-              name="location"
-              size={20}
-              color="#861C24"
-              style={{ marginRight: 8 }}
-            />
-            <View style={styles.addressTextColumn}>
-              <Text style={styles.addressTitle}>Deliver to</Text>
-              <Text style={styles.addressDetail} numberOfLines={1}>
-                {deliveryAddress}
-              </Text>
+          {fulfillment === 'delivery' && (
+            <View style={styles.billCard}>
+              <Text style={styles.addressTitle}>Delivery address (required)</Text>
+              <TextInput
+                accessibilityLabel="Delivery address"
+                style={styles.addressInput}
+                value={deliveryAddressDraft}
+                onChangeText={value => { setDeliveryAddressDraft(value); setReviewed(false); }}
+                placeholder="Enter your full delivery address"
+                placeholderTextColor={CHECKOUT_THEME.textMutedBrown}
+                multiline
+                textAlignVertical="top"
+              />
+              {!deliveryAddressDraft.trim() && <Text style={styles.errorText}>Enter a delivery address to review checkout.</Text>}
             </View>
-            <TouchableOpacity
-              style={styles.addressActionBtn}
-              onPress={() =>
-                Alert.prompt
-                  ? Alert.prompt(
-                      'Update Address',
-                      'Enter delivery address:',
-                      (text) => text && setDeliveryAddress(text),
-                      'plain-text',
-                      deliveryAddress
-                    )
-                  : Alert.alert('Address', deliveryAddress)
-              }
-              activeOpacity={0.7}
-            >
-              <Text style={styles.addressActionText}>Add address</Text>
-            </TouchableOpacity>
-          </View>
+          )}
 
-          {/* ── PRIMARY BUTTON: "आगे बढ़ें • Continue to Payment →" ── */}
+          <Text style={styles.reviewNotice}>
+            Estimate only. Pricing and coupons are temporary, pending shop-owner confirmation.
+            No payment is collected and no order is created.
+          </Text>
           <TouchableOpacity
-            style={styles.continueButton}
-            onPress={handlePayment}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !ready }}
+            disabled={!ready}
+            style={[styles.continueButton, !ready && styles.disabledButton]}
+            onPress={() => setReviewed(true)}
             activeOpacity={0.88}
           >
             <View style={styles.continueButtonInner}>
-              <Text style={styles.continueButtonText}>
-                आगे बढ़ें • Continue to Payment
-              </Text>
-              <Ionicons
-                name="arrow-forward"
-                size={18}
-                color="#FFF0D7"
-                style={{ marginLeft: 8 }}
-              />
+              <Text style={styles.continueButtonText}>Review checkout · no charge</Text>
             </View>
           </TouchableOpacity>
+          {reviewed && ready && (
+            <Text accessibilityRole="status" style={styles.reviewNotice}>
+              Your current checkout estimate is ready for review. No order has been placed and no payment collected.
+            </Text>
+          )}
 
           {/* ── BOTTOM DECORATIVE LOTUS DIVIDER ── */}
           <View style={styles.bottomDividerRow}>
@@ -383,6 +336,13 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({
 };
 
 const styles = StyleSheet.create({
+  fulfillmentOptions: { flexDirection: 'row', gap: 12, marginVertical: 12 },
+  fulfillmentOption: { flex: 1, padding: 12, borderWidth: 1, borderRadius: 12, borderColor: CHECKOUT_THEME.cardBorder, alignItems: 'center' },
+  fulfillmentSelected: { backgroundColor: '#F0D8BB', borderColor: CHECKOUT_THEME.primaryMaroon },
+  addressInput: { minHeight: 88, padding: 12, marginTop: 8, borderWidth: 1, borderRadius: 12, borderColor: CHECKOUT_THEME.cardBorder, color: CHECKOUT_THEME.textDarkBrown, backgroundColor: CHECKOUT_THEME.inputBg },
+  errorText: { color: '#A02020', marginBottom: 12, marginTop: 6, fontSize: 12 },
+  reviewNotice: { color: CHECKOUT_THEME.textMutedBrown, fontSize: 12, marginBottom: 16, lineHeight: 18 },
+  disabledButton: { opacity: 0.5 },
   container: {
     flex: 1,
     backgroundColor: CHECKOUT_THEME.parchmentBg,

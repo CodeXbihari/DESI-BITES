@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,21 +23,18 @@ import { homeTheme } from './src/theme/homeTheme';
 import type { SearchMenuItem } from './src/data/searchMenuData';
 
 import { HomeScreen } from './src/screens/HomeScreen';
-import { ExploreScreen } from './src/screens/ExploreScreen';
 import { OrdersScreen } from './src/screens/OrdersScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
 import { OnboardingScreen } from './src/screens/OnboardingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OtpScreen } from './src/screens/OtpScreen';
-import { SearchMenuScreen } from './src/screens/SearchMenuScreen';
+import { SearchResultsScreen } from './src/screens/SearchResultsScreen';
+import { ReorderScreen } from './src/screens/ReorderScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
-import { PaymentScreen } from './src/screens/PaymentScreen';
-import { OrderTrackingScreen } from './src/screens/OrderTrackingScreen';
 
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
-import { CheckoutModal } from './src/components/CheckoutModal';
-import { OrderTrackingModal } from './src/components/OrderTrackingModal';
+import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -46,30 +43,32 @@ export type RootStackParamList = {
   Login: undefined;
   Otp: { phoneNumber?: string };
   Main: undefined;
-  SearchMenu: { category?: SearchMenuItem['category'] } | undefined;
+  SearchResults: { query?: string; collection?: 'popular' | 'recommended'; category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
-  Payment: { amount?: number } | undefined;
-  OrderTracking: { orderId?: string; totalAmount?: number } | undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-type Tab = 'home' | 'explore' | 'orders' | 'profile';
+type Tab = 'home' | 'orders' | 'reorder' | 'profile';
 
 interface MainAppProps {
   onLogout: () => void;
   onReplayOnboarding: () => void;
-  onOpenSearchMenu?: (category?: SearchMenuItem['category']) => void;
+  onOpenSearch: (query: string, collection?: 'popular' | 'recommended', category?: SearchMenuItem['category']) => void;
+  onCheckout: () => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout }: MainAppProps) {
+  const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
-  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height);
+  const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height + insets.bottom);
   const { orders, cartCount } = useApp();
   const isHome = currentTab === 'home';
-  const activeTabColor = isHome ? homeTheme.primary : colors.primary;
-  const inactiveTabColor = isHome ? homeTheme.muted : colors.textMuted;
+  const isProfile = currentTab === 'profile';
+  const usesLoginPalette = isHome || isProfile;
+  const activeTabColor = usesLoginPalette ? homeTheme.primary : colors.primary;
+  const inactiveTabColor = usesLoginPalette ? homeTheme.muted : colors.textMuted;
 
   // The tab bar already sits outside the screen container. Reserve only the
   // part of the cart's measured height and bottom offset that covers Home.
@@ -78,7 +77,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
     : 0;
 
   return (
-    <SafeAreaView style={[styles.container, isHome && styles.homeContainer]} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={[styles.container, usesLoginPalette && styles.homeContainer]} edges={['top', 'left', 'right']}>
       <StatusBar style="dark" />
 
       {/* Screen Container */}
@@ -86,12 +85,13 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
         {currentTab === 'home' && (
           <HomeScreen
             bottomContentInset={homeBottomInset}
-            onOpenMenu={category => onOpenSearchMenu ? onOpenSearchMenu(category) : setCurrentTab('explore')}
+            onOpenSearch={onOpenSearch}
+            onOpenMenu={category => onOpenSearch('', undefined, category)}
             onOpenProfile={() => setCurrentTab('profile')}
           />
         )}
-        {currentTab === 'explore' && <ExploreScreen />}
         {currentTab === 'orders' && <OrdersScreen />}
+        {currentTab === 'reorder' && <ReorderScreen />}
         {currentTab === 'profile' && (
           <ProfileScreen
             onReplayOnboarding={onReplayOnboarding}
@@ -101,16 +101,14 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
       </View>
 
       {/* Floating Cart bar (shows when cart has items) */}
-      <CartFloatingBar onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : 'default'} />
+      <CartFloatingBar bottomOffset={tabBarHeight + 4} onBottomSpaceChange={setCartBottomSpace} variant={isHome ? 'home' : isProfile ? 'profile' : 'default'} />
 
       {/* Slide-up Modals */}
-      <CartModal />
-      <CheckoutModal />
-      <OrderTrackingModal />
+      <CartModal onCheckout={onCheckout} />
 
       {/* Bottom Tab Bar */}
       <View
-        style={[styles.tabBar, isHome && styles.homeTabBar]}
+        style={[styles.tabBar, usesLoginPalette && styles.homeTabBar, { height: 56 + insets.bottom, paddingBottom: insets.bottom }]}
         onLayout={({ nativeEvent: { layout } }) => setTabBarHeight(layout.height)}
       >
         <TouchableOpacity
@@ -126,39 +124,12 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'home' && styles.tabLabelActive,
-              currentTab === 'home' && styles.homeTabLabelActive,
+              currentTab === 'home' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Home
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() => {
-            if (onOpenSearchMenu) {
-              onOpenSearchMenu();
-            } else {
-              setCurrentTab('explore');
-            }
-          }}
-          activeOpacity={0.7}
-        >
-          <Ionicons
-            name={currentTab === 'explore' ? 'restaurant' : 'restaurant-outline'}
-            size={22}
-            color={currentTab === 'explore' ? activeTabColor : inactiveTabColor}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              isHome && styles.homeTabLabel,
-              currentTab === 'explore' && styles.tabLabelActive,
-            ]}
-          >
-            Menu
           </Text>
         </TouchableOpacity>
 
@@ -168,25 +139,40 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           activeOpacity={0.7}
         >
           <View style={styles.tabIconWrap}>
-            <Ionicons
-              name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'}
-              size={22}
-              color={currentTab === 'orders' ? activeTabColor : inactiveTabColor}
-            />
+            <Ionicons name={currentTab === 'orders' ? 'receipt' : 'receipt-outline'} size={22} color={currentTab === 'orders' ? activeTabColor : inactiveTabColor} />
             {orders.length > 0 && (
-              <View style={styles.ordersBadge}>
-                <Text style={styles.ordersBadgeText}>{orders.length}</Text>
+              <View style={[styles.ordersBadge, isProfile && styles.profileOrdersBadge]}>
+                <Text style={[styles.ordersBadgeText, isProfile && styles.profileOrdersBadgeText]}>{orders.length}</Text>
               </View>
             )}
           </View>
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'orders' && styles.tabLabelActive,
+              currentTab === 'orders' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Orders
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabItem}
+          onPress={() => setCurrentTab('reorder')}
+          activeOpacity={0.7}
+        >
+          <Ionicons name={currentTab === 'reorder' ? 'repeat' : 'repeat-outline'} size={22} color={currentTab === 'reorder' ? activeTabColor : inactiveTabColor} />
+          <Text
+            style={[
+              styles.tabLabel,
+              usesLoginPalette && styles.homeTabLabel,
+              currentTab === 'reorder' && styles.tabLabelActive,
+              currentTab === 'reorder' && usesLoginPalette && styles.homeTabLabelActive,
+            ]}
+          >
+            Reorder
           </Text>
         </TouchableOpacity>
 
@@ -203,8 +189,9 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearchMenu }: MainAppProp
           <Text
             style={[
               styles.tabLabel,
-              isHome && styles.homeTabLabel,
+              usesLoginPalette && styles.homeTabLabel,
               currentTab === 'profile' && styles.tabLabelActive,
+              currentTab === 'profile' && usesLoginPalette && styles.homeTabLabelActive,
             ]}
           >
             Profile
@@ -238,6 +225,7 @@ function SplashScreen() {
 // ── ROOT STACK NAVIGATOR ──
 function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'Onboarding' | 'Login'; onOnboardingChange: (completed: boolean) => void }) {
   const { user, logout } = useAuth();
+  const { setIsCartOpen } = useApp();
   return (
     <Stack.Navigator
       initialRouteName={user ? 'Main' : initialRoute}
@@ -293,6 +281,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
       <Stack.Screen name="Main">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
+            onCheckout={() => navigation.navigate('Checkout')}
             onLogout={() => {
               void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
             }}
@@ -305,24 +294,14 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
               onOnboardingChange(false);
               navigation.replace('Onboarding');
             }}
-            onOpenSearchMenu={(category = 'All') => {
-              navigation.navigate('SearchMenu', { category });
-            }}
+            onOpenSearch={(query, collection, category) => navigation.navigate('SearchResults', { query, collection, category })}
           />
         )}
       </Stack.Screen>
 
-      <Stack.Screen name="SearchMenu">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchMenu'>) => (
-          <SearchMenuScreen
-            initialCategory={route.params?.category}
-            onBack={() => {
-              navigation.goBack();
-            }}
-            onViewCart={() => {
-              navigation.navigate('Checkout');
-            }}
-          />
+      <Stack.Screen name="SearchResults">
+        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'SearchResults'>) => (
+          <SearchResultsScreen initialQuery={route.params?.query} initialCollection={route.params?.collection} initialCategory={route.params?.category} onBack={() => navigation.goBack()} />
         )}
       </Stack.Screen>
 
@@ -332,38 +311,10 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
             onBack={() => {
               navigation.goBack();
             }}
-            onPaymentSuccess={() => {
-              navigation.navigate('Payment', { amount: 502 });
-            }}
           />
         )}
       </Stack.Screen>
 
-      <Stack.Screen name="Payment">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'Payment'>) => (
-          <PaymentScreen
-            amount={route.params?.amount ?? 502}
-            onBack={() => {
-              navigation.goBack();
-            }}
-            onPaymentSuccess={() => {
-              navigation.navigate('OrderTracking', { orderId: '#DB-84920', totalAmount: route.params?.amount ?? 502 });
-            }}
-          />
-        )}
-      </Stack.Screen>
-
-      <Stack.Screen name="OrderTracking">
-        {({ navigation, route }: NativeStackScreenProps<RootStackParamList, 'OrderTracking'>) => (
-          <OrderTrackingScreen
-            orderId={route.params?.orderId ?? '#DB-84920'}
-            totalAmount={route.params?.totalAmount ?? 502}
-            onBackToHome={() => {
-              navigation.replace('Main');
-            }}
-          />
-        )}
-      </Stack.Screen>
       </Stack.Group>}
     </Stack.Navigator>
   );
@@ -405,6 +356,14 @@ function AppContent() {
 }
 
 export default function App() {
+  const [showAdminPreview, setShowAdminPreview] = useState(
+    __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
+  );
+
+  if (showAdminPreview) {
+    return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
+  }
+
   return <AuthProvider><AppContent /></AuthProvider>;
 }
 
@@ -476,6 +435,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '800',
+  },
+  profileOrdersBadge: {
+    backgroundColor: homeTheme.primary,
+  },
+  profileOrdersBadgeText: {
+    color: homeTheme.background,
   },
   tabLabel: {
     fontSize: 11,
