@@ -1,0 +1,102 @@
+rules_version = '2';
+
+// Stage 1 emulator candidate. NOT deployed. No client order/history writes.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function self(uid) { return signedIn() && request.auth.uid == uid; }
+    function owner(shopId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid)).data.role == 'owner'
+        && get(/databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid)).data.active == true;
+    }
+    function exact(data, fields) {
+      return data.keys().hasAll(fields) && data.keys().hasOnly(fields);
+    }
+    function text(value, minimum, maximum) {
+      return value is string && value.size() >= minimum && value.size() <= maximum
+        && (minimum == 0 || value.matches('.*[^\\s].*'));
+    }
+    function addressId(value) {
+      return value is string && value.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+    function validProfile(data, uid) {
+      return exact(data, ['displayName', 'defaultAddressId', 'createdAt', 'updatedAt'])
+        && text(data.displayName, 0, 80)
+        && (data.defaultAddressId == null || (
+          addressId(data.defaultAddressId)
+          && existsAfter(/databases/$(database)/documents/users/$(uid)/addresses/$(data.defaultAddressId))
+        ))
+        && data.createdAt is timestamp && data.updatedAt == request.time;
+    }
+    function validAddress(data) {
+      return exact(data, ['label', 'addressLine', 'area', 'city', 'pincode', 'deliveryInstructions', 'createdAt', 'updatedAt'])
+        && data.label in ['Home', 'Work', 'Other']
+        && text(data.addressLine, 1, 400) && text(data.area, 1, 120)
+        && text(data.city, 1, 120) && text(data.deliveryInstructions, 0, 500)
+        && data.pincode is string && data.pincode.matches('^[1-9][0-9]{5}$')
+        && data.createdAt is timestamp && data.updatedAt == request.time;
+    }
+    function canReadOrder(data) {
+      return signedIn() && (data.customerUid == request.auth.uid || owner(data.shopId));
+    }
+
+    match /shops/{shopId} {
+      allow get: if signedIn();
+      allow list, create, update, delete: if false;
+      match /members/{uid} {
+        allow get: if self(uid);
+        allow list, create, update, delete: if false;
+      }
+      match /menuCategories/{categoryId} {
+        allow read: if owner(shopId) || (signedIn() && resource.data.isActive == true);
+        allow write: if false;
+      }
+      match /menuItems/{itemId} {
+        allow read: if owner(shopId) || (signedIn() && resource.data.published == true);
+        allow update: if owner(shopId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['pricePaise', 'available', 'revision', 'updatedAt'])
+          && request.resource.data.pricePaise is int
+          && request.resource.data.pricePaise > 0
+          && request.resource.data.pricePaise <= 9007199254740991
+          && request.resource.data.available is bool
+          && request.resource.data.revision is int
+          && request.resource.data.revision == resource.data.revision + 1
+          && request.resource.data.updatedAt == request.time;
+        allow create, delete: if false;
+      }
+    }
+    match /users/{uid} {
+      allow get: if self(uid);
+      allow list, delete: if false;
+      allow create: if self(uid) && validProfile(request.resource.data, uid)
+        && request.resource.data.createdAt == request.time;
+      allow update: if self(uid) && validProfile(request.resource.data, uid)
+        && request.resource.data.createdAt == resource.data.createdAt;
+      match /addresses/{address} {
+        allow read: if self(uid);
+        allow create: if self(uid) && addressId(address) && validAddress(request.resource.data)
+          && request.resource.data.createdAt == request.time;
+        allow update: if self(uid) && addressId(address) && validAddress(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt;
+        // Prevent dangling defaults, including batched deletes. Clearing the
+        // profile's default and deleting its address atomically is permitted.
+        allow delete: if self(uid) && (
+          !existsAfter(/databases/$(database)/documents/users/$(uid))
+          || getAfter(/databases/$(database)/documents/users/$(uid)).data.defaultAddressId != address
+        );
+      }
+    }
+    match /orders/{orderId} {
+      allow read: if canReadOrder(resource.data);
+      allow create, update, delete: if false;
+      match /statusHistory/{eventId} {
+        allow read: if canReadOrder(get(/databases/$(database)/documents/orders/$(orderId)).data);
+        allow create, update, delete: if false;
+      }
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

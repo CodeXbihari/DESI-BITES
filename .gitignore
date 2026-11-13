@@ -22,6 +22,12 @@ yarn-error.*
 Thumbs.db
 *.tmp
 
+# Local Emulator runtime files (never export production data here)
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+.firebase/
+
 # Local Firebase client configuration and environment overrides
 .env
 .env.*

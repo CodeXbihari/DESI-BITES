@@ -1,0 +1,32 @@
+{
+  "indexes": [
+    { "collectionGroup": "menuItems", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "published", "order": "ASCENDING" },
+      { "fieldPath": "sortOrder", "order": "ASCENDING" }
+    ] },
+    { "collectionGroup": "menuItems", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "published", "order": "ASCENDING" },
+      { "fieldPath": "categoryId", "order": "ASCENDING" },
+      { "fieldPath": "sortOrder", "order": "ASCENDING" }
+    ] },
+    { "collectionGroup": "menuCategories", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "isActive", "order": "ASCENDING" },
+      { "fieldPath": "sortOrder", "order": "ASCENDING" }
+    ] },
+    { "collectionGroup": "orders", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "customerUid", "order": "ASCENDING" },
+      { "fieldPath": "shopId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" },
+      { "fieldPath": "__name__", "order": "ASCENDING" }
+    ] },
+    { "collectionGroup": "orders", "queryScope": "COLLECTION", "fields": [
+      { "fieldPath": "shopId", "order": "ASCENDING" },
+      { "fieldPath": "createdAt", "order": "DESCENDING" },
+      { "fieldPath": "__name__", "order": "ASCENDING" }
+    ] }
+  ],
+  "fieldOverrides": [
+    { "collectionGroup": "orders", "fieldPath": "items", "indexes": [] },
+    { "collectionGroup": "orders", "fieldPath": "addressSnapshot", "indexes": [] }
+  ]
+}
