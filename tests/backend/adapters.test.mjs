@@ -9,7 +9,7 @@ const target = { mode: 'emulator', development: true, projectId: 'demo-desiibite
 
 // Exercise both actual adapter modules against a narrow SDK boundary. This
 // proves call order and session wiring, NOT a working Android native bridge.
-function harness(platform) {
+function harness(platform, runtime) {
   const calls = [], auth = { currentUser: null, emulatorConfig: null };
   const sdk = {
     getAuth(app) { calls.push(['getAuth', app]); return auth; },
@@ -40,6 +40,7 @@ function harness(platform) {
   const module = { exports: {} };
   new Function('require', 'module', 'exports', code)(name => {
     if (name.endsWith('firebaseTarget.ts')) return { requireEmulatorTarget, assertMatchingProject };
+    if (name === 'react-native') return { NativeModules: { DesiiStage1Runtime: runtime } };
     if (['firebase/auth', 'firebase/firestore', '@react-native-firebase/auth', '@react-native-firebase/firestore'].includes(name)) return sdk;
     throw new Error(`Unexpected SDK dependency: ${name}`);
   }, module, module.exports);
@@ -109,4 +110,20 @@ test('release builds reject Emulator targets before loading Firebase', () => {
   globalThis.__DEV__ = false;
   try { assert.throws(() => requireEmulatorTarget(target, 'web'), /release/); }
   finally { delete globalThis.__DEV__; }
+});
+
+const nativeReady = { version: 1, ready: true, applicationId: 'com.desi.app.stage1',
+  projectId: target.projectId, transport: 'usb', host: '127.0.0.1', authPort: 9099,
+  firestorePort: 8080, authConnected: true, firestoreConnected: true };
+test('ordinary Android adapter refuses the native Stage 1 app before SDK initialization', () => {
+  for (const runtime of [nativeReady, {}, { ...nativeReady, ready: false }]) {
+    const h = harness('android', runtime);
+    assert.throws(() => h.create({ options: { projectId: target.projectId } }, target), /bootstrap entry point/);
+    assert.equal(h.calls.length, 0);
+  }
+});
+test('a generic proof argument cannot bypass ordinary adapter session checks', () => {
+  const h = harness('android'); h.auth.currentUser = { uid: 'existing-user' };
+  assert.throws(() => h.create({ options: { projectId: target.projectId } }, target, nativeReady), /isolated/);
+  assert.equal(h.calls.filter(x => x[0] === 'initialize').length, 0);
 });

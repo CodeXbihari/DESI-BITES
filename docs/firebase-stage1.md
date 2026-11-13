@@ -1,11 +1,24 @@
 # Desii Bites Stage 1 Firebase foundation
 
+The separate USB Android verification build is implemented as tracked source in
+an Expo config plugin and native templates; see [android-stage1-emulator.md](android-stage1-emulator.md).
+The plugin has now been applied to the ignored Android tree using `--no-clean`,
+and `:app:assembleStage1` compiled successfully. The separate verification APK uses
+`com.desi.app.stage1`; the customer-facing Desi Bytes app remains `com.desi.app`.
+Existing customer screens and production Firebase configuration are unchanged.
+Physical-device startup, native Auth restoration and Firestore operations remain
+unverified; successful compilation does not establish runtime behavior.
+The correction phase uses the actual Google Services Property API, checks complete
+plugin-owned blocks and keeps native readiness access inside the bootstrap. The
+handshake is trusted client wiring; server-side authorization remains necessary.
+
 ## Scope and current verification
 
 This is an unconnected, emulator-only foundation. Existing customer Auth,
 restaurant menu UI, shared cart and checkout still use their original code.
 No production Firestore operations, menu migration, owner assignment, Functions,
-payments, screen integration or native builds are included.
+payments or customer-screen integration are included. The separate native
+verification build has compiled; physical-device runtime verification is pending.
 
 The only order statuses are `placed`, `preparing`, `packed`, `food_ready`.
 Every order contract requires exactly `payment: { status: 'unpaid' }`.
@@ -15,7 +28,7 @@ address snapshot. These are read contracts, not an order-creation implementation
 
 The local contract/isolation/adapter tests run without Firebase resources.
 Adapter boundary tests use SDK stubs and do not prove Android native functionality.
-The final authorized `npm run test:emulator` run completed all 23 cases:
+The earlier foundation-only authorized `npm run test:emulator` run completed all 23 cases:
 **23 passed, 0 failed, 0 skipped, 0 cancelled; exit code 0**. These comprise
 14 security-rule cases and 9 Web repository integration cases. The corrected
 concurrent-edit test passed, including its final document assertions: exactly one
@@ -182,7 +195,7 @@ npm run test:emulator
 ```
 
 `test:auth` retains the original 24-test glob. `test:backend` runs local foundation
-tests in `tests/backend/`. `test:emulator` runs the two nested test suites serially,
+tests in `tests/backend/`. `test:emulator` runs the emulator test files serially,
 loads the actual Rules, seeds only synthetic fixtures and clears emulator data.
 Emulator tests refuse to run without BOTH loopback emulator hosts and the expected
 synthetic project. They do not read `.env`, platform config files or production
@@ -196,12 +209,12 @@ writes. Repository integration tests cover actual Web Auth emulator sessions,
 transactions, pagination, revocation, session switching and no order mutation API.
 
 For a later Android smoke test, the native default app and BOTH emulator services
-must share the same project ID. Its existing default app uses `desi-bytes-dbc89`;
-that is separate from automated demo-project tests. Android emulator connections
-use `10.0.2.2` or explicitly reversed localhost ports. Use an isolated development
-installation, connect both emulators first, and never change native Firebase files
-or redirect production sessions. Native Firestore needs a separately authorized
-development rebuild. No APK has been built or native behavior certified here.
+must share `demo-desiibites-stage1`. Use only the generated and compiled isolated
+`com.desi.app.stage1` verification APK, with explicitly reversed localhost ports as
+documented in [android-stage1-emulator.md](android-stage1-emulator.md). The ordinary
+`com.desi.app` app retains `desi-bytes-dbc89`; never redirect its production sessions.
+The Stage 1 APK has not been installed or launched, and native runtime behavior
+has not been certified. Device installation and smoke testing require separate approval.
 
 ## Dependency record
 
@@ -237,7 +250,8 @@ granted. These warnings were not hidden or resolved by unrelated upgrades.
 No production resources, migrations, owner membership, schema deployment or
 screen integration may follow automatically. The 122-item source catalog and all
 existing images remain unchanged. The emulator suite has completed successfully;
-future runs still require Java 21+, since the temporary runtime was removed.
-Native rebuild/smoke testing, screen integration, menu migration, trusted order
+future runs still require Java 21+. The original temporary runtime was removed;
+a later verified temporary JDK was retained for reuse during the approved native build.
+Further native rebuilds and device smoke testing, screen integration, menu migration, trusted order
 services and eventual database/index validation remain separate work requiring
 approval. Emulator success does not authorize production deployment.

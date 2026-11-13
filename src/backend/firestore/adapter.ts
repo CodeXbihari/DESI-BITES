@@ -4,7 +4,7 @@ import type { FirebaseApp } from '@react-native-firebase/app';
 import { connectAuthEmulator, getAuth } from '@react-native-firebase/auth';
 import {
   collection, connectFirestoreEmulator, doc, documentId, getDocFromServer,
-  getDocsFromServer, initializeFirestore, limit, orderBy, query,
+  getDocsFromServer, getFirestore, initializeFirestore, limit, orderBy, query,
   runTransaction, serverTimestamp, startAfter, where,
 } from '@react-native-firebase/firestore';
 import type { QueryConstraint } from '@react-native-firebase/firestore';
@@ -26,6 +26,10 @@ function comparableEmulatorHost(host: string): string {
 export function createAndroidAdapter(app: FirebaseApp, input: EmulatorTarget): StorePort {
   const target = requireEmulatorTarget(input, 'android');
   assertMatchingProject(app.options.projectId, target);
+  // The isolated native build has exactly one bootstrap-owned connection path.
+  // It must never enter this ordinary adapter and trigger hostname remapping.
+  const { NativeModules } = require('react-native') as typeof import('react-native');
+  if (NativeModules.DesiiStage1Runtime != null) throw new Error('Stage 1 requires its native bootstrap entry point.');
   const key = JSON.stringify({ ...target, host: comparableEmulatorHost(target.host) }), existing = instances.get(app);
   if (existing) {
     if (existing.target !== key) throw new Error('Cannot retarget an initialized Firebase app.');
@@ -38,6 +42,14 @@ export function createAndroidAdapter(app: FirebaseApp, input: EmulatorTarget): S
   if (!authConfig) connectAuthEmulator(auth, `http://${target.host}:${target.authPort}`);
   const db = initializeFirestore(app, { persistence: false });
   connectFirestoreEmulator(db, target.host, target.firestorePort);
+  const port = androidStorePort(auth, db);
+  instances.set(app, { target: key, port });
+  return port;
+}
+
+// Internal SDK operation mapping, not a connection/readiness API. Both callers
+// establish their own guarded connection before wrapping an SDK instance.
+export function androidStorePort(auth: ReturnType<typeof getAuth>, db: ReturnType<typeof getFirestore>): StorePort {
   const port: StorePort = {
     uid: () => auth.currentUser?.uid ?? null,
     serverTimestamp,
@@ -62,6 +74,5 @@ export function createAndroidAdapter(app: FirebaseApp, input: EmulatorTarget): S
       delete: path => { tx.delete(doc(db, path)); },
     })),
   };
-  instances.set(app, { target: key, port });
   return port;
 }

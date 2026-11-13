@@ -2,7 +2,7 @@
 
 Stage 1 backend foundation and its emulator-only boundaries are documented in
 [docs/firebase-stage1.md](docs/firebase-stage1.md). Customer screens are not yet
-connected to the new repositories. The final Stage 1 emulator run passed all
+connected to the new repositories. The earlier foundation-only Stage 1 emulator run passed all
 23 tests: 0 failed, 0 skipped, 0 cancelled, exit code 0. This verifies the tested
 local foundation, not production readiness. Native Android Firestore execution,
 menu migration, authoritative order creation and status updates remain unverified
@@ -12,6 +12,17 @@ Testing used a temporary, checksum-verified Temurin JDK 21.0.13+9, which was rem
 afterward. Auth and Firestore emulators shut down cleanly; system Java remains
 Zulu 17.0.21.0.3. No production Firebase operations occurred. See the Stage 1
 document for the verification details and remaining limits.
+
+The isolated Android Stage 1 source implementation is described in
+[docs/android-stage1-emulator.md](docs/android-stage1-emulator.md). It uses tracked
+Expo plugin/templates because `android/` is ignored. The isolated Stage 1 variant
+has now been generated with `--no-clean` and compiled with `:app:assembleStage1`.
+Its APK is `com.desi.app.stage1`, separate from the customer-facing Desi Bytes app
+(`com.desi.app`). It has not been installed or tested on a physical device. Future
+prebuilds still require approval and the explicit `--no-clean` flag.
+Its native readiness is read by the bootstrap itself, not supplied as a JavaScript
+proof parameter. The shared Expo app name stays unchanged; only Stage 1 native
+resources provide the emulator label. Native startup/restore still need device tests.
 
 Existing Expo / React Native food and grocery delivery prototype. The React Native app now uses Firebase phone authentication; unrelated ordering and payment functionality remains a demo. `desi-app-preview.html` is an independent design prototype and does not implement real authentication.
 
