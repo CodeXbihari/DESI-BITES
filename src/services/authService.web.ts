@@ -1,4 +1,4 @@
-import { onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, signOut } from 'firebase/auth';
+import { getIdTokenResult, onAuthStateChanged, RecaptchaVerifier, signInWithPhoneNumber, signOut } from 'firebase/auth';
 import { getWebAuth } from '../config/firebase.web';
 import type { AuthUser, OtpConfirmation } from './authTypes';
 
@@ -43,6 +43,13 @@ export async function requestPhoneOtp(phone: string): Promise<OtpConfirmation> {
 
 export async function signOutUser(): Promise<void> {
   await signOut(getWebAuth());
+}
+
+export async function getAdminClaim(): Promise<boolean> {
+  const user = getWebAuth().currentUser;
+  if (!user) return false;
+  const token = await getIdTokenResult(user, true);
+  return token.claims.admin === true;
 }
 
 export async function saveDisplayName(displayName: string): Promise<void> {

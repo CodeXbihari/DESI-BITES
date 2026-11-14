@@ -30,6 +30,13 @@ export async function signOutUser(): Promise<void> {
   await sdk.signOut(auth);
 }
 
+export async function getAdminClaim(): Promise<boolean> {
+  const { sdk, auth } = nativeAuth();
+  if (!auth.currentUser) return false;
+  const token = await sdk.getIdTokenResult(auth.currentUser, true);
+  return token.claims.admin === true;
+}
+
 export async function saveDisplayName(displayName: string): Promise<void> {
   const { sdk, auth } = nativeAuth();
   if (!auth.currentUser) throw new Error('Sign in before updating your name.');
