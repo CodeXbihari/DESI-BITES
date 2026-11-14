@@ -1,9 +1,0 @@
-// Merge into the existing project's deployed Firestore rules after review.
-// Do not replace customer/shop rules with this fragment.
-function isAdmin() {
-  return request.auth != null && request.auth.token.admin == true;
-}
-
-match /adminData/{document=**} {
-  allow read, write: if isAdmin();
-}

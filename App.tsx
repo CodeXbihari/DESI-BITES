@@ -7,7 +7,6 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Linking,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -35,7 +34,7 @@ import { CheckoutScreen } from './src/screens/CheckoutScreen';
 
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
-import { AdminAuthExperience } from './src/features/admin/AdminAuthExperience';
+import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -357,25 +356,13 @@ function AppContent() {
 }
 
 export default function App() {
-  const [adminRoute, setAdminRoute] = useState<boolean | null>(null);
-  useEffect(() => {
-    let active = true;
-    const check = (url: string | null | undefined) => {
-      if (!active) return;
-      const parsed = url ? new URL(url) : null;
-      const path = parsed ? `${parsed.protocol === 'desibites:' ? `/${parsed.hostname}` : ''}${parsed.pathname}` : '';
-      setAdminRoute(path === '/admin' || path.startsWith('/admin/'));
-    };
-    if (Platform.OS === 'web') check(window.location.href);
-    else void Linking.getInitialURL().then(check).catch(() => { if (active) setAdminRoute(false); });
-    const subscription = Linking.addEventListener('url', event => check(event.url));
-    return () => { active = false; subscription.remove(); };
-  }, []);
-  if (adminRoute === null) return <SplashScreen />;
-  if (adminRoute) return <AdminAuthExperience onExit={() => {
-    if (Platform.OS === 'web') window.history.replaceState({}, '', '/');
-    setAdminRoute(false);
-  }} />;
+  const [showAdminPreview, setShowAdminPreview] = useState(
+    __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
+  );
+
+  if (showAdminPreview) {
+    return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
+  }
 
   return <AuthProvider><AppContent /></AuthProvider>;
 }

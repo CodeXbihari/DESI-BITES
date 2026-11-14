@@ -2,7 +2,6 @@
   "expo": {
     "name": "Desi Bytes",
     "slug": "desi-prototype",
-    "scheme": "desibites",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",

@@ -29,10 +29,10 @@ export function AdminProfileScreen({ onLogout }: { onLogout: () => void }) {
       </AdminPanel>
       <Pressable onPress={() => setConfirmLogout(true)} accessibilityRole="button" style={styles.logout}>
         <Ionicons name="log-out-outline" size={18} color="#8B3D35" />
-        <Text style={styles.logoutText}>Sign out of Admin</Text>
+        <Text style={styles.logoutText}>Exit Admin preview</Text>
       </Pressable>
-      <Text style={styles.note}>Firebase verifies Admin access. Dashboard content is still local demo data.</Text>
-      <AdminConfirmModal visible={confirmLogout} title="Sign out of Admin?" message="You will return to the Customer app. Demo changes will be reset." confirmLabel="Sign out" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
+      <Text style={styles.note}>This local preview uses fictional data. It does not sign in an Admin or connect to Firebase.</Text>
+      <AdminConfirmModal visible={confirmLogout} title="Exit Admin preview?" message="You will return to the Customer app. Demo changes will be reset for the next preview session." confirmLabel="Exit preview" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
     </ScrollView>
   );
 }
