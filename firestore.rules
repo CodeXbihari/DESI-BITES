@@ -5,7 +5,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function self(uid) { return signedIn() && request.auth.uid == uid; }
-    function admin() { return signedIn() && request.auth.token.admin == true; }
     function owner(shopId) {
       return signedIn()
         && exists(/databases/$(database)/documents/shops/$(shopId)/members/$(request.auth.uid))
@@ -97,11 +96,6 @@ service cloud.firestore {
         allow read: if canReadOrder(get(/databases/$(database)/documents/orders/$(orderId)).data);
         allow create, update, delete: if false;
       }
-    }
-    // Admin-only records. The role is issued by Firebase Admin SDK; client
-    // profile fields, phone numbers and local Expo variables cannot grant it.
-    match /adminData/{document=**} {
-      allow read, write: if admin();
     }
     match /{document=**} { allow read, write: if false; }
   }

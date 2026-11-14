@@ -17,17 +17,6 @@ test('unauthenticated and unknown-path access is denied by default', async () =>
   for (const path of ['shops/shop-a', 'shops/shop-a/menuItems/fixture-item', 'users/customer-a', 'orders/fixture-order', 'orders/fixture-order/statusHistory/initial']) await assertFails(getDoc(doc(db, path)));
   await assertFails(setDoc(doc(client('customer-a'), 'unrecognized/path'), { value: true }));
 });
-test('Admin records require a Firebase Admin claim, not a phone number or profile role', async () => {
-  const ref = path => doc(path, 'adminData/restaurant/status');
-  await assertFails(getDoc(ref(client())));
-  await assertFails(setDoc(ref(client('customer-a')), { open: true }));
-  const phoneOnly = env.authenticatedContext('phone-only', { phone_number: '+917644940067', role: 'admin' }).firestore();
-  await assertFails(setDoc(ref(phoneOnly), { open: true }));
-  const admin = env.authenticatedContext('admin-uid', { admin: true }).firestore();
-  await assertSucceeds(setDoc(ref(admin), { open: true }));
-  await assertSucceeds(getDoc(ref(admin)));
-  await assertFails(getDoc(ref(client('customer-a'))));
-});
 test('customers can read/update only their own profile and cannot inject owner authority', async () => {
   const db = client('customer-a');
   await assertSucceeds(getDoc(doc(db, 'users/customer-a')));
