@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+  <!-- Only the isolated stage1 build may use local HTTP and its own test data. -->
+  <application android:usesCleartextTraffic="true" android:allowBackup="false"
+      tools:replace="android:usesCleartextTraffic,android:allowBackup" />
+</manifest>
