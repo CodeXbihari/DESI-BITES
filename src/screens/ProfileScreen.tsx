@@ -1,8 +1,10 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
+import { useCustomerAccount } from '../context/CustomerAccountContext';
+import { CustomerProfileEditor, SavedAddresses } from '../components/CustomerAccountUI';
 import { colors } from '../theme/colors';
 import { homeTheme } from '../theme/homeTheme';
 
@@ -16,17 +18,21 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onLogout,
 }) => {
   const { user, profileError } = useAuth();
-  const { addresses, favorites, orders } = useApp();
+  const { favorites, orders } = useApp();
+  const account = useCustomerAccount();
+  const addresses = account.addresses;
+  const [showAddresses, setShowAddresses] = useState(false);
+  const displayName = account.profile?.data.displayName || user?.displayName;
 
   return (
     <View style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{user?.displayName?.slice(0, 2).toUpperCase() || 'DB'}</Text>
+          <Text style={styles.avatarText}>{displayName?.slice(0, 2).toUpperCase() || 'DB'}</Text>
         </View>
         <View style={styles.profileInfo}>
-          <Text style={styles.userName}>{user?.displayName || 'Desi Bytes Member'}</Text>
+          <Text style={styles.userName}>{displayName || 'Desi Bytes Member'}</Text>
           <Text style={styles.userPhone}>{user?.phoneNumber}</Text>
           <View style={styles.clubBadge}>
             <Ionicons name="sparkles" size={12} color={homeTheme.gold} />
@@ -37,6 +43,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {profileError ? <Text accessibilityRole="alert" style={{ color: colors.danger, padding: 16 }}>{profileError}</Text> : null}
+        <CustomerProfileEditor />
         {/* Wallet / Desi Cash Quick Bar */}
         <View style={styles.walletBar}>
           <View style={styles.walletLeft}>
@@ -71,7 +78,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={styles.menuCard}>
           <Text style={styles.sectionHeading}>Account Settings</Text>
 
-          <TouchableOpacity style={styles.menuRow}>
+          <TouchableOpacity style={styles.menuRow} onPress={() => setShowAddresses(true)} accessibilityRole="button" accessibilityLabel="Saved Addresses">
             <View style={styles.menuLeft}>
               <Ionicons name="location-outline" size={20} color={homeTheme.text} />
               <Text style={styles.menuTitle}>Saved Addresses</Text>
@@ -149,6 +156,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <Text style={styles.madeWithText}>Crafted with ❤️ for Android & iOS</Text>
         </View>
       </ScrollView>
+      <Modal visible={showAddresses} animationType="slide" onRequestClose={() => setShowAddresses(false)}><ScrollView style={{ backgroundColor: homeTheme.background }} contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled"><TouchableOpacity accessibilityRole="button" onPress={() => setShowAddresses(false)}><Text style={{ color: homeTheme.primary, paddingVertical: 12 }}>Close saved addresses</Text></TouchableOpacity><SavedAddresses /></ScrollView></Modal>
     </View>
   );
 };

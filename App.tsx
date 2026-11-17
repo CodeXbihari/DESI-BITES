@@ -17,6 +17,11 @@ import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navig
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { authErrorMessage } from './src/services/authValidation';
+import { CustomerAccountProvider } from './src/context/CustomerAccountContext';
+import { CustomerMenuProvider } from './src/context/CustomerMenuContext';
+import { CustomerExperienceProviders } from './src/context/CustomerExperienceProviders';
+import { useCustomerOrders } from './src/context/CustomerOrdersContext';
+import { CustomerOrderDetailsScreen } from './src/screens/CustomerOrderDetailsScreen';
 import { AppProvider, useApp } from './src/context/AppContext';
 import { colors } from './src/theme/colors';
 import { homeTheme } from './src/theme/homeTheme';
@@ -45,6 +50,9 @@ export type RootStackParamList = {
   Main: undefined;
   SearchResults: { query?: string; collection?: 'popular' | 'recommended'; category?: SearchMenuItem['category'] } | undefined;
   Checkout: undefined;
+  OrderConfirmation: { orderId: string };
+  OrderDetails: { orderId: string };
+  OrdersHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -56,14 +64,16 @@ interface MainAppProps {
   onReplayOnboarding: () => void;
   onOpenSearch: (query: string, collection?: 'popular' | 'recommended', category?: SearchMenuItem['category']) => void;
   onCheckout: () => void;
+  onOpenOrder: (id: string) => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout, onOpenOrder }: MainAppProps) {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
   const [tabBarHeight, setTabBarHeight] = useState(styles.tabBar.height + insets.bottom);
-  const { orders, cartCount } = useApp();
+  const { cartCount } = useApp();
+  const { orders } = useCustomerOrders();
   const isHome = currentTab === 'home';
   const isProfile = currentTab === 'profile';
   const usesLoginPalette = isHome || isProfile;
@@ -90,7 +100,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout }: Mai
             onOpenProfile={() => setCurrentTab('profile')}
           />
         )}
-        {currentTab === 'orders' && <OrdersScreen />}
+        {currentTab === 'orders' && <OrdersScreen onOpenOrder={onOpenOrder} />}
         {currentTab === 'reorder' && <ReorderScreen />}
         {currentTab === 'profile' && (
           <ProfileScreen
@@ -281,6 +291,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
       <Stack.Screen name="Main">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
+            onOpenOrder={orderId => navigation.navigate('OrderDetails', { orderId })}
             onCheckout={() => navigation.navigate('Checkout')}
             onLogout={() => {
               void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
@@ -308,6 +319,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
       <Stack.Screen name="Checkout">
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Checkout'>) => (
           <CheckoutScreen
+            onConfirmed={orderId => navigation.replace('OrderConfirmation', { orderId })}
             onBack={() => {
               navigation.goBack();
             }}
@@ -315,6 +327,13 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
         )}
       </Stack.Screen>
 
+      <Stack.Screen name="OrderConfirmation">{({ navigation, route }) => <CustomerOrderDetailsScreen orderId={route.params.orderId} confirmation
+        onBack={() => navigation.navigate('Main')} onHistory={() => navigation.navigate('OrdersHistory')}
+        onDetails={() => navigation.navigate('OrderDetails', { orderId: route.params.orderId })} />}</Stack.Screen>
+      <Stack.Screen name="OrderDetails">{({ navigation, route }) => <CustomerOrderDetailsScreen orderId={route.params.orderId}
+        onBack={() => navigation.goBack()} onHistory={() => navigation.navigate('OrdersHistory')} />}</Stack.Screen>
+      <Stack.Screen name="OrdersHistory">{({ navigation }) => <OrdersScreen onBack={() => navigation.goBack()}
+        onOpenOrder={orderId => navigation.navigate('OrderDetails', { orderId })} />}</Stack.Screen>
       </Stack.Group>}
     </Stack.Navigator>
   );
@@ -346,11 +365,11 @@ function AppContent() {
 
   return (
     <SafeAreaProvider>
-      <AppProvider key={user?.uid ?? 'guest'}>
-        <NavigationContainer>
-          <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
-        </NavigationContainer>
-      </AppProvider>
+      <CustomerExperienceProviders>
+          <NavigationContainer>
+            <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
+          </NavigationContainer>
+      </CustomerExperienceProviders>
     </SafeAreaProvider>
   );
 }

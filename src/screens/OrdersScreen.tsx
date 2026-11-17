@@ -1,103 +1,38 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useApp } from '../context/AppContext';
+import { useCustomerOrders } from '../context/CustomerOrdersContext';
 import { colors } from '../theme/colors';
 
-export const OrdersScreen: React.FC = () => {
-  const { orders, activeOrder, setIsTrackingOpen, setActiveOrder } = useApp();
-
-  const handleTrack = (order: any) => {
-    setActiveOrder(order);
-    setIsTrackingOpen(true);
-  };
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Orders</Text>
-        <Text style={styles.subtitle}>Track live deliveries and view receipt history</Text>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Active Order Card */}
-        {activeOrder && (
-          <View style={styles.activeOrderCard}>
-            <View style={styles.activeHeader}>
-              <View style={styles.pulsingBadge}>
-                <View style={styles.dot} />
-                <Text style={styles.activeBadgeText}>ACTIVE ORDER</Text>
-              </View>
-              <Text style={styles.activeEta}>⚡ In 14 mins</Text>
-            </View>
-
-            <Text style={styles.activeOrderId}>{activeOrder.id}</Text>
-            <Text style={styles.activeSummary}>
-              {activeOrder.items.length} items • ₹{activeOrder.totalAmount}
-            </Text>
-
-            <TouchableOpacity
-              style={styles.trackBtn}
-              activeOpacity={0.8}
-              onPress={() => handleTrack(activeOrder)}
-            >
-              <Text style={styles.trackBtnText}>Track Delivery Status</Text>
-              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Previous Orders Header */}
-        <Text style={styles.sectionTitle}>
-          {orders.length === 0 ? 'No Past Orders' : 'Past Deliveries'}
-        </Text>
-
-        {orders.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={56} color={colors.textLight} />
-            <Text style={styles.emptyTitle}>No orders yet</Text>
-            <Text style={styles.emptySub}>
-              Your placed orders and invoices will show up right here.
-            </Text>
-          </View>
-        ) : (
-          orders.map((order) => (
-            <View key={order.id} style={styles.orderCard}>
-              <View style={styles.orderCardTop}>
-                <View>
-                  <Text style={styles.orderId}>{order.id}</Text>
-                  <Text style={styles.orderDate}>Ordered on {order.date}</Text>
-                </View>
-                <View style={styles.statusPill}>
-                  <Text style={styles.statusText}>{order.status.toUpperCase()}</Text>
-                </View>
-              </View>
-
-              <View style={styles.itemsSummary}>
-                {order.items.map((item) => (
-                  <Text key={item.product.id} style={styles.itemLine}>
-                    • {item.quantity}x {item.product.name}
-                  </Text>
-                ))}
-              </View>
-
-              <View style={styles.orderFooter}>
-                <Text style={styles.totalLabel}>
-                  Total Paid: <Text style={styles.totalPrice}>₹{order.totalAmount}</Text>
-                </Text>
-                <TouchableOpacity
-                  style={styles.reorderBtn}
-                  onPress={() => handleTrack(order)}
-                >
-                  <Text style={styles.reorderText}>View Tracking</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
+export const OrdersScreen: React.FC<{ onOpenOrder?: (id: string) => void; onBack?: () => void }> = ({ onOpenOrder, onBack }) => {
+  const orders = useCustomerOrders();
+  return <View style={styles.container}>
+    <View style={styles.header}>
+      {onBack && <TouchableOpacity accessibilityRole="button" onPress={onBack}><Text>Back</Text></TouchableOpacity>}
+      <Text style={styles.title}>Your Orders</Text>
+      <Text style={styles.subtitle}>Stored orders · payment remains unpaid</Text>
     </View>
-  );
+    <ScrollView style={styles.content}>
+      {orders.loading && <Text>Loading orders…</Text>}
+      {!!orders.error && <View><Text accessibilityRole="alert">{orders.error}</Text>
+        {orders.enabled && <TouchableOpacity accessibilityRole="button" onPress={() => { void orders.history(); }}><Text>Retry orders</Text></TouchableOpacity>}</View>}
+      {!orders.loading && !orders.error && !orders.orders.length && <View style={styles.emptyState}>
+        <Text style={styles.emptyTitle}>No orders yet</Text><Text>Your confirmed orders will appear here.</Text>
+      </View>}
+      {orders.orders.map(order => <View key={order.id} style={styles.orderCard}>
+        <Text style={styles.orderId}>{order.id}</Text>
+        <Text>{new Date(order.data.createdAt.seconds * 1000).toLocaleString()}</Text>
+        <Text>Status: {order.data.status === 'placed' ? 'Placed' : order.data.status.replace('_', ' ')}</Text>
+        <Text>{order.data.fulfillment === 'pickup' ? 'Pickup' : 'Delivery'}</Text>
+        {order.data.items.map(item => <Text key={item.menuItemId}>{item.quantity} × {item.nameSnapshot}</Text>)}
+        <Text>Total: ₹{(order.data.totalPaise / 100).toFixed(2)} · Payment: Unpaid</Text>
+        <Text>No payment has been collected.</Text>
+        <TouchableOpacity accessibilityRole="button" onPress={() => onOpenOrder?.(order.id)}><Text>View order details</Text></TouchableOpacity>
+      </View>)}
+      {orders.enabled && <TouchableOpacity accessibilityRole="button" disabled={orders.loading} onPress={() => { void orders.history(); }}><Text>Refresh orders</Text></TouchableOpacity>}
+      {orders.more && <TouchableOpacity accessibilityRole="button" disabled={orders.loading} onPress={() => { void orders.history(true); }}><Text>Load more orders</Text></TouchableOpacity>}
+    </ScrollView>
+  </View>;
 };
 
 const styles = StyleSheet.create({

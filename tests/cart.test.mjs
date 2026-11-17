@@ -6,6 +6,14 @@ import { addCartItem, setCartQuantity, calculateCartEstimate, normalizeCoupon, c
 const grocery = { id: 'p_fixture', name: 'Fixture', price: 99, image: '' };
 const food = { id: 'sm_fixture', name: 'Fixture', price: 120, image: '' };
 
+test('existing cart price snapshots remain unchanged when the same menu ID is added at a new price', () => {
+  const cart = addCartItem(addCartItem([], food), { ...food, price: 150 });
+  assert.equal(cart[0].quantity, 2);
+  assert.equal(cart[0].product.price, 120);
+  assert.equal(calculateCartEstimate(cart, null, 'pickup').subtotalPaise, 24000);
+  assert.equal(setCartQuantity(cart, food.id, 3)[0].product.price, 120);
+});
+
 test('cart operations synchronize matching IDs without merging similarly named items', () => {
   let cart = addCartItem([], grocery);
   cart = addCartItem(cart, food);

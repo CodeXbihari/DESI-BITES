@@ -1,7 +1,9 @@
 import { getApp, getApps, initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
+import { customerEmulatorEnabled, getCustomerEmulator } from './customerEmulator.web.ts';
 
 export function getWebAuth() {
+  if (customerEmulatorEnabled()) return getCustomerEmulator().auth;
   const config = {
     apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
     authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,

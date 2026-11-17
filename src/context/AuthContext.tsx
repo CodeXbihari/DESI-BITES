@@ -4,8 +4,9 @@ import { normalizeIndianPhone, RESEND_COOLDOWN_MS, validateOtp, authErrorMessage
 import { isMockAuthEnabled } from '../services/authMode';
 import type { AuthUser, OtpConfirmation } from '../services/authTypes';
 import { requestMockOtp, verifyMockOtp } from '../services/mockAuthService';
+import { customerEmulatorEnabled } from '../config/customerEmulator';
 
-const isMockAuthMode = isMockAuthEnabled(
+const isMockAuthMode = !(Platform.OS === 'web' && customerEmulatorEnabled()) && isMockAuthEnabled(
   Platform.OS,
   process.env.EXPO_PUBLIC_AUTH_MODE,
   __DEV__,

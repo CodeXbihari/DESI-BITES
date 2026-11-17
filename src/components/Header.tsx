@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Modal, Scro
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useApp } from '../context/AppContext';
+import { useCustomerAccount } from '../context/CustomerAccountContext';
+import { SavedAddresses } from './CustomerAccountUI';
 import { homeTheme as theme } from '../theme/homeTheme';
 
 interface HeaderProps {
@@ -178,10 +180,9 @@ const styles = StyleSheet.create({
 });
 
 function HomeHeader({ onOpenSearch }: Pick<HeaderProps, 'onOpenProfile' | 'onOpenSearch'>) {
-  const { selectedAddress, addresses, setSelectedAddress, addAddress, searchQuery, setSearchQuery, cartCount, setIsCartOpen } = useApp();
+  const { searchQuery, cartCount, setIsCartOpen } = useApp();
+  const { selectedAddress } = useCustomerAccount();
   const [showAddresses, setShowAddresses] = useState(false);
-  const [showAddAddress, setShowAddAddress] = useState(false);
-  const [newAddress, setNewAddress] = useState({ addressLine: '', area: '', city: '', pincode: '' });
 
   return (
     <>
@@ -194,7 +195,7 @@ function HomeHeader({ onOpenSearch }: Pick<HeaderProps, 'onOpenProfile' | 'onOpe
         />
         <View style={homeStyles.topRow}>
           <TouchableOpacity style={homeStyles.location} onPress={() => setShowAddresses(true)} accessibilityRole="button" accessibilityLabel="Change delivery address">
-            <View style={homeStyles.addressRow}><Ionicons name="location" size={23} color={theme.primary} /><Text style={homeStyles.addressTitle} numberOfLines={1}>{selectedAddress.city}</Text><Ionicons name="chevron-down" size={16} color={theme.primary} /></View>
+            <View style={homeStyles.addressRow}><Ionicons name="location" size={23} color={theme.primary} /><Text style={homeStyles.addressTitle} numberOfLines={1}>{selectedAddress?.data.city || 'Choose delivery address'}</Text><Ionicons name="chevron-down" size={16} color={theme.primary} /></View>
           </TouchableOpacity>
           <TouchableOpacity style={homeStyles.cart} onPress={() => setIsCartOpen(true)} accessibilityRole="button" accessibilityLabel={`Open cart, ${cartCount} items`}><Ionicons name="cart-outline" size={32} color={theme.primary} />{cartCount > 0 && <Text style={homeStyles.cartBadge}>{cartCount}</Text>}</TouchableOpacity>
         </View>
@@ -212,25 +213,11 @@ function HomeHeader({ onOpenSearch }: Pick<HeaderProps, 'onOpenProfile' | 'onOpe
                 <Ionicons name="close" size={22} color={theme.text} />
               </TouchableOpacity>
             </View>
-            <ScrollView>
-              {addresses.map(address => (
-                <TouchableOpacity
-                  key={address.id}
-                  style={[homeStyles.addressOption, address.id === selectedAddress.id && homeStyles.addressSelected]}
-                  onPress={() => { setSelectedAddress(address); setShowAddresses(false); }}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: address.id === selectedAddress.id }}
-                >
-                  <Text style={homeStyles.optionTitle}>{address.tag} · {address.area}</Text>
-                  <Text style={homeStyles.addressDetail}>{address.addressLine}, {address.city}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <TouchableOpacity style={homeStyles.addAddressButton} onPress={() => setShowAddAddress(true)} accessibilityRole="button"><Ionicons name="add-circle-outline" size={19} color={theme.primary}/><Text style={homeStyles.addAddressText}>Add new address</Text></TouchableOpacity>
+            <ScrollView keyboardShouldPersistTaps="handled" style={{ flexShrink: 1 }}><SavedAddresses /></ScrollView>
           </View>
         </View>
       </Modal>
-      <Modal visible={showAddAddress} transparent animationType="slide" onRequestClose={() => setShowAddAddress(false)}><View style={homeStyles.backdrop}><View style={homeStyles.addressSheet}><Text style={homeStyles.sheetTitle}>Add new address</Text>{(['addressLine','area','city','pincode'] as const).map((field,index)=><TextInput key={field} style={homeStyles.newAddressInput} placeholder={['Street address','Area / locality','City','PIN code'][index]} placeholderTextColor={theme.muted} value={newAddress[field]} onChangeText={value=>setNewAddress(prev=>({...prev,[field]:value}))} keyboardType={field==='pincode'?'number-pad':'default'} />)}<View style={homeStyles.addressActions}><TouchableOpacity style={[homeStyles.addressAction,homeStyles.cancelAddress]} onPress={()=>{setShowAddAddress(false);setNewAddress({addressLine:'',area:'',city:'',pincode:''});}} accessibilityRole="button"><Text style={homeStyles.cancelAddressText}>Cancel</Text></TouchableOpacity><TouchableOpacity style={[homeStyles.addressAction,homeStyles.saveAddress]} onPress={()=>{const {addressLine,area,city,pincode}=newAddress;if(!addressLine.trim()||!area.trim()||!city.trim()||!/^\d{6}$/.test(pincode.trim()))return;const address={id:`address-${Date.now()}`,tag:'Other' as const,addressLine:addressLine.trim(),area:area.trim(),city:city.trim(),pincode:pincode.trim(),isDefault:false};addAddress(address);setNewAddress({addressLine:'',area:'',city:'',pincode:''});setShowAddAddress(false);setShowAddresses(false);}} accessibilityRole="button"><Text style={homeStyles.saveAddressText}>Save address</Text></TouchableOpacity></View></View></View></Modal>
+
     </>
   );
 }

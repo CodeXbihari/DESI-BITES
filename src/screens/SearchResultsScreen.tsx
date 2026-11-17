@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import { SEARCH_MENU_ITEMS } from '../data/searchMenuData';
+import { useCustomerMenu } from '../context/CustomerMenuContext';
+import { CustomerMenuStatus } from '../components/CustomerMenuStatus';
 import { RestaurantFoodCard } from '../components/RestaurantFoodCard';
 import { useApp } from '../context/AppContext';
 import { searchMenu } from '../services/menuSearch';
@@ -12,16 +13,17 @@ import homeSections from '../data/homeSections.json';
 
 interface Props { initialQuery?: string; initialCollection?: 'popular' | 'recommended'; initialCategory?: string; onBack: () => void }
 export function SearchResultsScreen({ initialQuery = '', initialCollection, initialCategory, onBack }: Props) {
+  const { items: menuItems, loading, error } = useCustomerMenu();
   const [query, setQuery] = useState(initialQuery);
   const [collection, setCollection] = useState(initialCollection);
   const [category, setCategory] = useState(initialCategory);
   const { cartCount, setIsCartOpen } = useApp();
   const results = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    if (normalized) return searchMenu(SEARCH_MENU_ITEMS, query);
-    if (category) return SEARCH_MENU_ITEMS.filter(item => item.category === category);
-    return collection ? homeSections[collection].map(id => SEARCH_MENU_ITEMS.find(item => item.id === id)).filter((item): item is typeof SEARCH_MENU_ITEMS[number] => !!item) : [];
-  }, [query, collection, category]);
+    if (normalized) return searchMenu(menuItems, query);
+    if (category) return menuItems.filter(item => item.category === category);
+    return collection ? homeSections[collection].map(id => menuItems.find(item => item.id === id)).filter((item): item is typeof menuItems[number] => !!item) : [];
+  }, [query, collection, category, menuItems]);
   const updateQuery = (value: string) => { setCollection(undefined); setCategory(undefined); setQuery(value); };
   return <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
     <StatusBar style="dark" />
@@ -40,7 +42,8 @@ export function SearchResultsScreen({ initialQuery = '', initialCollection, init
         <Text style={styles.heading}>{query.trim() ? <>Showing results for “<Text style={styles.query}>{query.trim()}</Text>”</> : category ? `Showing results for “${category}”` : collection ? collection === 'popular' ? 'Popular Items' : 'Recommended for You' : 'Search the Desi Bites menu'}</Text>
         {!!query.trim() && <TouchableOpacity onPress={() => updateQuery('')} accessibilityRole="button" accessibilityLabel="Clear query"><Text style={styles.clear}>Clear</Text></TouchableOpacity>}
       </View>
-      <FlatList data={results} numColumns={2} keyExtractor={item => item.id} columnWrapperStyle={styles.row} contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" renderItem={({ item }) => <View style={styles.cell}><RestaurantFoodCard item={item} /></View>} ListEmptyComponent={<View style={styles.empty}><Ionicons name="search-outline" size={40} color={theme.muted} /><Text style={styles.emptyTitle}>{query.trim() ? 'No matching dishes' : 'What are you craving?'}</Text><Text style={styles.emptyText}>{query.trim() ? 'Try another food name or clear your search.' : 'Type a food name to find dishes across our full menu.'}</Text></View>} />
+      <CustomerMenuStatus />
+      <FlatList data={results} numColumns={2} keyExtractor={item => item.id} columnWrapperStyle={styles.row} contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" renderItem={({ item }) => <View style={styles.cell}><RestaurantFoodCard item={item} /></View>} ListEmptyComponent={!loading && !error && menuItems.length > 0 ? <View style={styles.empty}><Ionicons name="search-outline" size={40} color={theme.muted} /><Text style={styles.emptyTitle}>{query.trim() ? 'No matching dishes' : 'What are you craving?'}</Text><Text style={styles.emptyText}>{query.trim() ? 'Try another food name or clear your search.' : 'Type a food name to find dishes across our full menu.'}</Text></View> : undefined} />
     </View>
   </SafeAreaView>;
 }

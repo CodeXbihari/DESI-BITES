@@ -80,7 +80,7 @@ export const CheckoutModal: React.FC = () => {
               </View>
 
               {addresses.map((addr) => {
-                const isSelected = selectedAddress.id === addr.id;
+                const isSelected = selectedAddress?.id === addr.id;
                 return (
                   <TouchableOpacity
                     key={addr.id}

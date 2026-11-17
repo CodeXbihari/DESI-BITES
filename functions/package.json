@@ -1,0 +1,19 @@
+{
+  "name": "desi-bytes-order-domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Emulator-only Stage 4 quote callable and domain foundation.",
+  "main": "lib/functions/src/index.js",
+  "engines": { "node": "24" },
+  "scripts": {
+    "typecheck": "node ../node_modules/typescript/bin/tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "build": "node ../node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "test:emulator": "node scripts/run-emulators.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.1",
+    "firebase-functions": "7.4.0"
+  }
+}

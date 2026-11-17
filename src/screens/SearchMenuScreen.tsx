@@ -14,14 +14,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { useCustomerMenu } from '../context/CustomerMenuContext';
+import { CustomerMenuStatus } from '../components/CustomerMenuStatus';
 import { useApp } from '../context/AppContext';
 import { Ionicons } from '@expo/vector-icons';
 import {
   SEARCH_THEME,
   SEARCH_HEADER_IMAGE,
   SEARCH_FOOTER_LANDSCAPE,
-  SEARCH_MENU_ITEMS,
-  MENU_CATEGORIES,
   asCartProduct,
   SearchMenuItem,
 } from '../data/searchMenuData';
@@ -29,8 +29,6 @@ import {
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type MenuCategory = SearchMenuItem['category'];
-
-const CATEGORY_PILLS: MenuCategory[] = MENU_CATEGORIES;
 
 interface SearchMenuScreenProps {
   onSearch?: (query: string) => void;
@@ -45,6 +43,8 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
   onViewCart,
   initialCategory = 'All',
 }) => {
+  const { items: menuItems, loading, error } = useCustomerMenu();
+  const CATEGORY_PILLS = ['All', ...new Set(menuItems.map(item => item.category))];
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<MenuCategory>(initialCategory);
   const { cart, addToCart, updateQuantity, cartCount: cartItemCount, finalTotal: cartTotal } = useApp();
@@ -56,7 +56,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
 
   // Filter items by search + category
   const filteredItems = useMemo(() => {
-    return SEARCH_MENU_ITEMS.filter((item) => {
+    return menuItems.filter((item) => {
       const matchesCat = !!searchQuery.trim() || activeCategory === 'All' || item.category === activeCategory;
       const matchesSearch =
         searchQuery.trim() === '' ||
@@ -65,7 +65,7 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCat && matchesSearch;
     });
-  }, [searchQuery, activeCategory]);
+  }, [searchQuery, activeCategory, menuItems]);
 
   const renderMenuItem = ({ item }: { item: SearchMenuItem }) => {
     const qty = cart.find(entry => entry.product.id === item.id)?.quantity ?? 0;
@@ -276,20 +276,21 @@ export const SearchMenuScreen: React.FC<SearchMenuScreenProps> = ({
         </View>
 
         {/* Menu Items List */}
+        <CustomerMenuStatus />
         <FlatList
           data={filteredItems}
           keyExtractor={(item) => item.id}
           renderItem={renderMenuItem}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.menuListContent}
-          ListEmptyComponent={
+          ListEmptyComponent={!loading && !error && menuItems.length > 0 ?
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={42} color="#C4A882" />
               <Text style={styles.emptyTitle}>कुछ नहीं मिला</Text>
               <Text style={styles.emptySubtitle}>
                 Try a different search or category
               </Text>
-            </View>
+            </View> : undefined
           }
           ListFooterComponent={
             <View style={styles.footerLandscapeWrap}>

@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useRef } from 'react';
+import { canClearSubmittedCart, mergeReorderItems } from '../services/submittedCart';
+import type { CartSubmission } from '../services/customerOrderSession';
 import { Product, CartProduct, CartItem, Order, CategoryType, DeliveryAddress, FulfillmentType } from '../types';
 import { addCartItem, setCartQuantity, calculateCartEstimate, normalizeCoupon } from '../services/cart';
-import { PRODUCTS, INITIAL_ADDRESSES } from '../data/mockData';
+import { useCustomerAccount } from './CustomerAccountContext';
+import { formatCustomerAddress } from '../services/customerAccount';
+import { PRODUCTS } from '../data/mockData';
 
 interface AppContextType {
   products: Product[];
@@ -16,6 +20,10 @@ interface AppContextType {
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
+  cartVersion: number;
+  cartInstance: string;
+  clearSubmittedCart: (submitted: CartSubmission) => boolean;
+  addCurrentMenuItems: (items: { product: CartProduct; quantity: number }[]) => void;
   cartCount: number;
   cartSubtotal: number;
   deliveryFee: number;
@@ -32,13 +40,11 @@ interface AppContextType {
   fulfillment: FulfillmentType;
   setFulfillment: (value: FulfillmentType) => void;
   deliveryAddressDraft: string;
-  setDeliveryAddressDraft: (value: string) => void;
 
   // Delivery & Address
   addresses: DeliveryAddress[];
-  selectedAddress: DeliveryAddress;
+  selectedAddress: DeliveryAddress | null;
   setSelectedAddress: (addr: DeliveryAddress) => void;
-  addAddress: (addr: DeliveryAddress) => void;
 
   // Orders
   orders: Order[];
@@ -62,12 +68,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeCategory, setActiveCategory] = useState<CategoryType>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartVersion, setCartVersion] = useState(0);
+  const cartRef = useRef(cart);
+  const cartVersionRef = useRef(0);
+  // Local identity only (not a security/submission key): prevents a restored
+  // attempt from clearing a new cart whose numeric revision happens to match.
+  const cartInstance = useRef(`${Date.now()}-${Math.random()}`).current;
   const [fulfillment, setFulfillment] = useState<FulfillmentType>('delivery');
-  const [deliveryAddressDraft, setDeliveryAddressDraft] = useState('');
+  const account = useCustomerAccount();
+  const uidRef = useRef(account.uid);
+  uidRef.current = account.uid;
+  const deliveryAddressDraft = formatCustomerAddress(account.selectedAddress?.data ?? null);
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [addresses, setAddresses] = useState<DeliveryAddress[]>(INITIAL_ADDRESSES);
-  const [selectedAddress, setSelectedAddress] = useState<DeliveryAddress>(INITIAL_ADDRESSES[0]);
-  const addAddress = (address: DeliveryAddress) => { setAddresses(prev => [...prev, address]); setSelectedAddress(address); };
+  // Read-only compatibility views for retained legacy components; no second address store.
+  const addresses: DeliveryAddress[] = account.addresses.map(({ id, data }) => ({
+    id, tag: data.label, addressLine: data.addressLine, area: data.area, city: data.city, pincode: data.pincode,
+    isDefault: account.profile?.data.defaultAddressId === id,
+  }));
+  const selectedAddress = addresses.find(address => address.id === account.selectedAddressId) ?? null;
+  const setSelectedAddress = (address: DeliveryAddress) => account.selectAddress(address.id);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeOrder, setActiveOrder] = useState<Order | null>(null);
@@ -78,13 +97,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isTrackingOpen, setIsTrackingOpen] = useState(false);
 
   // All menu and checkout controls update this same state.
-  const addToCart = (product: CartProduct) => setCart(prev => addCartItem(prev, product));
-  const removeFromCart = (productId: string) => setCart(prev => setCartQuantity(prev, productId, 0));
-  const updateQuantity = (productId: string, quantity: number) => setCart(prev => setCartQuantity(prev, productId, quantity));
+  const changeCart = (next: CartItem[]) => {
+    cartRef.current = next; cartVersionRef.current++; setCartVersion(cartVersionRef.current); setCart(next);
+  };
+  const addToCart = (product: CartProduct) => changeCart(addCartItem(cartRef.current, product));
+  const removeFromCart = (productId: string) => changeCart(setCartQuantity(cartRef.current, productId, 0));
+  const updateQuantity = (productId: string, quantity: number) => changeCart(setCartQuantity(cartRef.current, productId, quantity));
+  // Reorder explicitly refreshes matching product snapshots to current menu prices.
+  const addCurrentMenuItems = (items: { product: CartProduct; quantity: number }[]) => {
+    changeCart(mergeReorderItems(cartRef.current, items));
+  };
 
   const clearCart = () => {
-    setCart([]);
+    changeCart([]);
     setAppliedCoupon(null);
+  };
+  const clearSubmittedCart = (submitted: CartSubmission) => {
+    if (!canClearSubmittedCart({ uid: uidRef.current ?? '', version: cartVersionRef.current, instance: cartInstance }, submitted)) return false;
+    clearCart(); return true;
   };
 
   const toggleFavorite = (productId: string) => {
@@ -112,24 +142,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const removeCoupon = () => setAppliedCoupon(null);
 
   const placeOrder = (paymentMethod: string): Order => {
-    const newOrder: Order = {
-      id: `DESI-${Math.floor(100000 + Math.random() * 900000)}`,
-      date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      items: [...cart],
-      totalAmount: finalTotal,
-      status: 'confirmed',
-      deliveryAddress: `${selectedAddress.addressLine}, ${selectedAddress.area}`,
-      paymentMethod,
-      estimatedDelivery: '15 - 20 mins',
-    };
-
-    setOrders(prev => [newOrder, ...prev]);
-    setActiveOrder(newOrder);
-    clearCart();
-    setIsCheckoutOpen(false);
-    setIsCartOpen(false);
-    setIsTrackingOpen(true);
-    return newOrder;
+    throw new Error('Local order creation is disabled. Use the trusted checkout flow.');
   };
 
   return (
@@ -145,6 +158,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         removeFromCart,
         updateQuantity,
         clearCart,
+        cartVersion,
+        cartInstance,
+        clearSubmittedCart,
+        addCurrentMenuItems,
         cartCount,
         cartSubtotal,
         deliveryFee,
@@ -156,13 +173,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fulfillment,
         setFulfillment,
         deliveryAddressDraft,
-        setDeliveryAddressDraft,
         favorites,
         toggleFavorite,
         addresses,
         selectedAddress,
         setSelectedAddress,
-        addAddress,
         orders,
         activeOrder,
         placeOrder,

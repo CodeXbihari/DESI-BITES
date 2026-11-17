@@ -1,13 +1,34 @@
 import type { Data, StorePort, TransactionPort } from './firestore/adapterTypes';
 import { buildRepositories } from './firestore/repositories.ts';
 import { id } from './validation.ts';
+import type { Entity, MenuCategory, MenuItem } from './types';
+import { menuEntity } from './firestore/mappers.ts';
+import { validateCategory } from './validation.ts';
+
+export interface DemoMenuSeed {
+  shopId: string;
+  items: Entity<MenuItem>[];
+  categories: Entity<MenuCategory>[];
+}
 
 // A new private in-memory store per factory call. No SDK imports or network code.
 // This is demonstration state, not a simulation of production authorization.
-export function createDemoRepositories(demoUid = 'demo-customer') {
+export function createDemoRepositories(demoUid = 'demo-customer', menu?: DemoMenuSeed) {
   id(demoUid);
   const documents = new Map<string, Data>();
   const copy = <T>(v: T): T => structuredClone(v);
+  if (menu) {
+    const shop = id(menu.shopId);
+    for (const category of menu.categories) {
+      id(category.id); validateCategory(category.data);
+      documents.set(`shops/${shop}/menuCategories/${category.id}`, copy(category.data) as unknown as Data);
+    }
+    for (const item of menu.items) {
+      menuEntity(item.id, item.data);
+      if (!menu.categories.some(category => category.id === item.data.categoryId)) throw new Error('Missing demo menu category.');
+      documents.set(`shops/${shop}/menuItems/${item.id}`, copy(item.data) as unknown as Data);
+    }
+  }
   const port: StorePort = {
     uid: () => demoUid,
     serverTimestamp: () => ({ seconds: Math.floor(Date.now() / 1000), nanoseconds: 0 }),

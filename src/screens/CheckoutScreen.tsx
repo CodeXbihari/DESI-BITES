@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useCustomerOrders } from '../context/CustomerOrdersContext';
+import { checkoutDraftKey } from '../services/submittedCart';
+import type { CheckoutDraft } from '../services/customerOrderSession';
 import {
   View,
   Text,
@@ -20,26 +23,36 @@ import {
 } from '../data/checkoutData';
 
 import { useApp } from '../context/AppContext';
+import { useCustomerAccount } from '../context/CustomerAccountContext';
+import { SavedAddresses } from '../components/CustomerAccountUI';
+import { hasValidDeliveryAddress } from '../services/customerAccount';
 import { canReviewCheckout } from '../services/cart';
 
 interface CheckoutScreenProps {
   onBack?: () => void;
+  onConfirmed?: (orderId: string) => void;
 }
 
-export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ onBack }) => {
+export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ onBack, onConfirmed }) => {
   const {
     cart, updateQuantity, cartSubtotal: subtotal, deliveryFee,
     appliedDiscount: discount, appliedCoupon, applyCoupon, removeCoupon,
     finalTotal: grandTotal, fulfillment, setFulfillment,
-    deliveryAddressDraft, setDeliveryAddressDraft,
+    deliveryAddressDraft, cartVersion, cartInstance,
   } = useApp();
+  const account = useCustomerAccount();
+  const orders = useCustomerOrders();
+  const seenSuccess = useRef(orders.success?.id);
   const [promoCode, setPromoCode] = useState('');
   const [promoError, setPromoError] = useState('');
-  const [reviewed, setReviewed] = useState(false);
-  useEffect(() => {
-    setReviewed(false);
-  }, [cart, appliedCoupon, subtotal, deliveryFee, discount, grandTotal, fulfillment, deliveryAddressDraft]);
-  const ready = canReviewCheckout(cart, fulfillment, deliveryAddressDraft);
+  const draft: CheckoutDraft = { input: { shopId: 'demo-desi-bites', items: cart.map(item => ({ menuItemId: item.product.id, quantity: item.quantity })),
+    couponCode: appliedCoupon, ...(fulfillment === 'pickup' ? { fulfillment: 'pickup', addressId: null } : { fulfillment: 'delivery', addressId: account.selectedAddressId ?? '' }) },
+    key: checkoutDraftKey(cart, cartVersion, fulfillment, [account.selectedAddress, account.loading, account.busy, account.error], appliedCoupon),
+    cart: { uid: account.uid ?? '', version: cartVersion, instance: cartInstance } };
+  useEffect(() => { orders.updateDraft(draft); }, [draft.key, orders.updateDraft]);
+  useEffect(() => { if (orders.success && seenSuccess.current !== orders.success.id) { seenSuccess.current = orders.success.id; onConfirmed?.(orders.success.id); } }, [orders.success, onConfirmed]);
+  const ready = orders.enabled && !orders.restoring && !['quoting', 'confirming', 'uncertain'].includes(orders.phase)
+    && canReviewCheckout(cart, fulfillment, deliveryAddressDraft) && (fulfillment === 'pickup' || hasValidDeliveryAddress(account));
   const items = cart.map(({ product, quantity }) => ({ ...product, quantity }));
 
   const handleApplyPromo = () => {
@@ -232,7 +245,7 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ onBack }) => {
                   key={option}
                   accessibilityRole="radio"
                   accessibilityState={{ checked: fulfillment === option }}
-                  onPress={() => { setFulfillment(option); setReviewed(false); }}
+                  onPress={() => { setFulfillment(option); }}
                   style={[styles.fulfillmentOption, fulfillment === option && styles.fulfillmentSelected]}
                 >
                   <Text style={styles.billLabel}>{option === 'pickup' ? 'Pickup' : 'Delivery'}</Text>
@@ -274,41 +287,49 @@ export const CheckoutScreen: React.FC<CheckoutScreenProps> = ({ onBack }) => {
           {fulfillment === 'delivery' && (
             <View style={styles.billCard}>
               <Text style={styles.addressTitle}>Delivery address (required)</Text>
-              <TextInput
-                accessibilityLabel="Delivery address"
-                style={styles.addressInput}
-                value={deliveryAddressDraft}
-                onChangeText={value => { setDeliveryAddressDraft(value); setReviewed(false); }}
-                placeholder="Enter your full delivery address"
-                placeholderTextColor={CHECKOUT_THEME.textMutedBrown}
-                multiline
-                textAlignVertical="top"
-              />
-              {!deliveryAddressDraft.trim() && <Text style={styles.errorText}>Enter a delivery address to review checkout.</Text>}
+              <SavedAddresses />
+              {!hasValidDeliveryAddress(account) && <Text style={styles.errorText}>Select a valid saved delivery address to review checkout.</Text>}
             </View>
           )}
 
           <Text style={styles.reviewNotice}>
             Estimate only. Pricing and coupons are temporary, pending shop-owner confirmation.
-            No payment is collected and no order is created.
+            Request a server quote before confirming an unpaid test order. No payment is collected.
           </Text>
+          {!orders.enabled && <Text accessibilityRole="alert" style={styles.errorText}>{orders.error}</Text>}
+          {!!orders.checkoutError && <Text accessibilityRole="alert" style={styles.errorText}>{orders.checkoutError}</Text>}
+          {orders.restoring && <Text>Checking previous submission…</Text>}
+          {orders.phase === 'quoting' && <Text>Loading trusted quote…</Text>}
+          {orders.phase === 'confirming' && <Text>Confirming order. Please wait…</Text>}
           <TouchableOpacity
             accessibilityRole="button"
+            accessibilityLabel="Review checkout"
             accessibilityState={{ disabled: !ready }}
             disabled={!ready}
             style={[styles.continueButton, !ready && styles.disabledButton]}
-            onPress={() => setReviewed(true)}
+            onPress={() => { if (ready) void orders.quote(draft); }}
             activeOpacity={0.88}
           >
             <View style={styles.continueButtonInner}>
-              <Text style={styles.continueButtonText}>Review checkout · no charge</Text>
+              <Text style={styles.continueButtonText}>Request trusted quote · no charge</Text>
             </View>
           </TouchableOpacity>
-          {reviewed && ready && (
-            <Text accessibilityRole="status" style={styles.reviewNotice}>
-              Your current checkout estimate is ready for review. No order has been placed and no payment collected.
-            </Text>
-          )}
+          {orders.attempt && <View style={styles.billCard}>
+            <Text style={styles.addressTitle}>Review trusted server quote</Text>
+            {orders.attempt.quote.items.map(item => <Text key={item.menuItemId}>{item.quantity} × {item.nameSnapshot} · ₹{(item.lineTotalPaise / 100).toFixed(2)}</Text>)}
+            <Text>{orders.attempt.quote.fulfillment === 'pickup' ? 'Pickup' : 'Delivery'}</Text>
+            {!!orders.attempt.quote.addressSnapshot && <Text>{orders.attempt.quote.addressSnapshot.addressLine}, {orders.attempt.quote.addressSnapshot.city}</Text>}
+            <Text>Subtotal ₹{(orders.attempt.quote.subtotalPaise / 100).toFixed(2)} · Discount ₹{(orders.attempt.quote.discountPaise / 100).toFixed(2)} · Delivery ₹{(orders.attempt.quote.deliveryFeePaise / 100).toFixed(2)}</Text>
+            <Text style={styles.totalValue}>Final trusted total: ₹{(orders.attempt.quote.totalPaise / 100).toFixed(2)}</Text>
+            <Text>Quote expires: {new Date(orders.attempt.quote.expiresAt.seconds * 1000).toLocaleTimeString()}. Payment will remain Unpaid.</Text>
+            {orders.phase === 'uncertain' && <Text>This retries the previously submitted items, even if your current cart changed.</Text>}
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Confirm unpaid order" disabled={!['review', 'uncertain'].includes(orders.phase) || (orders.phase === 'review' && orders.attempt.draft.key !== draft.key)}
+              onPress={() => { if (orders.phase === 'uncertain' || (orders.phase === 'review' && orders.attempt?.draft.key === draft.key)) void orders.confirm(); }}>
+              <Text>{orders.phase === 'uncertain' ? 'Retry same submission' : 'Confirm order · unpaid · no charge'}</Text>
+            </TouchableOpacity>
+          </View>}
+          {orders.success && <View><Text accessibilityRole="status">Order {orders.success.id} placed. Payment: Unpaid. No payment has been collected. If your cart changed, it has been kept.</Text>
+            <TouchableOpacity accessibilityRole="button" onPress={() => onConfirmed?.(orders.success!.id)}><Text>View confirmed order</Text></TouchableOpacity></View>}
 
           {/* ── BOTTOM DECORATIVE LOTUS DIVIDER ── */}
           <View style={styles.bottomDividerRow}>

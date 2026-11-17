@@ -3,8 +3,10 @@ import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Platform }
 import { Header } from '../components/Header';
 import { HomeFoodCategories } from '../components/HomeFoodCategories';
 import { RestaurantFoodCard } from '../components/RestaurantFoodCard';
-import { SEARCH_MENU_ITEMS, type SearchMenuItem } from '../data/searchMenuData';
+import type { SearchMenuItem } from '../data/searchMenuData';
 import { homeTheme as theme } from '../theme/homeTheme';
+import { useCustomerMenu } from '../context/CustomerMenuContext';
+import { CustomerMenuStatus } from '../components/CustomerMenuStatus';
 import homeSections from '../data/homeSections.json';
 
 interface Props {
@@ -14,6 +16,9 @@ interface Props {
   onOpenSearch: (query: string, collection?: 'popular' | 'recommended') => void;
 }
 export function HomeScreen({ bottomContentInset = 0, onOpenMenu, onOpenProfile, onOpenSearch }: Props) {
+  const { items: menuItems, loading, error } = useCustomerMenu();
+  const bannerItems = ['db-veg-pizza', 'db-paneer-tikka-pizza', 'db-veg-cheese-burger', 'db-veg-pasta', 'db-litti-2pc-chokha']
+    .map(id => menuItems.find(item => item.id === id)).filter((item): item is SearchMenuItem => !!item);
   const [activeBanner, setActiveBanner] = useState(0);
   const [bannerWidth, setBannerWidth] = useState(0);
   const bannerRef=useRef<React.ComponentRef<typeof ScrollView>>(null);
@@ -40,7 +45,7 @@ export function HomeScreen({ bottomContentInset = 0, onOpenMenu, onOpenProfile, 
       keyboardShouldPersistTaps="handled"
     >
       {ids.map(id => {
-        const item = SEARCH_MENU_ITEMS.find(entry => entry.id === id);
+        const item = menuItems.find(entry => entry.id === id);
         return item ? <View key={id} style={styles.cell}><RestaurantFoodCard item={item} /></View> : null;
       })}
     </ScrollView>
@@ -49,21 +54,23 @@ export function HomeScreen({ bottomContentInset = 0, onOpenMenu, onOpenProfile, 
   return <View style={styles.container}>
     <ScrollView testID="home-content" style={styles.scroll} contentContainerStyle={{ paddingBottom: bottomContentInset + 12 }} showsVerticalScrollIndicator={false}>
       <Header variant="home" onOpenProfile={onOpenProfile} onOpenSearch={onOpenSearch} />
+      <CustomerMenuStatus />
+      {!loading && !error && menuItems.length > 0 && <>
       <View style={styles.banner} onLayout={event=>setBannerWidth(event.nativeEvent.layout.width)}>
         <ScrollView ref={bannerRef} horizontal pagingEnabled nestedScrollEnabled directionalLockEnabled={false} showsHorizontalScrollIndicator={false} onMomentumScrollEnd={event => setActiveBanner(Math.round(event.nativeEvent.contentOffset.x / event.nativeEvent.layoutMeasurement.width))}>
-          {['db-veg-pizza','db-paneer-tikka-pizza','db-veg-cheese-burger','db-veg-pasta','db-litti-2pc-chokha'].map((id,index) => {
-            const item = SEARCH_MENU_ITEMS.find(entry => entry.id === id)!;
-            return <View key={id} style={[styles.bannerSlide,{width:bannerWidth||undefined}]}>
+          {bannerItems.map(item => {
+            return <View key={item.id} style={[styles.bannerSlide,{width:bannerWidth||undefined}]}>
               <Image source={{ uri: item.image }} style={styles.bannerImage} />
               <View style={styles.bannerCopy}><Text style={styles.bannerTitle}>Good Food</Text><Text style={styles.bannerAccent}>Good Mood!</Text><TouchableOpacity style={styles.orderButton} onPress={() => onOpenMenu(item.category as SearchMenuItem['category'])} accessibilityRole="button" accessibilityLabel={`Order ${item.category}`}><Text style={styles.orderText}>Order Now →</Text></TouchableOpacity></View>
             </View>;
           })}
         </ScrollView>
-        <View style={styles.dots}>{[0,1,2,3,4].map(i => <TouchableOpacity key={i} style={i===activeBanner?styles.activeDot:styles.dot} onPress={()=>{setActiveBanner(i);bannerRef.current?.scrollTo({x:i*bannerWidth,animated:true});}} accessibilityRole="button" accessibilityLabel={`Show promotion ${i+1}`}/>)}</View>
+        <View style={styles.dots}>{bannerItems.map((item, i) => <TouchableOpacity key={item.id} style={i===activeBanner?styles.activeDot:styles.dot} onPress={()=>{setActiveBanner(i);bannerRef.current?.scrollTo({x:i*bannerWidth,animated:true});}} accessibilityRole="button" accessibilityLabel={`Show promotion ${i+1}`}/>)}</View>
       </View>
       <HomeFoodCategories onOpenMenu={onOpenMenu} />
       {section('Popular Items', '🔥', homeSections.popular, 'home-popular-row')}
       {section('Recommended for You', '⭐', homeSections.recommended, 'home-recommended-row')}
+      </>}
     </ScrollView>
   </View>;
 }
