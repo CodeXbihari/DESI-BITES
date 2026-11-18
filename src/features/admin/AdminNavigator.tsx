@@ -5,11 +5,11 @@ import { AdminCustomerDetailsScreen } from './screens/AdminCustomerDetailsScreen
 import { AdminMenuItemFormScreen } from './screens/AdminMenuItemFormScreen';
 import { AdminOrderDetailsScreen } from './screens/AdminOrderDetailsScreen';
 import { AdminWorkspaceScreen } from './screens/AdminWorkspaceScreen';
-import type { AdminStackParamList } from './types';
+import type { AdminStackParamList, AdminStaffNavigation } from './types';
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
 
-export function AdminNavigator({ onExit }: { onExit: () => void }) {
+export function AdminNavigator({ onExit, staffNavigation }: { onExit: () => void; staffNavigation?: AdminStaffNavigation }) {
   return (
     <Stack.Navigator screenOptions={{
       headerStyle: { backgroundColor: theme.background },
@@ -20,7 +20,7 @@ export function AdminNavigator({ onExit }: { onExit: () => void }) {
       animation: 'fade_from_bottom',
     }}>
       <Stack.Screen name="AdminWorkspace" options={{ headerShown: false }}>
-        {props => <AdminWorkspaceScreen {...props} onExit={onExit} />}
+        {props => <AdminWorkspaceScreen {...props} onExit={onExit} staffNavigation={staffNavigation} />}
       </Stack.Screen>
       <Stack.Screen name="AdminOrderDetails" component={AdminOrderDetailsScreen} options={{ headerShown: true, title: 'Order details' }} />
       <Stack.Screen name="AdminMenuItemForm" component={AdminMenuItemFormScreen} options={({ route }) => ({ headerShown: true, title: route.params?.menuItemId ? 'Edit menu item' : 'Add menu item' })} />

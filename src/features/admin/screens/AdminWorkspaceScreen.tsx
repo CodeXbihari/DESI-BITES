@@ -15,9 +15,9 @@ import { AdminProfileScreen } from './AdminProfileScreen';
 import { AdminReportsScreen } from './AdminReportsScreen';
 import { AdminSettingsScreen } from './AdminSettingsScreen';
 import { useAdminDemo } from '../state/AdminDemoContext';
-import type { AdminPage, AdminStackParamList, AdminTab } from '../types';
+import type { AdminPage, AdminStackParamList, AdminStaffNavigation, AdminTab } from '../types';
 
-type Props = NativeStackScreenProps<AdminStackParamList, 'AdminWorkspace'> & { onExit: () => void };
+type Props = NativeStackScreenProps<AdminStackParamList, 'AdminWorkspace'> & { onExit: () => void; staffNavigation?: AdminStaffNavigation };
 
 const primaryNavigation: Array<{ page: AdminTab; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }> = [
   { page: 'dashboard', label: 'Dashboard', icon: 'grid-outline' },
@@ -31,14 +31,17 @@ const adminTools: Array<{ page: Exclude<AdminPage, AdminTab>; label: string; ico
   { page: 'categories', label: 'Categories', icon: 'pricetags-outline' },
   { page: 'inventory', label: 'Inventory', icon: 'cube-outline' },
   { page: 'customers', label: 'Customers', icon: 'people-outline' },
+  { page: 'delivery', label: 'Delivery', icon: 'bicycle-outline' },
   { page: 'settings', label: 'Settings', icon: 'settings-outline' },
 ];
 
-export function AdminWorkspaceScreen({ navigation, onExit }: Props) {
+export function AdminWorkspaceScreen({ navigation, onExit, staffNavigation }: Props) {
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const { settings, updateSettings, isLoading, loadError, reload, resetDemoData } = useAdminDemo();
-  const [page, setPage] = useState<AdminPage>('dashboard');
+  const [adminPage, setPage] = useState<Exclude<AdminPage, 'delivery'>>('dashboard');
+  const page = staffNavigation?.deliveryOpen ? 'delivery' : adminPage;
+  const tools = staffNavigation ? adminTools : adminTools.filter(item => item.page !== 'delivery');
   const [toolsVisible, setToolsVisible] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -49,8 +52,19 @@ export function AdminWorkspaceScreen({ navigation, onExit }: Props) {
     toastTimer.current = setTimeout(() => setToast(null), 2400);
   };
   useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
-  const openPage = (next: AdminPage) => { setPage(next); setToolsVisible(false); };
-  const exit = () => { resetDemoData(); onExit(); };
+  const openPage = (next: AdminPage) => {
+    setToolsVisible(false);
+    if (next === 'delivery') {
+      staffNavigation?.onDeliveryChange(true);
+      return;
+    }
+    setPage(next);
+    if (staffNavigation?.deliveryOpen) staffNavigation.onDeliveryChange(false);
+  };
+  const exit = () => {
+    if (!staffNavigation) resetDemoData();
+    onExit();
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right', 'bottom']}>
@@ -66,7 +80,7 @@ export function AdminWorkspaceScreen({ navigation, onExit }: Props) {
           showTools={!isWide}
         />
         <View style={styles.body}>
-          {isWide ? <SideNavigation page={page} onNavigate={openPage} /> : null}
+          {isWide ? <SideNavigation page={page} onNavigate={openPage} tools={tools} /> : null}
           <View style={styles.main}>
             {loadError ? <AdminErrorNotice message={loadError} onRetry={reload} /> : null}
             {isLoading ? <AdminLoadingState /> : <PageContent
@@ -78,13 +92,14 @@ export function AdminWorkspaceScreen({ navigation, onExit }: Props) {
               onEditMenu={menuItemId => navigation.navigate('AdminMenuItemForm', { menuItemId })}
               onNotify={notify}
               onExit={exit}
+              staffNavigation={staffNavigation}
             />}
           </View>
         </View>
         {!isWide ? <BottomNavigation page={page} onNavigate={openPage} /> : null}
         <AdminToast message={toast} bottomOffset={isWide ? 16 : 70} />
       </View>
-      <ToolsModal visible={toolsVisible} onClose={() => setToolsVisible(false)} page={page} onNavigate={openPage} />
+      <ToolsModal visible={toolsVisible} onClose={() => setToolsVisible(false)} page={page} onNavigate={openPage} tools={tools} />
     </SafeAreaView>
   );
 }
@@ -112,13 +127,13 @@ function Header({ restaurantName, logoImage, isOpen, acceptingOrders, onToggleOp
   );
 }
 
-function SideNavigation({ page, onNavigate }: { page: AdminPage; onNavigate: (page: AdminPage) => void }) {
+function SideNavigation({ page, onNavigate, tools }: { page: AdminPage; onNavigate: (page: AdminPage) => void; tools: typeof adminTools }) {
   return (
     <ScrollView style={styles.sideRail} contentContainerStyle={styles.sideRailContent} showsVerticalScrollIndicator={false}>
       <Text style={styles.navLabel}>WORKSPACE</Text>
       {primaryNavigation.map(item => <NavButton key={item.page} {...item} selected={page === item.page} onPress={() => onNavigate(item.page)} />)}
       <Text style={[styles.navLabel, styles.toolsLabel]}>MANAGEMENT</Text>
-      {adminTools.map(item => <NavButton key={item.page} {...item} selected={page === item.page} onPress={() => onNavigate(item.page)} />)}
+      {tools.map(item => <NavButton key={item.page} {...item} selected={page === item.page} onPress={() => onNavigate(item.page)} />)}
       <View style={styles.sidebarDemo}><AdminDemoLabel /><Text style={styles.sidebarDemoText}>All activity is local preview data.</Text></View>
     </ScrollView>
   );
@@ -135,19 +150,21 @@ function NavButton({ page, label, icon, selected, onPress }: { page: AdminPage; 
   return <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected }} style={[styles.navButton, selected && styles.navButtonSelected]}><Ionicons name={icon} size={18} color={selected ? theme.primary : theme.muted} /><Text style={[styles.navButtonText, selected && styles.navButtonTextSelected]}>{label}</Text>{selected ? <View style={styles.navSelectedMark} /> : null}</Pressable>;
 }
 
-function ToolsModal({ visible, onClose, page, onNavigate }: { visible: boolean; onClose: () => void; page: AdminPage; onNavigate: (page: AdminPage) => void }) {
-  return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}><Pressable style={styles.modalBackdrop} onPress={onClose}><View style={styles.toolsSheet}><Text style={styles.toolsTitle}>Management tools</Text><Text style={styles.toolsSubtitle}>Restaurant operations · demo only</Text>{adminTools.map(item => <NavButton key={item.page} {...item} selected={page === item.page} onPress={() => onNavigate(item.page)} />)}</View></Pressable></Modal>;
+function ToolsModal({ visible, onClose, page, onNavigate, tools }: { visible: boolean; onClose: () => void; page: AdminPage; onNavigate: (page: AdminPage) => void; tools: typeof adminTools }) {
+  return <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}><Pressable style={styles.modalBackdrop} onPress={onClose}><View style={styles.toolsSheet}><Text style={styles.toolsTitle}>Management tools</Text><Text style={styles.toolsSubtitle}>Restaurant operations · demo only</Text>{tools.map(item => <NavButton key={item.page} {...item} selected={page === item.page} onPress={() => onNavigate(item.page)} />)}</View></Pressable></Modal>;
 }
 
-function PageContent({ page, onNavigate, onOpenOrder, onOpenCustomer, onAddMenu, onEditMenu, onNotify, onExit }: {
+function PageContent({ page, onNavigate, onOpenOrder, onOpenCustomer, onAddMenu, onEditMenu, onNotify, onExit, staffNavigation }: {
   page: AdminPage; onNavigate: (page: AdminPage) => void; onOpenOrder: (id: string) => void; onOpenCustomer: (id: string) => void; onAddMenu: () => void; onEditMenu: (id: string) => void; onNotify: (message: string) => void; onExit: () => void;
+  staffNavigation?: AdminStaffNavigation;
 }) {
   switch (page) {
     case 'dashboard': return <AdminDashboardScreen onNavigate={onNavigate} onOpenOrder={onOpenOrder} onAddMenu={onAddMenu} />;
     case 'orders': return <AdminOrdersScreen onOpenOrder={onOpenOrder} onNotify={onNotify} />;
     case 'menu': return <AdminMenuScreen onAdd={onAddMenu} onEdit={onEditMenu} onNotify={onNotify} />;
     case 'reports': return <AdminReportsScreen />;
-    case 'profile': return <AdminProfileScreen onLogout={onExit} />;
+    case 'profile': return <AdminProfileScreen onLogout={onExit} staffDemo={Boolean(staffNavigation)} />;
+    case 'delivery': return staffNavigation?.deliveryContent ?? null;
     case 'categories': return <AdminCategoriesScreen onNotify={onNotify} />;
     case 'inventory': return <AdminInventoryScreen onNotify={onNotify} />;
     case 'customers': return <AdminCustomersScreen onOpenCustomer={onOpenCustomer} />;

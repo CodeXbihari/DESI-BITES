@@ -1,7 +1,13 @@
 import type { SearchMenuItem } from '../../data/searchMenuData';
 
 export type AdminTab = 'dashboard' | 'orders' | 'menu' | 'reports' | 'profile';
-export type AdminPage = AdminTab | 'categories' | 'inventory' | 'customers' | 'settings';
+export type AdminPage = AdminTab | 'categories' | 'inventory' | 'customers' | 'settings' | 'delivery';
+
+export interface AdminStaffNavigation {
+  deliveryOpen: boolean;
+  deliveryContent: import('react').ReactNode;
+  onDeliveryChange: (open: boolean) => void;
+}
 export type AdminOrderStatus = 'new' | 'accepted' | 'preparing' | 'ready' | 'completed' | 'cancelled';
 
 export type AdminStackParamList = {

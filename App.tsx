@@ -360,6 +360,11 @@ export default function App() {
     __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
   );
 
+  if (__DEV__ && process.env.EXPO_PUBLIC_STAFF_DEMO === '1') {
+    const { StaffExperience } = require('./src/features/staff/StaffExperience') as typeof import('./src/features/staff/StaffExperience');
+    return <StaffExperience />;
+  }
+
   if (showAdminPreview) {
     return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
   }

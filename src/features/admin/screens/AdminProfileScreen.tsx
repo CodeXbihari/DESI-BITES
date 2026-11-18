@@ -6,7 +6,7 @@ import { ADMIN_DEMO_PROFILE } from '../data/mockAdminData';
 import { useAdminDemo } from '../state/AdminDemoContext';
 import { AdminButton, AdminConfirmModal, AdminDemoLabel, AdminPageTitle, AdminPanel } from '../components/AdminUI';
 
-export function AdminProfileScreen({ onLogout }: { onLogout: () => void }) {
+export function AdminProfileScreen({ onLogout, staffDemo = false }: { onLogout: () => void; staffDemo?: boolean }) {
   const { settings } = useAdminDemo();
   const [confirmLogout, setConfirmLogout] = useState(false);
   return (
@@ -29,10 +29,12 @@ export function AdminProfileScreen({ onLogout }: { onLogout: () => void }) {
       </AdminPanel>
       <Pressable onPress={() => setConfirmLogout(true)} accessibilityRole="button" style={styles.logout}>
         <Ionicons name="log-out-outline" size={18} color="#8B3D35" />
-        <Text style={styles.logoutText}>Exit Admin preview</Text>
+        <Text style={styles.logoutText}>{staffDemo ? 'Logout' : 'Exit Admin preview'}</Text>
       </Pressable>
-      <Text style={styles.note}>This local preview uses fictional data. It does not sign in an Admin or connect to Firebase.</Text>
-      <AdminConfirmModal visible={confirmLogout} title="Exit Admin preview?" message="You will return to the Customer app. Demo changes will be reset for the next preview session." confirmLabel="Exit preview" onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
+      <Text style={styles.note}>{staffDemo ? 'Development demo account. Delivery partner changes are saved on this device.' : 'This local preview uses fictional data. It does not sign in an Admin or connect to Firebase.'}</Text>
+      <AdminConfirmModal visible={confirmLogout} title={staffDemo ? 'Log out of staff demo?' : 'Exit Admin preview?'}
+        message={staffDemo ? 'You will return to the shared staff login.' : 'You will return to the Customer app. Demo changes will be reset for the next preview session.'}
+        confirmLabel={staffDemo ? 'Logout' : 'Exit preview'} onCancel={() => setConfirmLogout(false)} onConfirm={() => { setConfirmLogout(false); onLogout(); }} />
     </ScrollView>
   );
 }
