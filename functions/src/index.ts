@@ -5,6 +5,9 @@ import { adminOrderStore } from './adminOrderStore.ts';
 import { createConfirmationHandler, createOrderLookupHandler } from './orderService.ts';
 import { requireQuoteEmulators } from './emulatorOnly.ts';
 import { createQuoteHandler } from './quoteService.ts';
+import { getAuth } from 'firebase-admin/auth';
+import { getApp } from 'firebase-admin/app';
+import { createAdminHandler } from './adminService.ts';
 
 export const createCustomerQuote = onCall({ region: 'us-central1' }, async request => {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in to request a quote.');
@@ -34,3 +37,11 @@ export const confirmCustomerOrder = onCall({ region: 'us-central1' }, async requ
 });
 export const getCustomerOrder = onCall({ region: 'us-central1' }, request =>
   createOrderLookupHandler(orderStoreForRequest(request.auth))(request));
+
+export const adminManage = onCall({ region: 'us-central1' }, request => {
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sign in to manage a shop.');
+  try { requireQuoteEmulators(); }
+  catch { throw new HttpsError('failed-precondition', 'Shop management is available only in the isolated emulator suite.'); }
+  const db = getEmulatorFirestore();
+  return createAdminHandler(db, uid => getAuth(getApp('stage4-quotes-emulator-only')).getUser(uid))(request);
+});

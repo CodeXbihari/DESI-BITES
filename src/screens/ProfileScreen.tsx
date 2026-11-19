@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
@@ -7,15 +7,18 @@ import { useCustomerAccount } from '../context/CustomerAccountContext';
 import { CustomerProfileEditor, SavedAddresses } from '../components/CustomerAccountUI';
 import { colors } from '../theme/colors';
 import { homeTheme } from '../theme/homeTheme';
+import { customerEmulatorEnabled } from '../config/customerEmulator';
 
 interface ProfileScreenProps {
   onReplayOnboarding?: () => void;
   onLogout?: () => void;
+  onAdminOpen?: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onReplayOnboarding,
   onLogout,
+  onAdminOpen,
 }) => {
   const { user, profileError } = useAuth();
   const { favorites, orders } = useApp();
@@ -117,6 +120,19 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
         <View style={styles.menuCard}>
           <Text style={styles.sectionHeading}>Help & Information</Text>
+
+          {onAdminOpen && Platform.OS === 'web' && customerEmulatorEnabled() && (
+            <>
+              <TouchableOpacity style={styles.menuRow} onPress={onAdminOpen} accessibilityRole="button" accessibilityLabel="Open shop administration">
+                <View style={styles.menuLeft}>
+                  <Ionicons name="shield-checkmark-outline" size={20} color={homeTheme.primary} />
+                  <Text style={[styles.menuTitle, { color: homeTheme.primary, fontWeight: '700' }]}>Shop administration</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={homeTheme.primary} />
+              </TouchableOpacity>
+              <Text selectable style={{ color: homeTheme.muted, fontSize: 9, paddingHorizontal: 16, paddingBottom: 8 }}>Local emulator UID: {user?.uid}</Text>
+            </>
+          )}
 
           <TouchableOpacity style={styles.menuRow}>
             <View style={styles.menuLeft}>

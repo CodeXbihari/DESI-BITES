@@ -1,44 +1,62 @@
-# Desi Bites Admin Frontend Preview
+# Desi Bites Admin emulator experience
 
-The Admin frontend is a development-only experience that shares the app's React Native screens across Android, iOS, and Expo Web. It uses local demo data and does not authenticate an Admin, access Firebase, or write restaurant/customer records.
+The signed-in Profile has a **Shop administration** entry only in the local
+web emulator configuration. It uses the existing Firebase Auth emulator
+session and `adminManage` callable. The Admin workspace does not render until the
+server confirms the current UID has an active `owner` membership for
+`shops/demo-desi-bites`. A customer or inactive owner sees only an access error
+and a return action. There is no client role flag or phone allowlist.
 
-## Open the preview
+The connected workspace provides today’s order counts, status filters, cursor
+pagination, order detail and status history, customer order history, the
+supported `placed → preparing → packed → food_ready` transitions, existing menu
+and category edits, item/category availability, and the shop’s
+`acceptsOrders` setting. Catalog create/delete, stock counts, photo edits,
+restaurant profile fields, cancellation, and payment actions are not supported
+by the current backend and are not exposed as live controls. Orders remain
+unpaid. Delivery fulfillment and snapshots are displayed as stored; no delivery
+rules or behavior are changed.
 
-Add this setting to the project root `.env` file:
+## Local owner setup
 
-```env
-EXPO_PUBLIC_ADMIN_PREVIEW=1
-```
-
-Restart Expo so it reads the new public environment value:
+Start the isolated emulator suite from the repository root:
 
 ```sh
-npx expo start --clear
+npm --prefix functions run build
+node node_modules/firebase-tools/lib/bin/firebase.js emulators:start --config firebase.emulators.json --project demo-desiibites-stage1 --only auth,firestore,functions
 ```
 
-Then open the project in Expo Go or a development build. For the browser, run:
+The emulator runtime requires Java 21 or newer. If a local suite is already
+running, reuse it; do not start another process on ports 5001, 8080, or 9099.
+The Admin callable only works with this explicit loopback project.
+
+If the existing emulator does not already contain `shops/demo-desi-bites` and
+the approved catalog, seed it once with the project's create-only local seeder
+after checking that it is the intended empty demo database:
 
 ```sh
-npx expo start --web --clear
+GCLOUD_PROJECT=demo-desiibites-stage1 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 node --experimental-strip-types scripts/seed_customer_emulator.mjs
 ```
 
-The Admin preview replaces the Customer experience only in a development build while the setting is enabled. It does not add a button, link, or Admin tab to the Customer app.
+Launch Expo Web in another terminal:
 
-To return to the Customer experience, change the value to `0` or remove it, then restart Expo. The Admin profile's “Exit Admin preview” action also returns to the Customer app for the current runtime session.
+```sh
+EXPO_PUBLIC_CUSTOMER_EMULATOR=1 EXPO_PUBLIC_AUTH_MODE=firebase EXPO_PUBLIC_ADMIN_PREVIEW=0 npm run web -- --host localhost
+```
 
-## Included demo workflows
+Sign in with a synthetic phone number using the Auth emulator's displayed OTP.
+The session UID can then be granted owner access by an operator after confirming
+the UID and demo shop. The existing script is deliberately not run by the app:
 
-- Dashboard metrics, sales chart, popular dishes, recent orders, and restaurant availability.
-- Order search/status filters, order details, status changes, and cancellation confirmation.
-- Menu search/category filters/sorting, add/edit forms, bundled photo selection, availability, and delete confirmation.
-- Category add/edit, image selection, active state, item counts, and guarded deletion.
-- Inventory search, stock controls, low-stock/sold-out filters, and availability controls.
-- Customer search and customer/order-history details with phone numbers masked.
-- Daily/weekly/monthly report views and best-selling items.
-- Restaurant profile/settings and mock Admin profile/exit.
+```sh
+GCLOUD_PROJECT=demo-desiibites-stage1 FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 node scripts/grant_local_shop_admin.mjs --uid EXISTING_EMULATOR_UID --shop demo-desi-bites
+```
 
-Changes are in-memory demo state and reset when the Admin preview is exited or the app reloads. They are intentionally separated from the Firebase architecture so a later backend integration can use an authorized Admin service.
+It uses Firestore `create`, so it refuses to replace an existing membership.
+Only after this manual local grant can the signed-in owner open Shop
+administration. No live Firebase, real customer order, payment, deploy, or
+production access is involved.
 
-## Important security boundary
-
-This is only a local UI preview. The environment switch is not authentication or authorization and must not be used to protect production Admin data. A production Admin experience needs trusted Firebase sign-in plus server-controlled authorization and security rules.
+The Admin UI and callables are emulator scoped. A production owner workflow,
+security review, payment integration, and any additional shop/catalog operations
+remain outside this demo milestone.

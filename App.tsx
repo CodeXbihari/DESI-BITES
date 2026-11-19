@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -26,6 +26,7 @@ import { AppProvider, useApp } from './src/context/AppContext';
 import { colors } from './src/theme/colors';
 import { homeTheme } from './src/theme/homeTheme';
 import type { SearchMenuItem } from './src/data/searchMenuData';
+import { AdminOwnerExperience } from './src/features/admin/AdminOwnerExperience';
 
 import { HomeScreen } from './src/screens/HomeScreen';
 import { OrdersScreen } from './src/screens/OrdersScreen';
@@ -39,7 +40,6 @@ import { CheckoutScreen } from './src/screens/CheckoutScreen';
 
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
-import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -65,9 +65,10 @@ interface MainAppProps {
   onOpenSearch: (query: string, collection?: 'popular' | 'recommended', category?: SearchMenuItem['category']) => void;
   onCheckout: () => void;
   onOpenOrder: (id: string) => void;
+  onOpenAdmin: () => void;
 }
 
-function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout, onOpenOrder }: MainAppProps) {
+function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout, onOpenOrder, onOpenAdmin }: MainAppProps) {
   const insets = useSafeAreaInsets();
   const [currentTab, setCurrentTab] = useState<Tab>('home');
   const [cartBottomSpace, setCartBottomSpace] = useState(0);
@@ -106,6 +107,7 @@ function MainApp({ onLogout, onReplayOnboarding, onOpenSearch, onCheckout, onOpe
           <ProfileScreen
             onReplayOnboarding={onReplayOnboarding}
             onLogout={onLogout}
+            onAdminOpen={onOpenAdmin}
           />
         )}
       </View>
@@ -233,7 +235,7 @@ function SplashScreen() {
 }
 
 // ── ROOT STACK NAVIGATOR ──
-function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'Onboarding' | 'Login'; onOnboardingChange: (completed: boolean) => void }) {
+function RootNavigator({ initialRoute, onOnboardingChange, onOpenAdmin }: { initialRoute: 'Onboarding' | 'Login'; onOnboardingChange: (completed: boolean) => void; onOpenAdmin: () => void }) {
   const { user, logout } = useAuth();
   const { setIsCartOpen } = useApp();
   return (
@@ -292,6 +294,7 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
         {({ navigation }: NativeStackScreenProps<RootStackParamList, 'Main'>) => (
           <MainApp
             onOpenOrder={orderId => navigation.navigate('OrderDetails', { orderId })}
+            onOpenAdmin={onOpenAdmin}
             onCheckout={() => navigation.navigate('Checkout')}
             onLogout={() => {
               void logout().catch(error => Alert.alert('Sign out failed', authErrorMessage(error)));
@@ -340,9 +343,12 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
 }
 
 function AppContent() {
-  const { user, initializing } = useAuth();
+  const { user, initializing, isMockAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [adminUid, setAdminUid] = useState<string | null>(null);
+
+  useEffect(() => { setAdminUid(null); }, [user?.uid]);
 
   useEffect(() => {
     async function checkOnboardingStatus() {
@@ -366,23 +372,17 @@ function AppContent() {
   return (
     <SafeAreaProvider>
       <CustomerExperienceProviders>
-          <NavigationContainer>
-            <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} />
-          </NavigationContainer>
+        {adminUid && user?.uid === adminUid
+          ? <AdminOwnerExperience uid={adminUid} onExit={() => setAdminUid(null)} />
+          : <NavigationContainer>
+              <RootNavigator initialRoute={hasCompletedOnboarding ? 'Login' : 'Onboarding'} onOnboardingChange={setHasCompletedOnboarding} onOpenAdmin={() => { if (user && !isMockAuth) setAdminUid(user.uid); }} />
+            </NavigationContainer>}
       </CustomerExperienceProviders>
     </SafeAreaProvider>
   );
 }
 
 export default function App() {
-  const [showAdminPreview, setShowAdminPreview] = useState(
-    __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
-  );
-
-  if (showAdminPreview) {
-    return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
-  }
-
   return <AuthProvider><AppContent /></AuthProvider>;
 }
 
