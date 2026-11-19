@@ -1,31 +1,31 @@
 # Staff login and delivery demo
 
-Run these commands from this checkout. If another Expo server is running, stop it first or choose a free port.
+Run these commands from this checkout. This demo uses the existing Desi Bites login screen for all roles. If another Expo server is running, stop it first or choose a free port.
 
 Web:
 
 ```sh
-EXPO_PUBLIC_STAFF_DEMO=1 npx expo start --web --clear
+npx expo start --web --clear
 ```
 
-Open [http://localhost:8081/login](http://localhost:8081/login), or use the port Metro prints.
+Open the customer app's normal login screen at the web address printed by Expo.
 
 Android and iOS:
 
 ```sh
-EXPO_PUBLIC_STAFF_DEMO=1 npx expo start --clear
+npx expo start --clear
 ```
 
 Open the project in a compatible Expo client or development build. Press `a` or `i` in the Expo terminal with an emulator or simulator configured.
 
-| Demo account | Mobile | PIN |
+| Demo account | Mobile | Login method |
 | --- | --- | --- |
-| Admin | 9999999999 | 123456 |
-| Delivery Partner | 8888888888 | 654321 |
-| Inactive Delivery Partner | 7777777777 | 456789 |
+| Admin | Enter the last 10 digits of `EXPO_PUBLIC_ADMIN_DEMO_PHONE` from `.env` | Existing OTP screen; use `EXPO_PUBLIC_ADMIN_DEMO_OTP` |
+| Seeded delivery partner | 8888888888 | 654321 PIN |
+| Inactive delivery partner | 7777777777 | 456789 PIN (sign-in is rejected) |
 
-Admin opens the existing dashboard. Select **Delivery** in the sidebar or mobile **Tools** menu. Add a partner, note their mobile and PIN, and log out through the Admin **Profile**. Sign in through the same form. The seeded delivery account has orders to try the four status actions. Newly created accounts start with no assigned orders.
+Enable mock authentication in development with `EXPO_PUBLIC_AUTH_MODE=mock`. The Admin enters their phone on the existing login screen and verifies through the existing OTP screen. In Admin, open **Delivery** from the sidebar or mobile **Tools** menu. Add a partner and assign a six-digit PIN. Log out through Admin **Profile**; the same login screen detects that partner's phone and shows the PIN field. A successful PIN opens the Delivery dashboard. The seeded delivery account has orders to try the four status actions. Newly created accounts start with no assigned orders.
 
 Browser data and the session persist per origin in localStorage. Native data and the session persist per installation in AsyncStorage. Demo accounts and changes do not sync between devices or browser profiles. Sign out to switch accounts on the same installation. Clear this app's local data to restore the seed.
 
-This entry is enabled by the development flag and `__DEV__`. Launch Expo without the flag to use the existing customer flow or the existing Admin preview setting. The three browser paths are served by Expo's development server. Native uses the same guarded screens without depending on a browser URL.
+Delivery PIN sign-in and Admin demo sessions are development-only. Do not use local demo PINs as production authentication. For real delivery accounts and roles, add trusted backend authentication and authorization before production. Customer sign-in keeps its existing OTP flow.

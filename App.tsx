@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,10 @@ import { CheckoutScreen } from './src/screens/CheckoutScreen';
 import { CartFloatingBar } from './src/components/CartFloatingBar';
 import { CartModal } from './src/components/CartModal';
 import { AdminPreviewExperience } from './src/features/admin/AdminPreviewExperience';
+import { StaffProvider, useStaff } from './src/features/staff/StaffContext';
+import { DeliveryDashboardScreen } from './src/features/staff/DeliveryDashboardScreen';
+import { DeliveryManagementScreen } from './src/features/staff/DeliveryManagementScreen';
+import { STAFF_DEMO_ENABLED } from './src/features/staff/staffDemo';
 
 const ONBOARDING_STORAGE_KEY = '@desi_onboarding_completed';
 
@@ -321,9 +325,25 @@ function RootNavigator({ initialRoute, onOnboardingChange }: { initialRoute: 'On
 }
 
 function AppContent() {
-  const { user, initializing } = useAuth();
+  const { user, initializing, logout } = useAuth();
+  const { account: staffAccount, loading: staffLoading, activateAdminDemo, logout: logoutStaff } = useStaff();
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [adminSessionReady, setAdminSessionReady] = useState(false);
+  const [adminDeliveryOpen, setAdminDeliveryOpen] = useState(false);
+  const activatedAdminUid = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (user?.isAdminDemo && activatedAdminUid.current !== user.uid) {
+      activatedAdminUid.current = user.uid;
+      setAdminSessionReady(false);
+      void activateAdminDemo().then(() => setAdminSessionReady(true)).catch(() => setAdminSessionReady(false));
+    } else if (!user?.isAdminDemo) {
+      activatedAdminUid.current = null;
+      setAdminSessionReady(false);
+      setAdminDeliveryOpen(false);
+    }
+  }, [user?.uid, user?.isAdminDemo]);
 
   useEffect(() => {
     async function checkOnboardingStatus() {
@@ -340,8 +360,23 @@ function AppContent() {
     checkOnboardingStatus();
   }, []);
 
-  if (isLoading || initializing) {
+  if (isLoading || initializing || staffLoading) {
     return <SplashScreen />;
+  }
+
+  if (user?.isAdminDemo && adminSessionReady) {
+    return <AdminPreviewExperience
+      onExit={() => { void logoutStaff().then(logout); }}
+      staffNavigation={{
+        deliveryOpen: adminDeliveryOpen,
+        deliveryContent: <DeliveryManagementScreen />,
+        onDeliveryChange: setAdminDeliveryOpen,
+      }}
+    />;
+  }
+
+  if (STAFF_DEMO_ENABLED && staffAccount?.role === 'delivery') {
+    return <SafeAreaProvider><DeliveryDashboardScreen onLogout={() => { void logoutStaff(); }} /></SafeAreaProvider>;
   }
 
   return (
@@ -356,20 +391,7 @@ function AppContent() {
 }
 
 export default function App() {
-  const [showAdminPreview, setShowAdminPreview] = useState(
-    __DEV__ && process.env.EXPO_PUBLIC_ADMIN_PREVIEW === '1',
-  );
-
-  if (__DEV__ && process.env.EXPO_PUBLIC_STAFF_DEMO === '1') {
-    const { StaffExperience } = require('./src/features/staff/StaffExperience') as typeof import('./src/features/staff/StaffExperience');
-    return <StaffExperience />;
-  }
-
-  if (showAdminPreview) {
-    return <AdminPreviewExperience onExit={() => setShowAdminPreview(false)} />;
-  }
-
-  return <AuthProvider><AppContent /></AuthProvider>;
+  return <AuthProvider><StaffProvider><AppContent /></StaffProvider></AuthProvider>;
 }
 
 const styles = StyleSheet.create({

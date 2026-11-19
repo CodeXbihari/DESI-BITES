@@ -21,3 +21,11 @@ test('incorrect demo OTP is rejected', async () => {
     /Incorrect demo code\. Enter 123123/,
   );
 });
+
+test('admin demo OTP authenticates only the configured development phone', async () => {
+  const adminDemo = { enabled: true, phoneNumber: '+917644940067', otp: '022007' };
+  const admin = await verifyMockOtp('7644940067', '022007', '', adminDemo);
+  assert.equal(admin.isAdminDemo, true);
+  await assert.rejects(verifyMockOtp('+917644940067', '123123', '', adminDemo), /Incorrect Admin demo code/);
+  await assert.rejects(verifyMockOtp('+919999999999', '022007', '', adminDemo), /Incorrect demo code/);
+});

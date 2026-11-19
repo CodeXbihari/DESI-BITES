@@ -35,7 +35,7 @@ export function DeliveryManagementScreen() {
     setUpdatingId(partner.id);
     try {
       await setPartnerActive(partner.id, active);
-      setNotice({ message: active ? 'Delivery partner activated.' : 'Delivery partner deactivated.' });
+      setNotice({ message: active ? 'Delivery agent activated.' : 'Delivery agent deactivated.' });
     } catch (failure) { setNotice({ message: errorMessage(failure), error: true }); }
     finally { setUpdatingId(null); }
   }
@@ -46,12 +46,12 @@ export function DeliveryManagementScreen() {
         <View style={styles.headingText}>
           <Text style={staffStyles.eyebrow}>DESI BITES · ADMIN PANEL</Text>
           <Text accessibilityRole="header" style={staffStyles.title}>Delivery Management</Text>
-          <Text style={staffStyles.muted}>Manage your delivery partners and their accounts.</Text>
+          <Text style={staffStyles.muted}>Create delivery agent accounts and manage their access.</Text>
         </View>
-        <StaffButton primary icon="add" label="Add Delivery Partner" onPress={() => { setNotice(null); setEditor({ kind: 'add' }); }} />
+        <StaffButton primary icon="add" label="Add Delivery Agent" onPress={() => { setNotice(null); setEditor({ kind: 'add' }); }} />
       </View>
-      <StaffField label="Search delivery partners" placeholder="Search name or mobile number" value={search} onChangeText={setSearch} />
-      <View style={staffStyles.row} accessibilityLabel="Filter delivery partners">
+      <StaffField label="Search delivery agents" placeholder="Search name or mobile number" value={search} onChangeText={setSearch} />
+      <View style={staffStyles.row} accessibilityLabel="Filter delivery agents">
         {filters.map(value => <StaffButton key={value} label={value} primary={filter === value} onPress={() => setFilter(value)} />)}
       </View>
       {notice ? <StaffNotice message={notice.message} error={notice.error} /> : null}
@@ -91,8 +91,8 @@ export function DeliveryManagementScreen() {
         );
       }) : (
         <View style={staffStyles.card}>
-          <Text style={staffStyles.sectionTitle}>{partners.length ? 'No matching partners' : 'No delivery partners yet'}</Text>
-          <Text style={staffStyles.muted}>{partners.length ? 'Try a different search or status filter.' : 'Add a partner to give them access to the delivery demo.'}</Text>
+          <Text style={staffStyles.sectionTitle}>{partners.length ? 'No matching agents' : 'No delivery agents yet'}</Text>
+          <Text style={staffStyles.muted}>{partners.length ? 'Try a different search or status filter.' : 'Add an agent and assign a six-digit PIN so they can sign in through the shared login.'}</Text>
         </View>
       )}
       {editor ? <PartnerEditor editor={editor} onCancel={() => setEditor(null)} onSaved={saved} /> : null}
@@ -108,7 +108,7 @@ function PartnerEditor({ editor, onCancel, onSaved }: { editor: Editor; onCancel
   const [busy, setBusy] = useState(false);
   const form = editor.kind === 'add' || editor.kind === 'edit';
   const showPin = editor.kind === 'add' || editor.kind === 'reset';
-  const titles = { add: 'Add Delivery Partner', edit: 'Edit Delivery Partner', reset: 'Reset Login PIN', delete: 'Delete Delivery Partner?' };
+  const titles = { add: 'Add Delivery Agent', edit: 'Edit Delivery Agent', reset: 'Reset Login PIN', delete: 'Delete Delivery Agent?' };
 
   async function submit() {
     if (busy) return;
@@ -119,7 +119,7 @@ function PartnerEditor({ editor, onCancel, onSaved }: { editor: Editor; onCancel
         case 'add':
         case 'edit':
           await savePartner(draft, partner?.id);
-          onSaved(editor.kind === 'add' ? 'Delivery partner added. They can now use the shared login when active.' : 'Delivery partner updated.');
+          onSaved(editor.kind === 'add' ? 'Delivery agent added. They can now use the shared login when active.' : 'Delivery agent updated.');
           break;
         case 'reset':
           await resetPartnerPin(editor.partner.id, draft.pin);
@@ -127,7 +127,7 @@ function PartnerEditor({ editor, onCancel, onSaved }: { editor: Editor; onCancel
           break;
         case 'delete':
           await deletePartner(editor.partner.id);
-          onSaved('Delivery partner deleted.');
+          onSaved('Delivery agent deleted.');
           break;
       }
     } catch (failure) { setError(errorMessage(failure)); }
@@ -160,13 +160,13 @@ function PartnerEditor({ editor, onCancel, onSaved }: { editor: Editor; onCancel
               </> : null}
               {form ? <View style={staffStyles.row}>
                 <Text style={staffStyles.label}>{draft.active ? 'Active' : 'Inactive'}</Text>
-                <Switch accessibilityLabel="Delivery partner active" value={draft.active} onValueChange={active => update({ active })} disabled={busy}
+                <Switch accessibilityLabel="Delivery agent active" value={draft.active} onValueChange={active => update({ active })} disabled={busy}
                   trackColor={{ false: staffColors.beige, true: staffColors.teal }} thumbColor={staffColors.ivory} />
               </View> : null}
               {error ? <StaffNotice message={error} error /> : null}
               <View style={staffStyles.row}>
                 <StaffButton label="Cancel" onPress={onCancel} disabled={busy} />
-                <StaffButton primary label={editor.kind === 'delete' ? 'Delete Partner' : editor.kind === 'reset' ? 'Save PIN' : 'Save Delivery Partner'}
+                <StaffButton primary label={editor.kind === 'delete' ? 'Delete Agent' : editor.kind === 'reset' ? 'Save PIN' : 'Save Delivery Agent'}
                   busy={busy} onPress={() => void submit()} />
               </View>
             </View>

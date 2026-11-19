@@ -35,7 +35,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
   phoneNumber,
   onBack,
 }) => {
-  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt, isMockAuth } = useAuth();
+  const { verifyOtp, sendOtp, busy, phoneNumber: requestedPhone, resendAt, isMockAuth, adminDemoPhoneRequested, adminDemoOtpHint } = useAuth();
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
   const [errorMessage, setErrorMessage] = useState('');
@@ -251,7 +251,7 @@ export const OtpScreen: React.FC<OtpScreenProps> = ({
               <Text style={styles.demoHelperText}>
                 {isMockAuth ? 'Demo sign-in for ' : 'Code sent to '}{requestedPhone ?? phoneNumber}
               </Text>
-              {isMockAuth && <Text style={styles.demoHelperText}>Demo code: 123123</Text>}
+              {isMockAuth && <Text style={styles.demoHelperText}>{adminDemoPhoneRequested ? `DEVELOPMENT ADMIN DEMO code: ${adminDemoOtpHint}` : 'Customer demo code: 123123'}</Text>}
             </View>
           </View>
 

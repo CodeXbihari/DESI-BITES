@@ -1,4 +1,4 @@
-const MOCK_AUTH_PLATFORMS = new Set(['web', 'android']);
+const MOCK_AUTH_PLATFORMS = new Set(['web', 'android', 'ios']);
 
 export function isMockAuthEnabled(
   platform: string,

@@ -24,6 +24,7 @@ import {
 
 import { useAuth } from '../context/AuthContext';
 import { authErrorMessage } from '../services/authValidation';
+import { useStaff } from '../features/staff/StaffContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -37,6 +38,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   onBackToOnboarding,
 }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [deliveryPin, setDeliveryPin] = useState('');
+  const [deliveryBusy, setDeliveryBusy] = useState(false);
   const [fullName, setFullName] = useState('');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
@@ -45,6 +48,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const countryCode = '+91';
   const { sendOtp, busy, setupError, resendAt, isMockAuth } = useAuth();
+  const { login: loginDelivery, hasDeliveryPhone, loading: staffLoading } = useStaff();
   const [errorMessage, setErrorMessage] = useState('');
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
@@ -52,14 +56,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
     return () => clearInterval(timer);
   }, []);
   const remaining = Math.max(0, Math.ceil((resendAt - now) / 1000));
+  const isDeliveryLogin = !isRegisterMode && phoneNumber.length === 10 && hasDeliveryPhone(phoneNumber);
+  const checkingDeliveryAccount = !isRegisterMode && phoneNumber.length === 10 && staffLoading;
 
   const handleSendOtp = async () => {
     setErrorMessage('');
+    if (checkingDeliveryAccount) {
+      setErrorMessage('Checking your account. Please try again in a moment.');
+      return;
+    }
     try {
+      if (isDeliveryLogin) {
+        setDeliveryBusy(true);
+        await loginDelivery(phoneNumber, deliveryPin);
+        return;
+      }
       await sendOtp(phoneNumber, isRegisterMode ? fullName.trim() : '');
       if (mounted.current) onNavigateToOtp?.(phoneNumber);
     } catch (error) {
       if (mounted.current) setErrorMessage(authErrorMessage(error));
+    } finally {
+      if (mounted.current) setDeliveryBusy(false);
     }
   };
 
@@ -187,7 +204,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
                   keyboardType="phone-pad"
                   maxLength={10}
                   value={phoneNumber}
-                  onChangeText={(value) => { setPhoneNumber(value.replace(/\D/g, '')); setErrorMessage(''); }}
+                  onChangeText={(value) => { setPhoneNumber(value.replace(/\D/g, '')); setDeliveryPin(''); setErrorMessage(''); }}
                   editable={!busy}
                   autoComplete="tel-national"
                   accessibilityLabel="Indian mobile number"
@@ -195,12 +212,37 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
               </View>
             </View>
 
+            {isDeliveryLogin && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>DELIVERY PIN · 6 DIGITS</Text>
+                <View style={styles.phoneInputBox}>
+                  <Ionicons name="key-outline" size={18} color="#7B321F" style={{ marginLeft: 14, marginRight: 8 }} />
+                  <TextInput
+                    style={styles.textInput}
+                    placeholder="Enter your assigned PIN"
+                    placeholderTextColor="#A48978"
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    secureTextEntry
+                    value={deliveryPin}
+                    onChangeText={value => { setDeliveryPin(value.replace(/\D/g, '')); setErrorMessage(''); }}
+                    editable={!deliveryBusy}
+                    accessibilityLabel="Delivery partner 6-digit PIN"
+                    onSubmitEditing={() => void handleSendOtp()}
+                  />
+                </View>
+                <Text style={styles.termsText}>Use the six-digit PIN assigned by your cafe admin.</Text>
+              </View>
+            )}
+
             {(errorMessage || setupError) ? (
               <Text accessibilityRole="alert" style={{ color: LOGIN_THEME.deepMaroon, marginBottom: 12 }}>{errorMessage || setupError}</Text>
             ) : null}
             <Text style={[styles.termsText, { marginBottom: 12 }]}>
-              {isMockAuth
-                ? 'Development preview: no SMS will be sent. Use demo code 123123 on the next screen.'
+              {isDeliveryLogin
+                ? 'Delivery partner access is available for accounts created by your cafe admin.'
+                : isMockAuth
+                ? 'Development preview: no SMS will be sent. Customer demo code: 123123. Admin test account uses its displayed demo code.'
                 : 'We will send an SMS verification code. Standard SMS rates may apply. Your number is processed by Google for verification and abuse prevention.'}
             </Text>
 
@@ -208,19 +250,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({
             <TouchableOpacity
               style={styles.sendOtpButton}
               onPress={handleSendOtp}
-              disabled={busy || remaining > 0}
-              accessibilityState={{ disabled: busy || remaining > 0, busy }}
+              disabled={busy || deliveryBusy || checkingDeliveryAccount || (isDeliveryLogin ? deliveryPin.length !== 6 : remaining > 0)}
+              accessibilityState={{ disabled: busy || deliveryBusy || checkingDeliveryAccount || (isDeliveryLogin ? deliveryPin.length !== 6 : remaining > 0), busy: busy || deliveryBusy }}
               activeOpacity={0.88}
             >
-              {busy && <ActivityIndicator size="small" color="#FFFFFF" />}
+              {(busy || deliveryBusy) && <ActivityIndicator size="small" color="#FFFFFF" />}
               <Ionicons
-                name="send"
+                name={isDeliveryLogin ? 'log-in-outline' : 'send'}
                 size={16}
                 color="#FFFFFF"
                 style={styles.paperPlaneIcon}
               />
               <Text style={styles.sendOtpText}>
-                {busy ? 'Sending OTP…' : remaining > 0 ? `Try again in ${remaining}s` : isRegisterMode ? 'Create Account & Send OTP' : 'Send OTP'}
+                {deliveryBusy ? 'Signing in…' : busy ? 'Sending OTP…' : checkingDeliveryAccount ? 'Checking account…' : isDeliveryLogin ? 'Login to Delivery' : remaining > 0 ? `Try again in ${remaining}s` : isRegisterMode ? 'Create Account & Send OTP' : 'Send OTP'}
               </Text>
             </TouchableOpacity>
 

@@ -5,10 +5,10 @@ import {
   progressOrder, readStaffPath, removeDeliveryPartner, saveDeliveryPartner,
 } from '../src/features/staff/staffDemo.ts';
 
-test('demo credentials identify the correct role and reject invalid logins', () => {
+test('delivery PIN login accepts active partners and never authenticates Admin accounts', () => {
   const data = createStaffData();
-  assert.equal(checkCredentials(data, '9999999999', '123456').role, 'admin');
   assert.equal(checkCredentials(data, '8888888888', '654321').role, 'delivery');
+  assert.throws(() => checkCredentials(data, '9999999999', '123456'), /did not match/);
   assert.throws(() => checkCredentials(data, '7777777777', '456789'), /inactive/);
   assert.throws(() => checkCredentials(data, '9999999999', '654321'), /did not match/);
   assert.throws(() => checkCredentials(data, '9876543210', '123456'), /did not match/);
@@ -32,7 +32,7 @@ test('staff routing guards protected paths and redirects login by role', () => {
 test('a partner can sign in after creation, PIN reset, and reactivation', () => {
   const data = createStaffData();
   const draft = { name: '  Neha Rao  ', phone: '9876543210', pin: '012345', active: true };
-  assert.throws(() => saveDeliveryPartner(data, 'new', { ...draft, phone: '9999999999' }, false), /already registered/);
+  assert.throws(() => saveDeliveryPartner(data, 'new', { ...draft, phone: '8888888888' }, false), /already registered/);
   assert.throws(() => saveDeliveryPartner(data, 'new', { ...draft, name: ' ' }, false), /full name/);
   let updated = saveDeliveryPartner(data, 'new', draft, false);
   assert.equal(checkCredentials(updated, draft.phone, '012345').name, 'Neha Rao');

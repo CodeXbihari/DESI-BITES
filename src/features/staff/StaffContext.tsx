@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import { checkCredentials, createStaffData, progressOrder, removeDeliveryPartner, saveDeliveryPartner } from './staffDemo';
+import { STAFF_DEMO_ENABLED } from './staffDemo';
 import type { DeliveryStatus, PartnerDraft, StaffAccount, StaffData } from './staffDemo';
 
 const storageKey = 'desi-bites.staff-demo.v1';
@@ -33,12 +34,14 @@ type AccountView = Omit<StaffAccount, 'pin'>;
 
 interface StaffContextValue {
   account: AccountView | undefined;
-  partners: AccountView[];
-  orders: StaffData['orders'];
   loading: boolean;
   error: string | null;
+  partners: AccountView[];
+  orders: StaffData['orders'];
   reload: () => void;
   login: (phone: string, pin: string) => Promise<void>;
+  hasDeliveryPhone: (phone: string) => boolean;
+  activateAdminDemo: () => Promise<void>;
   logout: () => Promise<void>;
   savePartner: (draft: PartnerDraft, id?: string) => Promise<void>;
   setPartnerActive: (id: string, active: boolean) => Promise<void>;
@@ -114,12 +117,23 @@ export function StaffProvider({ children }: { children: React.ReactNode }) {
   return (
     <StaffContext.Provider value={{
       account: currentAccount ? withoutPin(currentAccount) : undefined,
-      partners: currentAccount?.role === 'admin' ? accounts.filter(account => account.role === 'delivery').map(withoutPin) : [],
-      orders: currentAccount?.role === 'admin' ? orders : orders.filter(order => Boolean(currentAccount) && order.partnerId === currentAccount?.id),
       loading: snapshot === null && error === null,
       error,
+      partners: currentAccount?.role === 'admin' ? accounts.filter(account => account.role === 'delivery').map(withoutPin) : [],
+      orders: currentAccount?.role === 'admin' ? orders : orders.filter(order => Boolean(currentAccount) && order.partnerId === currentAccount?.id),
       reload: () => { void reload(); },
-      login: (phone, pin) => change(current => ({ ...current, sessionId: checkCredentials(current.data, phone, pin).id })),
+      login: (phone, pin) => {
+        if (!STAFF_DEMO_ENABLED) return Promise.reject(new Error('Delivery PIN preview is available only in development.'));
+        return change(current => ({ ...current, sessionId: checkCredentials(current.data, phone, pin).id }));
+      },
+      hasDeliveryPhone: phone => STAFF_DEMO_ENABLED && Boolean(snapshot?.data.accounts.some(account => account.role === 'delivery' && account.phone === phone.replace(/\D/g, '').slice(-10))),
+      activateAdminDemo: () => change(current => {
+        if (!STAFF_DEMO_ENABLED) throw new Error('Admin demo is available only in development.');
+        if (!current.data.accounts.some(account => account.id === 'demo-admin' && account.role === 'admin')) {
+          throw new Error('Admin demo account is unavailable.');
+        }
+        return { ...current, sessionId: 'demo-admin' };
+      }),
       logout: () => change(current => ({ ...current, sessionId: null })),
       savePartner: (draft, id) => updateData('admin', data => {
         const previous = id ? data.accounts.find(item => item.id === id) : undefined;

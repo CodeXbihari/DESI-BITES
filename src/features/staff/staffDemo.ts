@@ -1,4 +1,5 @@
 export type StaffRole = 'admin' | 'delivery';
+export const STAFF_DEMO_ENABLED = typeof __DEV__ !== 'undefined' && __DEV__;
 export type StaffPath = '/login' | '/admin/dashboard' | '/admin/delivery' | '/delivery/dashboard';
 export const loginPath = '/login';
 export const roleDashboard = { admin: '/admin/dashboard', delivery: '/delivery/dashboard' } as const;
@@ -53,7 +54,7 @@ export const deliveryAction: Partial<Record<DeliveryStatus, { label: string; nex
 export function createStaffData(): StaffData {
   return {
     accounts: [
-      { id: 'demo-admin', role: 'admin', name: 'Riya Kapoor', phone: '9999999999', pin: '123456', active: true },
+      { id: 'demo-admin', role: 'admin', name: 'Riya Kapoor', phone: '', pin: '', active: true },
       { id: 'demo-partner', role: 'delivery', name: 'Arjun Mehta', phone: '8888888888', pin: '654321', active: true },
       { id: 'demo-paused', role: 'delivery', name: 'Nisha Rao', phone: '7777777777', pin: '456789', active: false },
     ],
@@ -70,7 +71,7 @@ export function checkCredentials(data: StaffData, phone: string, pin: string): S
   if (!/^\d{10}$/.test(phone)) throw new Error('Enter a 10-digit mobile number.');
   if (!/^\d{6}$/.test(pin)) throw new Error('Enter a 6-digit PIN.');
   const account = data.accounts.find(item => item.phone === phone);
-  if (!account || account.pin !== pin) throw new Error('The mobile number or PIN did not match.');
+  if (!account || account.role !== 'delivery' || account.pin !== pin) throw new Error('The mobile number or PIN did not match.');
   if (!account.active) throw new Error('This account is inactive. Ask your cafe admin to activate it.');
   return account;
 }

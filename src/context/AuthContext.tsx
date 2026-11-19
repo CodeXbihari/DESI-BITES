@@ -3,17 +3,25 @@ import { Platform } from 'react-native';
 import { normalizeIndianPhone, RESEND_COOLDOWN_MS, validateOtp, authErrorMessage } from '../services/authValidation';
 import { isMockAuthEnabled } from '../services/authMode';
 import type { AuthUser, OtpConfirmation } from '../services/authTypes';
-import { requestMockOtp, verifyMockOtp } from '../services/mockAuthService';
+import { isAdminDemoPhone, requestMockOtp, verifyMockOtp, type AdminDemoCredentials } from '../services/mockAuthService';
 
 const isMockAuthMode = isMockAuthEnabled(
   Platform.OS,
   process.env.EXPO_PUBLIC_AUTH_MODE,
   __DEV__,
 );
+const adminDemoCredentials: AdminDemoCredentials = {
+  enabled: __DEV__ && isMockAuthMode && process.env.EXPO_PUBLIC_ADMIN_DEMO_ENABLED === '1'
+    && Boolean(process.env.EXPO_PUBLIC_ADMIN_DEMO_PHONE && process.env.EXPO_PUBLIC_ADMIN_DEMO_OTP),
+  phoneNumber: process.env.EXPO_PUBLIC_ADMIN_DEMO_PHONE ?? '',
+  otp: process.env.EXPO_PUBLIC_ADMIN_DEMO_OTP ?? '',
+};
 
 interface AuthContextValue {
   user: AuthUser | null;
   isMockAuth: boolean;
+  adminDemoPhoneRequested: boolean;
+  adminDemoOtpHint: string | null;
   initializing: boolean;
   setupError: string | null;
   profileError: string | null;
@@ -35,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const authenticatedUid = useRef<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string | null>(null);
+  const [adminDemoPhoneRequested, setAdminDemoPhoneRequested] = useState(false);
   const [resendAt, setResendAt] = useState(0);
   const confirmation = useRef<OtpConfirmation | null>(null);
   const lock = useRef(false);
@@ -110,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) { pendingName.current = previousName; throw error; }
       if (authenticatedUid.current) return;
       setPhoneNumber(phone);
+      setAdminDemoPhoneRequested(isMockAuthMode && isAdminDemoPhone(phone, adminDemoCredentials));
       cooldown.current = Date.now() + RESEND_COOLDOWN_MS;
       setResendAt(cooldown.current);
       setSetupError(null);
@@ -120,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     validateOtp(code);
     await exclusive(async () => {
       if (isMockAuthMode) {
-        const mockUser = await verifyMockOtp(phoneNumber ?? '', code, pendingName.current);
+        const mockUser = await verifyMockOtp(phoneNumber ?? '', code, pendingName.current, adminDemoCredentials);
         authenticatedUid.current = mockUser.uid;
         pendingName.current = '';
         setUser(mockUser);
@@ -146,12 +156,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       pendingName.current = '';
       setProfileError(null);
       setPhoneNumber(null);
+      setAdminDemoPhoneRequested(false);
       cooldown.current = 0;
       setResendAt(0);
     });
   }
 
-  return <AuthContext.Provider value={{ user, isMockAuth: isMockAuthMode, initializing, setupError, profileError, busy, phoneNumber, resendAt, sendOtp, verifyOtp, logout }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, isMockAuth: isMockAuthMode, adminDemoPhoneRequested, adminDemoOtpHint: adminDemoPhoneRequested ? adminDemoCredentials.otp : null, initializing, setupError, profileError, busy, phoneNumber, resendAt, sendOtp, verifyOtp, logout }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
